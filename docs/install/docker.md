@@ -1,64 +1,64 @@
 ---
-summary: "Optional Docker-based setup and onboarding for Moltbot"
+summary: "可选的 Docker 化安装与引导流程"
 read_when:
-  - You want a containerized gateway instead of local installs
-  - You are validating the Docker flow
+  - 你想用容器化 gateway 而不是本地安装
+  - 你在验证 Docker 方案
 ---
 
-# Docker (optional)
+# Docker（可选）
 
-Docker is **optional**. Use it only if you want a containerized gateway or to validate the Docker flow.
+Docker 是**可选**的。只有在你想要容器化 gateway 或验证 Docker 流程时才使用。
 
-## Is Docker right for me?
+## Docker 适合我吗
 
-- **Yes**: you want an isolated, throwaway gateway environment or to run Moltbot on a host without local installs.
-- **No**: you’re running on your own machine and just want the fastest dev loop. Use the normal install flow instead.
-- **Sandboxing note**: agent sandboxing uses Docker too, but it does **not** require the full gateway to run in Docker. See [Sandboxing](/gateway/sandboxing).
+- **适合**：你想要隔离的、可丢弃的 gateway 环境，或在没有本地安装的主机上运行 Moltbot。
+- **不适合**：你在自己的机器上，只想要最快的开发循环。请使用正常安装流程。
+- **沙箱说明**：agent 沙箱也会使用 Docker，但它**不要求**整个 gateway 在 Docker 中运行。参见 [Sandboxing](/gateway/sandboxing)。
 
-This guide covers:
-- Containerized Gateway (full Moltbot in Docker)
-- Per-session Agent Sandbox (host gateway + Docker-isolated agent tools)
+本指南覆盖：
+- 容器化 Gateway（Docker 中运行完整 Moltbot）
+- 会话级 Agent 沙箱（宿主机 gateway + Docker 隔离工具）
 
-Sandboxing details: [Sandboxing](/gateway/sandboxing)
+沙箱详情：[Sandboxing](/gateway/sandboxing)
 
-## Requirements
+## 要求
 
-- Docker Desktop (or Docker Engine) + Docker Compose v2
-- Enough disk for images + logs
+- Docker Desktop（或 Docker Engine）+ Docker Compose v2
+- 足够的磁盘空间用于镜像和日志
 
-## Containerized Gateway (Docker Compose)
+## 容器化 Gateway（Docker Compose）
 
-### Quick start (recommended)
+### 快速开始（推荐）
 
-From repo root:
+在仓库根目录：
 
 ```bash
 ./docker-setup.sh
 ```
 
-This script:
-- builds the gateway image
-- runs the onboarding wizard
-- prints optional provider setup hints
-- starts the gateway via Docker Compose
-- generates a gateway token and writes it to `.env`
+该脚本会：
+- 构建 gateway 镜像
+- 运行引导向导
+- 打印可选的提供方设置提示
+- 通过 Docker Compose 启动 gateway
+- 生成 gateway token 并写入 `.env`
 
-Optional env vars:
-- `CLAWDBOT_DOCKER_APT_PACKAGES` — install extra apt packages during build
-- `CLAWDBOT_EXTRA_MOUNTS` — add extra host bind mounts
-- `CLAWDBOT_HOME_VOLUME` — persist `/home/node` in a named volume
+可选环境变量：
+- `CLAWDBOT_DOCKER_APT_PACKAGES` — 构建时安装额外 apt 包
+- `CLAWDBOT_EXTRA_MOUNTS` — 增加额外的宿主机 bind mount
+- `CLAWDBOT_HOME_VOLUME` — 用命名卷持久化 `/home/node`
 
-After it finishes:
-- Open `http://127.0.0.1:18789/` in your browser.
-- Paste the token into the Control UI (Settings → token).
+完成后：
+- 在浏览器打开 `http://127.0.0.1:18789/`。
+- 在 Control UI（Settings → token）中粘贴 token。
 
-It writes config/workspace on the host:
+它会把配置和工作区写到宿主机：
 - `~/.clawdbot/`
 - `~/clawd`
 
-Running on a VPS? See [Hetzner (Docker VPS)](/platforms/hetzner).
+在 VPS 上运行？参见 [Hetzner (Docker VPS)](/platforms/hetzner)。
 
-### Manual flow (compose)
+### 手动流程（compose）
 
 ```bash
 docker build -t moltbot:local -f Dockerfile .
@@ -66,42 +66,38 @@ docker compose run --rm moltbot-cli onboard
 docker compose up -d moltbot-gateway
 ```
 
-### Extra mounts (optional)
+### 额外挂载（可选）
 
-If you want to mount additional host directories into the containers, set
-`CLAWDBOT_EXTRA_MOUNTS` before running `docker-setup.sh`. This accepts a
-comma-separated list of Docker bind mounts and applies them to both
-`moltbot-gateway` and `moltbot-cli` by generating `docker-compose.extra.yml`.
+如果你想把宿主机的额外目录挂载进容器，在运行 `docker-setup.sh` 之前设置
+`CLAWDBOT_EXTRA_MOUNTS`。它接受一个逗号分隔的 Docker bind mount 列表，并通过生成
+`docker-compose.extra.yml` 应用到 `moltbot-gateway` 与 `moltbot-cli`。
 
-Example:
+示例：
 
 ```bash
 export CLAWDBOT_EXTRA_MOUNTS="$HOME/.codex:/home/node/.codex:ro,$HOME/github:/home/node/github:rw"
 ./docker-setup.sh
 ```
 
-Notes:
-- Paths must be shared with Docker Desktop on macOS/Windows.
-- If you edit `CLAWDBOT_EXTRA_MOUNTS`, rerun `docker-setup.sh` to regenerate the
-  extra compose file.
-- `docker-compose.extra.yml` is generated. Don’t hand-edit it.
+说明：
+- 路径必须在 macOS/Windows 的 Docker Desktop 共享列表中。
+- 如果你修改了 `CLAWDBOT_EXTRA_MOUNTS`，请重新运行 `docker-setup.sh` 以重新生成额外的 compose 文件。
+- `docker-compose.extra.yml` 由脚本生成，不要手动编辑。
 
-### Persist the entire container home (optional)
+### 持久化整个容器 home（可选）
 
-If you want `/home/node` to persist across container recreation, set a named
-volume via `CLAWDBOT_HOME_VOLUME`. This creates a Docker volume and mounts it at
-`/home/node`, while keeping the standard config/workspace bind mounts. Use a
-named volume here (not a bind path); for bind mounts, use
-`CLAWDBOT_EXTRA_MOUNTS`.
+如果你想让 `/home/node` 在容器重建后仍持久化，通过 `CLAWDBOT_HOME_VOLUME` 设置命名卷。
+该方式会创建 Docker volume 并挂载到 `/home/node`，同时保留标准的配置和工作区 bind mounts。
+这里请使用**命名卷**（不要使用 bind 路径）；若要 bind，使用 `CLAWDBOT_EXTRA_MOUNTS`。
 
-Example:
+示例：
 
 ```bash
 export CLAWDBOT_HOME_VOLUME="moltbot_home"
 ./docker-setup.sh
 ```
 
-You can combine this with extra mounts:
+可以与额外挂载组合：
 
 ```bash
 export CLAWDBOT_HOME_VOLUME="moltbot_home"
@@ -109,34 +105,29 @@ export CLAWDBOT_EXTRA_MOUNTS="$HOME/.codex:/home/node/.codex:ro,$HOME/github:/ho
 ./docker-setup.sh
 ```
 
-Notes:
-- If you change `CLAWDBOT_HOME_VOLUME`, rerun `docker-setup.sh` to regenerate the
-  extra compose file.
-- The named volume persists until removed with `docker volume rm <name>`.
+说明：
+- 如果你修改了 `CLAWDBOT_HOME_VOLUME`，请重新运行 `docker-setup.sh` 以重新生成额外 compose 文件。
+- 命名卷会一直保留，直到执行 `docker volume rm <name>` 删除。
 
-### Install extra apt packages (optional)
+### 安装额外 apt 包（可选）
 
-If you need system packages inside the image (for example, build tools or media
-libraries), set `CLAWDBOT_DOCKER_APT_PACKAGES` before running `docker-setup.sh`.
-This installs the packages during the image build, so they persist even if the
-container is deleted.
+如果你需要在镜像内安装系统包（例如构建工具或媒体库），在运行 `docker-setup.sh` 之前设置 `CLAWDBOT_DOCKER_APT_PACKAGES`。
+这些包会在镜像构建时安装，因此即使容器被删除也会保留。
 
-Example:
+示例：
 
 ```bash
 export CLAWDBOT_DOCKER_APT_PACKAGES="ffmpeg build-essential"
 ./docker-setup.sh
 ```
 
-Notes:
-- This accepts a space-separated list of apt package names.
-- If you change `CLAWDBOT_DOCKER_APT_PACKAGES`, rerun `docker-setup.sh` to rebuild
-  the image.
+说明：
+- 这里接受以空格分隔的 apt 包名列表。
+- 如果你修改了 `CLAWDBOT_DOCKER_APT_PACKAGES`，请重新运行 `docker-setup.sh` 以重建镜像。
 
-### Faster rebuilds (recommended)
+### 更快的重建（推荐）
 
-To speed up rebuilds, order your Dockerfile so dependency layers are cached.
-This avoids re-running `pnpm install` unless lockfiles change:
+为加速重建，请调整 Dockerfile 的顺序以利用缓存层。这样除非 lockfile 变化，否则不会重复执行 `pnpm install`：
 
 ```dockerfile
 FROM node:22-bookworm
@@ -166,101 +157,97 @@ ENV NODE_ENV=production
 CMD ["node","dist/index.js"]
 ```
 
-### Channel setup (optional)
+### 渠道设置（可选）
 
-Use the CLI container to configure channels, then restart the gateway if needed.
+使用 CLI 容器配置渠道，然后按需重启 gateway。
 
-WhatsApp (QR):
+WhatsApp（二维码）：
 ```bash
 docker compose run --rm moltbot-cli channels login
 ```
 
-Telegram (bot token):
+Telegram（bot token）：
 ```bash
 docker compose run --rm moltbot-cli channels add --channel telegram --token "<token>"
 ```
 
-Discord (bot token):
+Discord（bot token）：
 ```bash
 docker compose run --rm moltbot-cli channels add --channel discord --token "<token>"
 ```
 
-Docs: [WhatsApp](/channels/whatsapp), [Telegram](/channels/telegram), [Discord](/channels/discord)
+文档：[WhatsApp](/channels/whatsapp)、[Telegram](/channels/telegram)、[Discord](/channels/discord)
 
-### Health check
+### 健康检查
 
 ```bash
 docker compose exec moltbot-gateway node dist/index.js health --token "$CLAWDBOT_GATEWAY_TOKEN"
 ```
 
-### E2E smoke test (Docker)
+### E2E 冒烟测试（Docker）
 
 ```bash
 scripts/e2e/onboard-docker.sh
 ```
 
-### QR import smoke test (Docker)
+### 二维码导入冒烟测试（Docker）
 
 ```bash
 pnpm test:docker:qr
 ```
 
-### Notes
+### 说明
 
-- Gateway bind defaults to `lan` for container use.
-- The gateway container is the source of truth for sessions (`~/.clawdbot/agents/<agentId>/sessions/`).
+- Gateway 绑定默认使用 `lan` 以适配容器。
+- gateway 容器是会话的事实来源（`~/.clawdbot/agents/<agentId>/sessions/`）。
 
-## Agent Sandbox (host gateway + Docker tools)
+## Agent 沙箱（宿主机 gateway + Docker 工具）
 
-Deep dive: [Sandboxing](/gateway/sandboxing)
+深入阅读：[Sandboxing](/gateway/sandboxing)
 
-### What it does
+### 功能说明
 
-When `agents.defaults.sandbox` is enabled, **non-main sessions** run tools inside a Docker
-container. The gateway stays on your host, but the tool execution is isolated:
-- scope: `"agent"` by default (one container + workspace per agent)
-- scope: `"session"` for per-session isolation
-- per-scope workspace folder mounted at `/workspace`
-- optional agent workspace access (`agents.defaults.sandbox.workspaceAccess`)
-- allow/deny tool policy (deny wins)
-- inbound media is copied into the active sandbox workspace (`media/inbound/*`) so tools can read it (with `workspaceAccess: "rw"`, this lands in the agent workspace)
+当启用 `agents.defaults.sandbox` 时，**非 main 会话**会在 Docker 容器内运行工具。
+gateway 仍在宿主机，但工具执行被隔离：
+- scope：默认是 `"agent"`（每个 agent 一个容器与工作区）
+- scope：`"session"` 为按会话隔离
+- 每个 scope 的工作区挂载到 `/workspace`
+- 可选的 agent 工作区访问（`agents.defaults.sandbox.workspaceAccess`）
+- allow/deny 工具策略（deny 优先）
+- 入站媒体会复制到当前沙箱工作区（`media/inbound/*`），方便工具读取（当 `workspaceAccess: "rw"` 时，会进入 agent 工作区）
 
-Warning: `scope: "shared"` disables cross-session isolation. All sessions share
-one container and one workspace.
+警告：`scope: "shared"` 会禁用跨会话隔离。所有会话共享同一容器与工作区。
 
-### Per-agent sandbox profiles (multi-agent)
+### 按 agent 的沙箱配置（多 agent）
 
-If you use multi-agent routing, each agent can override sandbox + tool settings:
-`agents.list[].sandbox` and `agents.list[].tools` (plus `agents.list[].tools.sandbox.tools`). This lets you run
-mixed access levels in one gateway:
-- Full access (personal agent)
-- Read-only tools + read-only workspace (family/work agent)
-- No filesystem/shell tools (public agent)
+如果你使用多 agent 路由，每个 agent 可以覆盖沙箱与工具设置：
+`agents.list[].sandbox` 与 `agents.list[].tools`（以及 `agents.list[].tools.sandbox.tools`）。这样一个 gateway 可以运行不同的访问级别：
+- 全权限（个人 agent）
+- 只读工具 + 只读工作区（家庭或工作 agent）
+- 无文件系统或 shell 工具（公共 agent）
 
-See [Multi-Agent Sandbox & Tools](/multi-agent-sandbox-tools) for examples,
-precedence, and troubleshooting.
+例子、优先级和排障见 [Multi-Agent Sandbox & Tools](/multi-agent-sandbox-tools)。
 
-### Default behavior
+### 默认行为
 
-- Image: `moltbot-sandbox:bookworm-slim`
-- One container per agent
-- Agent workspace access: `workspaceAccess: "none"` (default) uses `~/.clawdbot/sandboxes`
-  - `"ro"` keeps the sandbox workspace at `/workspace` and mounts the agent workspace read-only at `/agent` (disables `write`/`edit`/`apply_patch`)
-  - `"rw"` mounts the agent workspace read/write at `/workspace`
-- Auto-prune: idle > 24h OR age > 7d
-- Network: `none` by default (explicitly opt-in if you need egress)
-- Default allow: `exec`, `process`, `read`, `write`, `edit`, `sessions_list`, `sessions_history`, `sessions_send`, `sessions_spawn`, `session_status`
-- Default deny: `browser`, `canvas`, `nodes`, `cron`, `discord`, `gateway`
+- 镜像：`moltbot-sandbox:bookworm-slim`
+- 每个 agent 一个容器
+- Agent 工作区访问：`workspaceAccess: "none"`（默认）使用 `~/.clawdbot/sandboxes`
+  - `"ro"` 保持沙箱工作区在 `/workspace`，并将 agent 工作区只读挂载到 `/agent`（禁用 `write`/`edit`/`apply_patch`）
+  - `"rw"` 以读写方式将 agent 工作区挂载到 `/workspace`
+- 自动清理：空闲 > 24h 或总年龄 > 7d
+- 网络：默认 `none`（如需出站必须显式开启）
+- 默认允许：`exec`、`process`、`read`、`write`、`edit`、`sessions_list`、`sessions_history`、`sessions_send`、`sessions_spawn`、`session_status`
+- 默认拒绝：`browser`、`canvas`、`nodes`、`cron`、`discord`、`gateway`
 
-### Enable sandboxing
+### 启用沙箱
 
-If you plan to install packages in `setupCommand`, note:
-- Default `docker.network` is `"none"` (no egress).
-- `readOnlyRoot: true` blocks package installs.
-- `user` must be root for `apt-get` (omit `user` or set `user: "0:0"`).
-Moltbot auto-recreates containers when `setupCommand` (or docker config) changes
-unless the container was **recently used** (within ~5 minutes). Hot containers
-log a warning with the exact `moltbot sandbox recreate ...` command.
+如果你计划在 `setupCommand` 中安装包，请注意：
+- 默认 `docker.network` 为 `"none"`（无出站）。
+- `readOnlyRoot: true` 会阻止包安装。
+- `user` 必须是 root 才能执行 `apt-get`（省略 `user` 或设置 `user: "0:0"`）。
+Moltbot 会在 `setupCommand`（或 docker 配置）变化时自动重建容器，
+除非容器**刚刚被使用过**（约 5 分钟内）。热容器会记录一条警告，并给出精确的 `moltbot sandbox recreate ...` 命令。
 
 ```json5
 {
@@ -312,29 +299,30 @@ log a warning with the exact `moltbot sandbox recreate ...` command.
 }
 ```
 
-Hardening knobs live under `agents.defaults.sandbox.docker`:
-`network`, `user`, `pidsLimit`, `memory`, `memorySwap`, `cpus`, `ulimits`,
-`seccompProfile`, `apparmorProfile`, `dns`, `extraHosts`.
+加固选项位于 `agents.defaults.sandbox.docker`：
+`network`、`user`、`pidsLimit`、`memory`、`memorySwap`、`cpus`、`ulimits`、
+`seccompProfile`、`apparmorProfile`、`dns`、`extraHosts`。
 
-Multi-agent: override `agents.defaults.sandbox.{docker,browser,prune}.*` per agent via `agents.list[].sandbox.{docker,browser,prune}.*`
-(ignored when `agents.defaults.sandbox.scope` / `agents.list[].sandbox.scope` is `"shared"`).
+多 agent：可通过 `agents.list[].sandbox.{docker,browser,prune}.*` 按 agent 覆盖 `agents.defaults.sandbox.{docker,browser,prune}.*`
+（当 `agents.defaults.sandbox.scope` / `agents.list[].sandbox.scope` 为 `"shared"` 时忽略）。
 
-### Build the default sandbox image
+### 构建默认沙箱镜像
 
 ```bash
 scripts/sandbox-setup.sh
 ```
 
-This builds `moltbot-sandbox:bookworm-slim` using `Dockerfile.sandbox`.
+该脚本会使用 `Dockerfile.sandbox` 构建 `moltbot-sandbox:bookworm-slim`。
 
-### Sandbox common image (optional)
-If you want a sandbox image with common build tooling (Node, Go, Rust, etc.), build the common image:
+### 沙箱通用镜像（可选）
+
+如果你希望沙箱镜像包含常用构建工具（Node、Go、Rust 等），可构建通用镜像：
 
 ```bash
 scripts/sandbox-common-setup.sh
 ```
 
-This builds `moltbot-sandbox-common:bookworm-slim`. To use it:
+这会构建 `moltbot-sandbox-common:bookworm-slim`。使用方式：
 
 ```json5
 {
@@ -342,24 +330,22 @@ This builds `moltbot-sandbox-common:bookworm-slim`. To use it:
 }
 ```
 
-### Sandbox browser image
+### 沙箱浏览器镜像
 
-To run the browser tool inside the sandbox, build the browser image:
+要在沙箱内运行 browser 工具，构建浏览器镜像：
 
 ```bash
 scripts/sandbox-browser-setup.sh
 ```
 
-This builds `moltbot-sandbox-browser:bookworm-slim` using
-`Dockerfile.sandbox-browser`. The container runs Chromium with CDP enabled and
-an optional noVNC observer (headful via Xvfb).
+这会使用 `Dockerfile.sandbox-browser` 构建 `moltbot-sandbox-browser:bookworm-slim`。容器运行启用了 CDP 的 Chromium，并提供可选 noVNC 观察者（通过 Xvfb 提供有界面模式）。
 
-Notes:
-- Headful (Xvfb) reduces bot blocking vs headless.
-- Headless can still be used by setting `agents.defaults.sandbox.browser.headless=true`.
-- No full desktop environment (GNOME) is needed; Xvfb provides the display.
+说明：
+- 有界面模式（Xvfb）比无头更不易被反爬阻拦。
+- 无头仍可用，通过设置 `agents.defaults.sandbox.browser.headless=true`。
+- 不需要完整桌面环境（GNOME）；Xvfb 提供显示即可。
 
-Use config:
+配置示例：
 
 ```json5
 {
@@ -373,7 +359,7 @@ Use config:
 }
 ```
 
-Custom browser image:
+自定义浏览器镜像：
 
 ```json5
 {
@@ -385,17 +371,16 @@ Custom browser image:
 }
 ```
 
-When enabled, the agent receives:
-- a sandbox browser control URL (for the `browser` tool)
-- a noVNC URL (if enabled and headless=false)
+启用后，agent 会获得：
+- 沙箱浏览器控制 URL（用于 `browser` 工具）
+- noVNC URL（若启用且 headless=false）
 
-Remember: if you use an allowlist for tools, add `browser` (and remove it from
-deny) or the tool remains blocked.
-Prune rules (`agents.defaults.sandbox.prune`) apply to browser containers too.
+注意：如果你为工具设置了 allowlist，请把 `browser` 加入 allow，并从 deny 移除，否则该工具仍会被阻止。
+清理规则（`agents.defaults.sandbox.prune`）同样适用于浏览器容器。
 
-### Custom sandbox image
+### 自定义沙箱镜像
 
-Build your own image and point config to it:
+构建自定义镜像并在配置中指向它：
 
 ```bash
 docker build -t my-moltbot-sbx -f Dockerfile.sandbox .
@@ -411,37 +396,33 @@ docker build -t my-moltbot-sbx -f Dockerfile.sandbox .
 }
 ```
 
-### Tool policy (allow/deny)
+### 工具策略（allow/deny）
 
-- `deny` wins over `allow`.
-- If `allow` is empty: all tools (except deny) are available.
-- If `allow` is non-empty: only tools in `allow` are available (minus deny).
+- `deny` 优先于 `allow`。
+- `allow` 为空：所有工具（除 deny 外）可用。
+- `allow` 非空：仅 allow 中的工具可用（再减去 deny）。
 
-### Pruning strategy
+### 清理策略
 
-Two knobs:
-- `prune.idleHours`: remove containers not used in X hours (0 = disable)
-- `prune.maxAgeDays`: remove containers older than X days (0 = disable)
+两个参数：
+- `prune.idleHours`：清理 X 小时未使用的容器（0 表示禁用）
+- `prune.maxAgeDays`：清理超过 X 天的容器（0 表示禁用）
 
-Example:
-- Keep busy sessions but cap lifetime:
-  `idleHours: 24`, `maxAgeDays: 7`
-- Never prune:
-  `idleHours: 0`, `maxAgeDays: 0`
+示例：
+- 保留活跃会话但限制生命周期：
+  `idleHours: 24`，`maxAgeDays: 7`
+- 永不清理：
+  `idleHours: 0`，`maxAgeDays: 0`
 
-### Security notes
+### 安全说明
 
-- Hard wall only applies to **tools** (exec/read/write/edit/apply_patch).  
-- Host-only tools like browser/camera/canvas are blocked by default.  
-- Allowing `browser` in sandbox **breaks isolation** (browser runs on host).
+- 硬隔离仅适用于**工具**（exec/read/write/edit/apply_patch）。  
+- 浏览器/相机/canvas 等宿主机工具默认被阻止。  
+- 在沙箱中允许 `browser` **会破坏隔离**（浏览器在宿主机上运行）。
 
-## Troubleshooting
+## 故障排查
 
-- Image missing: build with [`scripts/sandbox-setup.sh`](https://github.com/moltbot/moltbot/blob/main/scripts/sandbox-setup.sh) or set `agents.defaults.sandbox.docker.image`.
-- Container not running: it will auto-create per session on demand.
-- Permission errors in sandbox: set `docker.user` to a UID:GID that matches your
-  mounted workspace ownership (or chown the workspace folder).
-- Custom tools not found: Moltbot runs commands with `sh -lc` (login shell), which
-  sources `/etc/profile` and may reset PATH. Set `docker.env.PATH` to prepend your
-  custom tool paths (e.g., `/custom/bin:/usr/local/share/npm-global/bin`), or add
-  a script under `/etc/profile.d/` in your Dockerfile.
+- 镜像缺失：使用 [`scripts/sandbox-setup.sh`](https://github.com/moltbot/moltbot/blob/main/scripts/sandbox-setup.sh) 构建或设置 `agents.defaults.sandbox.docker.image`。
+- 容器未运行：会按需为会话自动创建。
+- 沙箱权限错误：将 `docker.user` 设为与挂载工作区一致的 UID:GID（或 chown 工作区）。
+- 自定义工具找不到：Moltbot 使用 `sh -lc`（登录 shell）执行命令，会读取 `/etc/profile` 并可能重置 PATH。设置 `docker.env.PATH` 以在 PATH 前置自定义工具路径（例如 `/custom/bin:/usr/local/share/npm-global/bin`），或在 Dockerfile 中添加 `/etc/profile.d/` 脚本。

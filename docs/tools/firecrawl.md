@@ -1,23 +1,21 @@
 ---
-summary: "Firecrawl fallback for web_fetch (anti-bot + cached extraction)"
+summary: "web_fetch 的 Firecrawl 兜底（反爬 + 缓存抽取）"
 read_when:
-  - You want Firecrawl-backed web extraction
-  - You need a Firecrawl API key
-  - You want anti-bot extraction for web_fetch
+  - 想使用 Firecrawl 做 Web 抽取
+  - 需要 Firecrawl API key
+  - 想为 web_fetch 启用反爬抽取
 ---
 
 # Firecrawl
 
-Moltbot can use **Firecrawl** as a fallback extractor for `web_fetch`. It is a hosted
-content extraction service that supports bot circumvention and caching, which helps
-with JS-heavy sites or pages that block plain HTTP fetches.
+Moltbot 可将 **Firecrawl** 作为 `web_fetch` 的兜底抽取器。它是托管内容抽取服务，支持反爬与缓存，适合 JS 重或阻止普通 HTTP 抓取的页面。
 
-## Get an API key
+## 获取 API key
 
-1) Create a Firecrawl account and generate an API key.
-2) Store it in config or set `FIRECRAWL_API_KEY` in the gateway environment.
+1) 创建 Firecrawl 账号并生成 API key。
+2) 将 key 写入配置或在 gateway 环境中设置 `FIRECRAWL_API_KEY`。
 
-## Configure Firecrawl
+## 配置 Firecrawl
 
 ```json5
 {
@@ -37,22 +35,21 @@ with JS-heavy sites or pages that block plain HTTP fetches.
 }
 ```
 
-Notes:
-- `firecrawl.enabled` defaults to true when an API key is present.
-- `maxAgeMs` controls how old cached results can be (ms). Default is 2 days.
+说明：
+- 当提供 API key 时，`firecrawl.enabled` 默认为 true。
+- `maxAgeMs` 控制缓存结果的最大年龄（毫秒）。默认 2 天。
 
-## Stealth / bot circumvention
+## 隐身 / 反爬
 
-Firecrawl exposes a **proxy mode** parameter for bot circumvention (`basic`, `stealth`, or `auto`).
-Moltbot always uses `proxy: "auto"` plus `storeInCache: true` for Firecrawl requests.
-If proxy is omitted, Firecrawl defaults to `auto`. `auto` retries with stealth proxies if a basic attempt fails, which may use more credits
-than basic-only scraping.
+Firecrawl 提供 **proxy mode** 参数用于反爬（`basic`、`stealth` 或 `auto`）。
+Moltbot 对 Firecrawl 请求固定使用 `proxy: "auto"` 并 `storeInCache: true`。
+若省略 proxy，Firecrawl 默认为 `auto`。`auto` 在 basic 失败后会重试 stealth，可能比仅 basic 更耗积分。
 
-## How `web_fetch` uses Firecrawl
+## `web_fetch` 如何使用 Firecrawl
 
-`web_fetch` extraction order:
-1) Readability (local)
-2) Firecrawl (if configured)
-3) Basic HTML cleanup (last fallback)
+`web_fetch` 抽取顺序：
+1) Readability（本地）
+2) Firecrawl（若配置）
+3) 基础 HTML 清理（最后兜底）
 
-See [Web tools](/tools/web) for the full web tool setup.
+完整 Web 工具设置见 [Web 工具](/tools/web)。

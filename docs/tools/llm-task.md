@@ -1,21 +1,19 @@
 ---
-summary: "JSON-only LLM tasks for workflows (optional plugin tool)"
+summary: "面向工作流的 JSON-only LLM 任务（可选插件工具）"
 read_when:
-  - You want a JSON-only LLM step inside workflows
-  - You need schema-validated LLM output for automation
+  - 想在工作流中加入 JSON-only 的 LLM 步骤
+  - 需要可 schema 校验的 LLM 输出
 ---
 
 # LLM Task
 
-`llm-task` is an **optional plugin tool** that runs a JSON-only LLM task and
-returns structured output (optionally validated against JSON Schema).
+`llm-task` 是**可选插件工具**，运行 JSON-only LLM 任务并返回结构化输出（可选 JSON Schema 校验）。
 
-This is ideal for workflow engines like Lobster: you can add a single LLM step
-without writing custom Moltbot code for each workflow.
+这非常适合 Lobster 等工作流引擎：你可以插入一个 LLM 步骤，而无需为每个工作流编写自定义 Moltbot 代码。
 
-## Enable the plugin
+## 启用插件
 
-1) Enable the plugin:
+1) 启用插件：
 
 ```json
 {
@@ -27,7 +25,7 @@ without writing custom Moltbot code for each workflow.
 }
 ```
 
-2) Allowlist the tool (it is registered with `optional: true`):
+2) 加入工具 allowlist（该工具注册为 `optional: true`）：
 
 ```json
 {
@@ -42,7 +40,7 @@ without writing custom Moltbot code for each workflow.
 }
 ```
 
-## Config (optional)
+## 配置（可选）
 
 ```json
 {
@@ -64,27 +62,25 @@ without writing custom Moltbot code for each workflow.
 }
 ```
 
-`allowedModels` is an allowlist of `provider/model` strings. If set, any request
-outside the list is rejected.
+`allowedModels` 是 `provider/model` 的 allowlist。设置后，列表外请求会被拒绝。
 
-## Tool parameters
+## 工具参数
 
-- `prompt` (string, required)
-- `input` (any, optional)
-- `schema` (object, optional JSON Schema)
-- `provider` (string, optional)
-- `model` (string, optional)
-- `authProfileId` (string, optional)
-- `temperature` (number, optional)
-- `maxTokens` (number, optional)
-- `timeoutMs` (number, optional)
+- `prompt`（string，必填）
+- `input`（any，可选）
+- `schema`（object，可选 JSON Schema）
+- `provider`（string，可选）
+- `model`（string，可选）
+- `authProfileId`（string，可选）
+- `temperature`（number，可选）
+- `maxTokens`（number，可选）
+- `timeoutMs`（number，可选）
 
-## Output
+## 输出
 
-Returns `details.json` containing the parsed JSON (and validates against
-`schema` when provided).
+返回 `details.json`，包含解析后的 JSON（如提供 `schema` 则校验）。
 
-## Example: Lobster workflow step
+## 示例：Lobster 工作流步骤
 
 ```lobster
 clawd.invoke --tool llm-task --action json --args-json '{
@@ -105,10 +101,9 @@ clawd.invoke --tool llm-task --action json --args-json '{
 }'
 ```
 
-## Safety notes
+## 安全说明
 
-- The tool is **JSON-only** and instructs the model to output only JSON (no
-  code fences, no commentary).
-- No tools are exposed to the model for this run.
-- Treat output as untrusted unless you validate with `schema`.
-- Put approvals before any side-effecting step (send, post, exec).
+- 工具为 **JSON-only**，会要求模型只输出 JSON（不含代码围栏/评论）。
+- 此次运行不会暴露任何工具给模型。
+- 如无 `schema` 校验，请将输出视为不可信。
+- 任何有副作用的步骤（发送/发布/执行）前应设置审批。

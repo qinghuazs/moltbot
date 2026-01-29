@@ -1,18 +1,18 @@
 ---
-summary: "Install Moltbot declaratively with Nix"
+summary: "使用 Nix 以声明式方式安装 Moltbot"
 read_when:
-  - You want reproducible, rollback-able installs
-  - You're already using Nix/NixOS/Home Manager
-  - You want everything pinned and managed declaratively
+  - 你想要可复现 可回滚的安装
+  - 你已经在用 Nix/NixOS/Home Manager
+  - 你希望全部固定并用声明式方式管理
 ---
 
-# Nix Installation
+# Nix 安装
 
-The recommended way to run Moltbot with Nix is via **[nix-moltbot](https://github.com/moltbot/nix-moltbot)** — a batteries-included Home Manager module.
+使用 Nix 运行 Moltbot 的推荐方式是 **[nix-moltbot](https://github.com/moltbot/nix-moltbot)**，这是一个带电池的 Home Manager 模块。
 
-## Quick Start
+## 快速开始
 
-Paste this to your AI agent (Claude, Cursor, etc.):
+把下面这段复制给你的 AI agent（Claude、Cursor 等）：
 
 ```text
 I want to set up nix-moltbot on my Mac.
@@ -29,67 +29,65 @@ What I need you to do:
 Reference the nix-moltbot README for module options.
 ```
 
-> **📦 Full guide: [github.com/moltbot/nix-moltbot](https://github.com/moltbot/nix-moltbot)**
+> **📦 完整指南：[github.com/moltbot/nix-moltbot](https://github.com/moltbot/nix-moltbot)**
 >
-> The nix-moltbot repo is the source of truth for Nix installation. This page is just a quick overview.
+> nix-moltbot 仓库是 Nix 安装的事实来源。本页面只是快速概览。
 
-## What you get
+## 你将获得
 
-- Gateway + macOS app + tools (whisper, spotify, cameras) — all pinned
-- Launchd service that survives reboots
-- Plugin system with declarative config
-- Instant rollback: `home-manager switch --rollback`
+- Gateway + macOS 应用 + 工具（whisper、spotify、cameras）— 全部固定版本
+- 可在重启后继续运行的 launchd 服务
+- 声明式配置的插件系统
+- 即时回滚：`home-manager switch --rollback`
 
 ---
 
-## Nix Mode Runtime Behavior
+## Nix 模式运行行为
 
-When `CLAWDBOT_NIX_MODE=1` is set (automatic with nix-moltbot):
+当设置了 `CLAWDBOT_NIX_MODE=1`（使用 nix-moltbot 时自动设置）：
 
-Moltbot supports a **Nix mode** that makes configuration deterministic and disables auto-install flows.
-Enable it by exporting:
+Moltbot 支持 **Nix 模式**，让配置确定化并禁用自动安装流程。
+通过导出环境变量启用：
 
 ```bash
 CLAWDBOT_NIX_MODE=1
 ```
 
-On macOS, the GUI app does not automatically inherit shell env vars. You can
-also enable Nix mode via defaults:
+在 macOS 上，GUI 应用不会自动继承 shell 环境变量。也可以通过 defaults 启用 Nix 模式：
 
 ```bash
 defaults write bot.molt.mac moltbot.nixMode -bool true
 ```
 
-### Config + state paths
+### 配置与状态路径
 
-Moltbot reads JSON5 config from `CLAWDBOT_CONFIG_PATH` and stores mutable data in `CLAWDBOT_STATE_DIR`.
+Moltbot 从 `CLAWDBOT_CONFIG_PATH` 读取 JSON5 配置，并把可变数据存入 `CLAWDBOT_STATE_DIR`。
 
-- `CLAWDBOT_STATE_DIR` (default: `~/.clawdbot`)
-- `CLAWDBOT_CONFIG_PATH` (default: `$CLAWDBOT_STATE_DIR/moltbot.json`)
+- `CLAWDBOT_STATE_DIR`（默认：`~/.clawdbot`）
+- `CLAWDBOT_CONFIG_PATH`（默认：`$CLAWDBOT_STATE_DIR/moltbot.json`）
 
-When running under Nix, set these explicitly to Nix-managed locations so runtime state and config
-stay out of the immutable store.
+在 Nix 下运行时，请把这些显式设置为 Nix 管理的位置，避免运行时状态与配置落到不可变 store 中。
 
-### Runtime behavior in Nix mode
+### Nix 模式下的运行行为
 
-- Auto-install and self-mutation flows are disabled
-- Missing dependencies surface Nix-specific remediation messages
-- UI surfaces a read-only Nix mode banner when present
+- 禁用自动安装与自修改流程
+- 缺失依赖时显示 Nix 专用的修复提示
+- UI 在可用时显示只读的 Nix 模式横幅
 
-## Packaging note (macOS)
+## 打包说明（macOS）
 
-The macOS packaging flow expects a stable Info.plist template at:
+macOS 打包流程需要一个稳定的 Info.plist 模板，路径为：
 
 ```
 apps/macos/Sources/Moltbot/Resources/Info.plist
 ```
 
-[`scripts/package-mac-app.sh`](https://github.com/moltbot/moltbot/blob/main/scripts/package-mac-app.sh) copies this template into the app bundle and patches dynamic fields
-(bundle ID, version/build, Git SHA, Sparkle keys). This keeps the plist deterministic for SwiftPM
-packaging and Nix builds (which do not rely on a full Xcode toolchain).
+[`scripts/package-mac-app.sh`](https://github.com/moltbot/moltbot/blob/main/scripts/package-mac-app.sh) 会把该模板复制进 app bundle 并填充动态字段
+（bundle ID、version/build、Git SHA、Sparkle keys）。这样可保证 SwiftPM 打包与 Nix 构建
+（不依赖完整 Xcode 工具链）时的 plist 可确定性。
 
-## Related
+## 相关
 
-- [nix-moltbot](https://github.com/moltbot/nix-moltbot) — full setup guide
-- [Wizard](/start/wizard) — non-Nix CLI setup
-- [Docker](/install/docker) — containerized setup
+- [nix-moltbot](https://github.com/moltbot/nix-moltbot) — 完整搭建指南
+- [Wizard](/start/wizard) — 非 Nix CLI 安装
+- [Docker](/install/docker) — 容器化安装

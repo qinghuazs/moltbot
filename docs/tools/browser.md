@@ -1,35 +1,32 @@
 ---
-summary: "Integrated browser control service + action commands"
+summary: "集成浏览器控制服务 + 动作命令"
 read_when:
-  - Adding agent-controlled browser automation
-  - Debugging why clawd is interfering with your own Chrome
-  - Implementing browser settings + lifecycle in the macOS app
+  - 添加 agent 控制的浏览器自动化
+  - 排查 clawd 干扰你自己的 Chrome 的原因
+  - 在 macOS app 中实现浏览器设置与生命周期
 ---
 
-# Browser (clawd-managed)
+# 浏览器（clawd 管理）
 
-Moltbot can run a **dedicated Chrome/Brave/Edge/Chromium profile** that the agent controls.
-It is isolated from your personal browser and is managed through a small local
-control service inside the Gateway (loopback only).
+Moltbot 可运行一个**专用的 Chrome/Brave/Edge/Chromium 配置文件**供 agent 控制。
+它与个人浏览器隔离，通过 Gateway 内部的本地控制服务管理（仅 loopback）。
 
-Beginner view:
-- Think of it as a **separate, agent-only browser**.
-- The `clawd` profile does **not** touch your personal browser profile.
-- The agent can **open tabs, read pages, click, and type** in a safe lane.
-- The default `chrome` profile uses the **system default Chromium browser** via the
-  extension relay; switch to `clawd` for the isolated managed browser.
+新手视角：
+- 把它当作**独立的 agent 浏览器**。
+- `clawd` profile **不会**触碰你的个人浏览器数据。
+- agent 可在安全通道中**打开标签页、读取页面、点击与输入**。
+- 默认 `chrome` profile 使用**系统默认 Chromium 浏览器**通过扩展中继；切换到 `clawd` 使用隔离的托管浏览器。
 
-## What you get
+## 你会得到什么
 
-- A separate browser profile named **clawd** (orange accent by default).
-- Deterministic tab control (list/open/focus/close).
-- Agent actions (click/type/drag/select), snapshots, screenshots, PDFs.
-- Optional multi-profile support (`clawd`, `work`, `remote`, ...).
+- 独立浏览器 profile：**clawd**（默认橙色主题）。
+- 可预测的标签页控制（列表/打开/聚焦/关闭）。
+- agent 动作（点击/输入/拖拽/选择）、快照、截图、PDF。
+- 可选多 profile 支持（`clawd`、`work`、`remote` 等）。
 
-This browser is **not** your daily driver. It is a safe, isolated surface for
-agent automation and verification.
+这个浏览器**不是**你的日常浏览器。它是面向 agent 自动化与验证的隔离界面。
 
-## Quick start
+## 快速开始
 
 ```bash
 moltbot browser --browser-profile clawd status
@@ -38,28 +35,26 @@ moltbot browser --browser-profile clawd open https://example.com
 moltbot browser --browser-profile clawd snapshot
 ```
 
-If you get “Browser disabled”, enable it in config (see below) and restart the
-Gateway.
+若提示 “Browser disabled”，请在配置中启用（见下）并重启 Gateway。
 
-## Profiles: `clawd` vs `chrome`
+## Profiles：`clawd` vs `chrome`
 
-- `clawd`: managed, isolated browser (no extension required).
-- `chrome`: extension relay to your **system browser** (requires the Moltbot
-  extension to be attached to a tab).
+- `clawd`：托管、隔离浏览器（无需扩展）。
+- `chrome`：扩展中继到**系统浏览器**（需要 Moltbot 扩展绑定标签页）。
 
-Set `browser.defaultProfile: "clawd"` if you want managed mode by default.
+若希望默认使用托管模式，设置 `browser.defaultProfile: "clawd"`。
 
-## Configuration
+## 配置
 
-Browser settings live in `~/.clawdbot/moltbot.json`.
+浏览器设置位于 `~/.clawdbot/moltbot.json`。
 
 ```json5
 {
   browser: {
     enabled: true,                    // default: true
     // cdpUrl: "http://127.0.0.1:18792", // legacy single-profile override
-    remoteCdpTimeoutMs: 1500,         // remote CDP HTTP timeout (ms)
-    remoteCdpHandshakeTimeoutMs: 3000, // remote CDP WebSocket handshake timeout (ms)
+    remoteCdpTimeoutMs: 1500,         // 远程 CDP HTTP 超时（ms）
+    remoteCdpHandshakeTimeoutMs: 3000, // 远程 CDP WebSocket 握手超时（ms）
     defaultProfile: "chrome",
     color: "#FF4500",
     headless: false,
@@ -75,27 +70,24 @@ Browser settings live in `~/.clawdbot/moltbot.json`.
 }
 ```
 
-Notes:
-- The browser control service binds to loopback on a port derived from `gateway.port`
-  (default: `18791`, which is gateway + 2). The relay uses the next port (`18792`).
-- If you override the Gateway port (`gateway.port` or `CLAWDBOT_GATEWAY_PORT`),
-  the derived browser ports shift to stay in the same “family”.
-- `cdpUrl` defaults to the relay port when unset.
-- `remoteCdpTimeoutMs` applies to remote (non-loopback) CDP reachability checks.
-- `remoteCdpHandshakeTimeoutMs` applies to remote CDP WebSocket reachability checks.
-- `attachOnly: true` means “never launch a local browser; only attach if it is already running.”
-- `color` + per-profile `color` tint the browser UI so you can see which profile is active.
-- Default profile is `chrome` (extension relay). Use `defaultProfile: "clawd"` for the managed browser.
-- Auto-detect order: system default browser if Chromium-based; otherwise Chrome → Brave → Edge → Chromium → Chrome Canary.
-- Local `clawd` profiles auto-assign `cdpPort`/`cdpUrl` — set those only for remote CDP.
+说明：
+- 浏览器控制服务绑定在 loopback，端口来自 `gateway.port`（默认 `18791`，即 gateway + 2）。中继使用下一个端口（`18792`）。
+- 若修改 Gateway 端口（`gateway.port` 或 `CLAWDBOT_GATEWAY_PORT`），浏览器端口会按同“家族”联动变更。
+- 未设置 `cdpUrl` 时默认使用中继端口。
+- `remoteCdpTimeoutMs` 作用于远程（非 loopback）CDP 可达性检查。
+- `remoteCdpHandshakeTimeoutMs` 作用于远程 CDP WebSocket 可达性检查。
+- `attachOnly: true` 表示“不要启动本地浏览器；仅在已运行时附加”。
+- `color` 与每个 profile 的 `color` 会给浏览器 UI 着色，便于识别当前 profile。
+- 默认 profile 为 `chrome`（扩展中继）；设置 `defaultProfile: "clawd"` 可使用托管浏览器。
+- 自动检测顺序：若系统默认浏览器为 Chromium 系列则优先，否则依次为 Chrome → Brave → Edge → Chromium → Chrome Canary。
+- 本地 `clawd` profile 会自动分配 `cdpPort`/`cdpUrl` — 仅在远程 CDP 时设置这些。
 
-## Use Brave (or another Chromium-based browser)
+## 使用 Brave（或其他 Chromium 浏览器）
 
-If your **system default** browser is Chromium-based (Chrome/Brave/Edge/etc),
-Moltbot uses it automatically. Set `browser.executablePath` to override
-auto-detection:
+若系统默认浏览器是 Chromium 系列（Chrome/Brave/Edge 等），Moltbot 会自动使用。
+设置 `browser.executablePath` 可覆盖自动检测：
 
-CLI example:
+CLI 示例：
 
 ```bash
 moltbot config set browser.executablePath "/usr/bin/google-chrome"
@@ -124,41 +116,36 @@ moltbot config set browser.executablePath "/usr/bin/google-chrome"
 }
 ```
 
-## Local vs remote control
+## 本地 vs 远程控制
 
-- **Local control (default):** the Gateway starts the loopback control service and can launch a local browser.
-- **Remote control (node host):** run a node host on the machine that has the browser; the Gateway proxies browser actions to it.
-- **Remote CDP:** set `browser.profiles.<name>.cdpUrl` (or `browser.cdpUrl`) to
-  attach to a remote Chromium-based browser. In this case, Moltbot will not launch a local browser.
+- **本地控制（默认）：** Gateway 启动本地 loopback 控制服务并可启动浏览器。
+- **远程控制（节点主机）：** 在有浏览器的机器上运行 node host；Gateway 代理浏览器动作。
+- **远程 CDP：** 设置 `browser.profiles.<name>.cdpUrl`（或 `browser.cdpUrl`）以连接远程 Chromium 浏览器；此时 Moltbot 不会启动本地浏览器。
 
-Remote CDP URLs can include auth:
-- Query tokens (e.g., `https://provider.example?token=<token>`)
-- HTTP Basic auth (e.g., `https://user:pass@provider.example`)
+远程 CDP URL 可包含认证：
+- Query token（如 `https://provider.example?token=<token>`）
+- HTTP Basic（如 `https://user:pass@provider.example`）
 
-Moltbot preserves the auth when calling `/json/*` endpoints and when connecting
-to the CDP WebSocket. Prefer environment variables or secrets managers for
-tokens instead of committing them to config files.
+Moltbot 在调用 `/json/*` 与连接 CDP WebSocket 时保留认证信息。
+请使用环境变量或 secrets manager 保存 token，避免写入配置文件。
 
-## Node browser proxy (zero-config default)
+## Node 浏览器代理（零配置默认）
 
-If you run a **node host** on the machine that has your browser, Moltbot can
-auto-route browser tool calls to that node without any extra browser config.
-This is the default path for remote gateways.
+若你在**拥有浏览器的机器**上运行 node host，Moltbot 可自动将浏览器工具调用路由到该节点，无需额外配置。这是远程 Gateway 的默认路径。
 
-Notes:
-- The node host exposes its local browser control server via a **proxy command**.
-- Profiles come from the node’s own `browser.profiles` config (same as local).
-- Disable if you don’t want it:
-  - On the node: `nodeHost.browserProxy.enabled=false`
-  - On the gateway: `gateway.nodes.browser.mode="off"`
+说明：
+- node host 通过**代理命令**暴露本地浏览器控制服务。
+- profile 来自节点自身的 `browser.profiles` 配置（与本地一致）。
+- 若不需要此功能，可禁用：
+  - 在 node：`nodeHost.browserProxy.enabled=false`
+  - 在 gateway：`gateway.nodes.browser.mode="off"`
 
-## Browserless (hosted remote CDP)
+## Browserless（托管远程 CDP）
 
-[Browserless](https://browserless.io) is a hosted Chromium service that exposes
-CDP endpoints over HTTPS. You can point a Moltbot browser profile at a
-Browserless region endpoint and authenticate with your API key.
+[Browserless](https://browserless.io) 是托管 Chromium 服务，提供 HTTPS CDP 端点。
+可将 Moltbot 浏览器 profile 指向 Browserless 区域端点，并使用 API key 认证。
 
-Example:
+示例：
 ```json5
 {
   browser: {
@@ -176,74 +163,74 @@ Example:
 }
 ```
 
-Notes:
-- Replace `<BROWSERLESS_API_KEY>` with your real Browserless token.
-- Choose the region endpoint that matches your Browserless account (see their docs).
+说明：
+- 将 `<BROWSERLESS_API_KEY>` 替换为你的真实 token。
+- 选择与账号匹配的区域端点（见其文档）。
 
-## Security
+## 安全
 
-Key ideas:
-- Browser control is loopback-only; access flows through the Gateway’s auth or node pairing.
-- Keep the Gateway and any node hosts on a private network (Tailscale); avoid public exposure.
-- Treat remote CDP URLs/tokens as secrets; prefer env vars or a secrets manager.
+关键点：
+- 浏览器控制仅 loopback；访问经过 Gateway 鉴权或节点配对。
+- 保持 Gateway 与 node host 在私网（如 Tailscale），避免公网暴露。
+- 将远程 CDP URL/token 视为机密；建议用环境变量或 secrets manager。
 
-Remote CDP tips:
-- Prefer HTTPS endpoints and short-lived tokens where possible.
-- Avoid embedding long-lived tokens directly in config files.
+远程 CDP 建议：
+- 尽量使用 HTTPS 与短期 token。
+- 避免将长期 token 写入配置文件。
 
-## Profiles (multi-browser)
+## Profiles（多浏览器）
 
-Moltbot supports multiple named profiles (routing configs). Profiles can be:
-- **clawd-managed**: a dedicated Chromium-based browser instance with its own user data directory + CDP port
-- **remote**: an explicit CDP URL (Chromium-based browser running elsewhere)
-- **extension relay**: your existing Chrome tab(s) via the local relay + Chrome extension
+Moltbot 支持多个命名 profile（路由配置）。Profile 可以是：
+- **clawd 托管**：专用 Chromium 实例，独立用户数据目录 + CDP 端口
+- **remote**：显式 CDP URL（远程 Chromium 浏览器）
+- **扩展中继**：通过本地中继 + Chrome 扩展控制现有 Chrome 标签页
 
-Defaults:
-- The `clawd` profile is auto-created if missing.
-- The `chrome` profile is built-in for the Chrome extension relay (points at `http://127.0.0.1:18792` by default).
-- Local CDP ports allocate from **18800–18899** by default.
-- Deleting a profile moves its local data directory to Trash.
+默认：
+- 缺失时自动创建 `clawd` profile。
+- 内置 `chrome` profile 用于扩展中继（默认指向 `http://127.0.0.1:18792`）。
+- 本地 CDP 端口默认从 **18800–18899** 分配。
+- 删除 profile 会将其本地数据目录移到回收站。
 
-All control endpoints accept `?profile=<name>`; the CLI uses `--browser-profile`.
+所有控制端点支持 `?profile=<name>`；CLI 使用 `--browser-profile`。
 
-## Chrome extension relay (use your existing Chrome)
+## Chrome 扩展中继（使用现有 Chrome）
 
-Moltbot can also drive **your existing Chrome tabs** (no separate “clawd” Chrome instance) via a local CDP relay + a Chrome extension.
+Moltbot 可通过本地 CDP 中继 + Chrome 扩展控制**现有 Chrome 标签页**（不需要独立的 “clawd” 实例）。
 
-Full guide: [Chrome extension](/tools/chrome-extension)
+完整指南：见 [Chrome 扩展](/tools/chrome-extension)
 
-Flow:
-- The Gateway runs locally (same machine) or a node host runs on the browser machine.
-- A local **relay server** listens at a loopback `cdpUrl` (default: `http://127.0.0.1:18792`).
-- You click the **Moltbot Browser Relay** extension icon on a tab to attach (it does not auto-attach).
-- The agent controls that tab via the normal `browser` tool, by selecting the right profile.
+流程：
+- Gateway 在本机运行（或在浏览器机上运行 node host）。
+- 本地**中继服务**在 loopback `cdpUrl` 监听（默认 `http://127.0.0.1:18792`）。
+- 你在标签页上点击 **Moltbot Browser Relay** 扩展图标进行附加（不会自动附加）。
+- agent 通过 `browser` 工具选择对应 profile 来控制该标签页。
 
-If the Gateway runs elsewhere, run a node host on the browser machine so the Gateway can proxy browser actions.
+若 Gateway 运行在别处，请在浏览器机上运行 node host，让 Gateway 代理浏览器动作。
 
-### Sandboxed sessions
+### 沙箱会话
 
-If the agent session is sandboxed, the `browser` tool may default to `target="sandbox"` (sandbox browser).
-Chrome extension relay takeover requires host browser control, so either:
-- run the session unsandboxed, or
-- set `agents.defaults.sandbox.browser.allowHostControl: true` and use `target="host"` when calling the tool.
+若 agent 会话处于沙箱，`browser` 工具可能默认 `target="sandbox"`（沙箱浏览器）。
+扩展中继需要宿主浏览器控制，因此：
+- 运行非沙箱会话，或
+- 设置 `agents.defaults.sandbox.browser.allowHostControl: true` 并在调用工具时用 `target="host"`。
 
-### Setup
+### 设置
 
-1) Load the extension (dev/unpacked):
+1) 加载扩展（dev/unpacked）：
 
 ```bash
 moltbot browser extension install
 ```
 
-- Chrome → `chrome://extensions` → enable “Developer mode”
-- “Load unpacked” → select the directory printed by `moltbot browser extension path`
-- Pin the extension, then click it on the tab you want to control (badge shows `ON`).
+- Chrome → `chrome://extensions` → 启用“Developer mode”
+- “Load unpacked” → 选择 `moltbot browser extension path` 打印的目录
+- 固定扩展，然后在要控制的标签页点击扩展图标（徽标显示 `ON`）
 
-2) Use it:
-- CLI: `moltbot browser --browser-profile chrome tabs`
-- Agent tool: `browser` with `profile="chrome"`
+2) 使用：
+- CLI：`moltbot browser --browser-profile chrome tabs`
+- Agent 工具：`browser`，`profile="chrome"`
 
-Optional: if you want a different name or relay port, create your own profile:
+可选：若你想使用不同名称或中继端口，可创建自定义 profile：
 
 ```bash
 moltbot browser create-profile \
@@ -253,80 +240,76 @@ moltbot browser create-profile \
   --color "#00AA00"
 ```
 
-Notes:
-- This mode relies on Playwright-on-CDP for most operations (screenshots/snapshots/actions).
-- Detach by clicking the extension icon again.
+说明：
+- 此模式依赖 Playwright-on-CDP 完成多数操作（截图/快照/动作）。
+- 再次点击扩展图标可解除附加。
 
-## Isolation guarantees
+## 隔离保证
 
-- **Dedicated user data dir**: never touches your personal browser profile.
-- **Dedicated ports**: avoids `9222` to prevent collisions with dev workflows.
-- **Deterministic tab control**: target tabs by `targetId`, not “last tab”.
+- **独立用户数据目录**：不会触碰个人浏览器数据。
+- **独立端口**：避免 `9222` 与开发流程冲突。
+- **确定性标签页控制**：通过 `targetId` 定位标签页，而非“最后一个标签”。
 
-## Browser selection
+## 浏览器选择
 
-When launching locally, Moltbot picks the first available:
+本地启动时，Moltbot 按以下优先级选择：
 1. Chrome
 2. Brave
 3. Edge
 4. Chromium
 5. Chrome Canary
 
-You can override with `browser.executablePath`.
+可用 `browser.executablePath` 覆盖。
 
-Platforms:
-- macOS: checks `/Applications` and `~/Applications`.
-- Linux: looks for `google-chrome`, `brave`, `microsoft-edge`, `chromium`, etc.
-- Windows: checks common install locations.
+平台规则：
+- macOS：检查 `/Applications` 与 `~/Applications`。
+- Linux：查找 `google-chrome`、`brave`、`microsoft-edge`、`chromium` 等。
+- Windows：检查常见安装路径。
 
-## Control API (optional)
+## 控制 API（可选）
 
-For local integrations only, the Gateway exposes a small loopback HTTP API:
+仅用于本地集成，Gateway 提供小型 loopback HTTP API：
 
-- Status/start/stop: `GET /`, `POST /start`, `POST /stop`
-- Tabs: `GET /tabs`, `POST /tabs/open`, `POST /tabs/focus`, `DELETE /tabs/:targetId`
-- Snapshot/screenshot: `GET /snapshot`, `POST /screenshot`
-- Actions: `POST /navigate`, `POST /act`
-- Hooks: `POST /hooks/file-chooser`, `POST /hooks/dialog`
-- Downloads: `POST /download`, `POST /wait/download`
-- Debugging: `GET /console`, `POST /pdf`
-- Debugging: `GET /errors`, `GET /requests`, `POST /trace/start`, `POST /trace/stop`, `POST /highlight`
-- Network: `POST /response/body`
-- State: `GET /cookies`, `POST /cookies/set`, `POST /cookies/clear`
-- State: `GET /storage/:kind`, `POST /storage/:kind/set`, `POST /storage/:kind/clear`
-- Settings: `POST /set/offline`, `POST /set/headers`, `POST /set/credentials`, `POST /set/geolocation`, `POST /set/media`, `POST /set/timezone`, `POST /set/locale`, `POST /set/device`
+- 状态/启动/停止：`GET /`、`POST /start`、`POST /stop`
+- 标签页：`GET /tabs`、`POST /tabs/open`、`POST /tabs/focus`、`DELETE /tabs/:targetId`
+- 快照/截图：`GET /snapshot`、`POST /screenshot`
+- 动作：`POST /navigate`、`POST /act`
+- Hooks：`POST /hooks/file-chooser`、`POST /hooks/dialog`
+- 下载：`POST /download`、`POST /wait/download`
+- 调试：`GET /console`、`POST /pdf`
+- 调试：`GET /errors`、`GET /requests`、`POST /trace/start`、`POST /trace/stop`、`POST /highlight`
+- 网络：`POST /response/body`
+- 状态：`GET /cookies`、`POST /cookies/set`、`POST /cookies/clear`
+- 状态：`GET /storage/:kind`、`POST /storage/:kind/set`、`POST /storage/:kind/clear`
+- 设置：`POST /set/offline`、`POST /set/headers`、`POST /set/credentials`、`POST /set/geolocation`、`POST /set/media`、`POST /set/timezone`、`POST /set/locale`、`POST /set/device`
 
-All endpoints accept `?profile=<name>`.
+所有端点支持 `?profile=<name>`。
 
-### Playwright requirement
+### Playwright 依赖
 
-Some features (navigate/act/AI snapshot/role snapshot, element screenshots, PDF) require
-Playwright. If Playwright isn’t installed, those endpoints return a clear 501
-error. ARIA snapshots and basic screenshots still work for clawd-managed Chrome.
-For the Chrome extension relay driver, ARIA snapshots and screenshots require Playwright.
+部分特性（navigate/act/AI snapshot/role snapshot、元素截图、PDF）需要 Playwright。
+若未安装 Playwright，这些端点会返回明确的 501 错误。
+clawd 托管 Chrome 的 ARIA 快照与基础截图仍可用。
+Chrome 扩展中继驱动下，ARIA 快照与截图同样需要 Playwright。
 
-If you see `Playwright is not available in this gateway build`, install the full
-Playwright package (not `playwright-core`) and restart the gateway, or reinstall
-Moltbot with browser support.
+若看到 `Playwright is not available in this gateway build`，请安装完整 Playwright 包（非 `playwright-core`）并重启 gateway，或重新安装带浏览器支持的 Moltbot。
 
-## How it works (internal)
+## 工作方式（内部）
 
-High-level flow:
-- A small **control server** accepts HTTP requests.
-- It connects to Chromium-based browsers (Chrome/Brave/Edge/Chromium) via **CDP**.
-- For advanced actions (click/type/snapshot/PDF), it uses **Playwright** on top
-  of CDP.
-- When Playwright is missing, only non-Playwright operations are available.
+高层流程：
+- 一个小型**控制服务**接受 HTTP 请求。
+- 通过 **CDP** 连接 Chromium 浏览器（Chrome/Brave/Edge/Chromium）。
+- 高级动作（点击/输入/快照/PDF）在 CDP 之上使用 **Playwright**。
+- 若缺失 Playwright，仅支持非 Playwright 操作。
 
-This design keeps the agent on a stable, deterministic interface while letting
-you swap local/remote browsers and profiles.
+该设计让 agent 使用稳定、可预测的接口，同时允许你更换本地/远程浏览器与 profile。
 
-## CLI quick reference
+## CLI 快速参考
 
-All commands accept `--browser-profile <name>` to target a specific profile.
-All commands also accept `--json` for machine-readable output (stable payloads).
+所有命令均支持 `--browser-profile <name>` 指定 profile。
+所有命令也支持 `--json` 输出机器可读结果（稳定 payload）。
 
-Basics:
+基础：
 - `moltbot browser status`
 - `moltbot browser start`
 - `moltbot browser stop`
@@ -339,7 +322,7 @@ Basics:
 - `moltbot browser focus abcd1234`
 - `moltbot browser close abcd1234`
 
-Inspection:
+检查：
 - `moltbot browser screenshot`
 - `moltbot browser screenshot --full-page`
 - `moltbot browser screenshot --ref 12`
@@ -357,7 +340,7 @@ Inspection:
 - `moltbot browser pdf`
 - `moltbot browser responsebody "**/api" --max-chars 5000`
 
-Actions:
+动作：
 - `moltbot browser navigate https://example.com`
 - `moltbot browser resize 1280 720`
 - `moltbot browser click 12 --double`
@@ -380,7 +363,7 @@ Actions:
 - `moltbot browser trace start`
 - `moltbot browser trace stop`
 
-State:
+状态：
 - `moltbot browser cookies`
 - `moltbot browser cookies set session abc123 --url "https://example.com"`
 - `moltbot browser cookies clear`
@@ -398,55 +381,54 @@ State:
 - `moltbot browser set locale en-US`
 - `moltbot browser set device "iPhone 14"`
 
-Notes:
-- `upload` and `dialog` are **arming** calls; run them before the click/press
-  that triggers the chooser/dialog.
-- `upload` can also set file inputs directly via `--input-ref` or `--element`.
-- `snapshot`:
-  - `--format ai` (default when Playwright is installed): returns an AI snapshot with numeric refs (`aria-ref="<n>"`).
-  - `--format aria`: returns the accessibility tree (no refs; inspection only).
-  - `--efficient` (or `--mode efficient`): compact role snapshot preset (interactive + compact + depth + lower maxChars).
-  - Config default (tool/CLI only): set `browser.snapshotDefaults.mode: "efficient"` to use efficient snapshots when the caller does not pass a mode (see [Gateway configuration](/gateway/configuration#browser-clawd-managed-browser)).
-  - Role snapshot options (`--interactive`, `--compact`, `--depth`, `--selector`) force a role-based snapshot with refs like `ref=e12`.
-  - `--frame "<iframe selector>"` scopes role snapshots to an iframe (pairs with role refs like `e12`).
-  - `--interactive` outputs a flat, easy-to-pick list of interactive elements (best for driving actions).
-  - `--labels` adds a viewport-only screenshot with overlayed ref labels (prints `MEDIA:<path>`).
-- `click`/`type`/etc require a `ref` from `snapshot` (either numeric `12` or role ref `e12`).
-  CSS selectors are intentionally not supported for actions.
+说明：
+- `upload` 与 `dialog` 是**arming** 调用；在触发选择器/对话框的点击/按键之前先调用。
+- `upload` 也可通过 `--input-ref` 或 `--element` 直接设置 file input。
+- `snapshot`：
+  - `--format ai`（默认，Playwright 安装时）：返回带数字 ref 的 AI 快照（`aria-ref="<n>"`）。
+  - `--format aria`：返回无障碍树（无 ref，仅用于检查）。
+  - `--efficient`（或 `--mode efficient`）：紧凑的 role snapshot 预设（interactive + compact + depth + 更低 maxChars）。
+  - 配置默认值（仅 tool/CLI）：设置 `browser.snapshotDefaults.mode: "efficient"`，当调用方未传 mode 时使用高效快照（见 [Gateway 配置](/gateway/configuration#browser-clawd-managed-browser)）。
+  - Role snapshot 选项（`--interactive`、`--compact`、`--depth`、`--selector`）会强制 role-based 快照，返回如 `ref=e12`。
+  - `--frame "<iframe selector>"` 将 role 快照限定在 iframe 内（与 `e12` 等 ref 搭配）。
+  - `--interactive` 输出可交互元素列表（最适合驱动动作）。
+  - `--labels` 附带视口截图并叠加 ref 标签（输出 `MEDIA:<path>`）。
+- `click`/`type` 等需要 `snapshot` 的 `ref`（数字 `12` 或 role ref `e12`）。
+  CSS 选择器刻意不支持用于动作。
 
-## Snapshots and refs
+## 快照与 ref
 
-Moltbot supports two “snapshot” styles:
+Moltbot 支持两种快照样式：
 
-- **AI snapshot (numeric refs)**: `moltbot browser snapshot` (default; `--format ai`)
-  - Output: a text snapshot that includes numeric refs.
-  - Actions: `moltbot browser click 12`, `moltbot browser type 23 "hello"`.
-  - Internally, the ref is resolved via Playwright’s `aria-ref`.
+- **AI 快照（数字 ref）**：`moltbot browser snapshot`（默认；`--format ai`）
+  - 输出：包含数字 ref 的文本快照。
+  - 动作：`moltbot browser click 12`、`moltbot browser type 23 "hello"`。
+  - 内部通过 Playwright 的 `aria-ref` 解析 ref。
 
-- **Role snapshot (role refs like `e12`)**: `moltbot browser snapshot --interactive` (or `--compact`, `--depth`, `--selector`, `--frame`)
-  - Output: a role-based list/tree with `[ref=e12]` (and optional `[nth=1]`).
-  - Actions: `moltbot browser click e12`, `moltbot browser highlight e12`.
-  - Internally, the ref is resolved via `getByRole(...)` (plus `nth()` for duplicates).
-  - Add `--labels` to include a viewport screenshot with overlayed `e12` labels.
+- **Role 快照（`e12` 等）**：`moltbot browser snapshot --interactive`（或 `--compact`、`--depth`、`--selector`、`--frame`）
+  - 输出：基于 role 的列表/树，包含 `[ref=e12]`（可选 `[nth=1]`）。
+  - 动作：`moltbot browser click e12`、`moltbot browser highlight e12`。
+  - 内部通过 `getByRole(...)` 解析（重复项使用 `nth()`）。
+  - 使用 `--labels` 可附带带 `e12` 标签的视口截图。
 
-Ref behavior:
-- Refs are **not stable across navigations**; if something fails, re-run `snapshot` and use a fresh ref.
-- If the role snapshot was taken with `--frame`, role refs are scoped to that iframe until the next role snapshot.
+Ref 行为：
+- ref **不会跨导航稳定**；若失败请重新 `snapshot` 获取新 ref。
+- 若 role 快照使用 `--frame`，role ref 会限定在该 iframe，直到下一次 role 快照。
 
-## Wait power-ups
+## Wait 增强
 
-You can wait on more than just time/text:
+不仅可等待时间/文本，还支持：
 
-- Wait for URL (globs supported by Playwright):
+- 等待 URL（Playwright glob）：
   - `moltbot browser wait --url "**/dash"`
-- Wait for load state:
+- 等待加载状态：
   - `moltbot browser wait --load networkidle`
-- Wait for a JS predicate:
+- 等待 JS 条件：
   - `moltbot browser wait --fn "window.ready===true"`
-- Wait for a selector to become visible:
+- 等待选择器可见：
   - `moltbot browser wait "#main"`
 
-These can be combined:
+可组合使用：
 
 ```bash
 moltbot browser wait "#main" \
@@ -456,26 +438,26 @@ moltbot browser wait "#main" \
   --timeout-ms 15000
 ```
 
-## Debug workflows
+## 调试流程
 
-When an action fails (e.g. “not visible”, “strict mode violation”, “covered”):
+当动作失败（如 “not visible”、“strict mode violation”、“covered”）：
 
 1. `moltbot browser snapshot --interactive`
-2. Use `click <ref>` / `type <ref>` (prefer role refs in interactive mode)
-3. If it still fails: `moltbot browser highlight <ref>` to see what Playwright is targeting
-4. If the page behaves oddly:
+2. 使用 `click <ref>` / `type <ref>`（优先使用 interactive 的 role ref）
+3. 仍失败：`moltbot browser highlight <ref>` 看 Playwright 命中的元素
+4. 页面异常时：
    - `moltbot browser errors --clear`
    - `moltbot browser requests --filter api --clear`
-5. For deep debugging: record a trace:
+5. 深度排查可录制 trace：
    - `moltbot browser trace start`
-   - reproduce the issue
-   - `moltbot browser trace stop` (prints `TRACE:<path>`)
+   - 复现问题
+   - `moltbot browser trace stop`（输出 `TRACE:<path>`）
 
-## JSON output
+## JSON 输出
 
-`--json` is for scripting and structured tooling.
+`--json` 用于脚本和结构化工具。
 
-Examples:
+示例：
 
 ```bash
 moltbot browser status --json
@@ -484,53 +466,53 @@ moltbot browser requests --filter api --json
 moltbot browser cookies --json
 ```
 
-Role snapshots in JSON include `refs` plus a small `stats` block (lines/chars/refs/interactive) so tools can reason about payload size and density.
+JSON 的 role 快照包含 `refs` 与 `stats`（lines/chars/refs/interactive），便于评估 payload 大小与密度。
 
-## State and environment knobs
+## 状态与环境设置
 
-These are useful for “make the site behave like X” workflows:
+这些设置适用于“让网站表现为某种环境”的场景：
 
-- Cookies: `cookies`, `cookies set`, `cookies clear`
-- Storage: `storage local|session get|set|clear`
-- Offline: `set offline on|off`
-- Headers: `set headers --json '{"X-Debug":"1"}'` (or `--clear`)
-- HTTP basic auth: `set credentials user pass` (or `--clear`)
-- Geolocation: `set geo <lat> <lon> --origin "https://example.com"` (or `--clear`)
-- Media: `set media dark|light|no-preference|none`
-- Timezone / locale: `set timezone ...`, `set locale ...`
-- Device / viewport:
-  - `set device "iPhone 14"` (Playwright device presets)
+- Cookies：`cookies`、`cookies set`、`cookies clear`
+- Storage：`storage local|session get|set|clear`
+- Offline：`set offline on|off`
+- Headers：`set headers --json '{"X-Debug":"1"}'`（或 `--clear`）
+- HTTP Basic Auth：`set credentials user pass`（或 `--clear`）
+- Geolocation：`set geo <lat> <lon> --origin "https://example.com"`（或 `--clear`）
+- Media：`set media dark|light|no-preference|none`
+- Timezone / locale：`set timezone ...`、`set locale ...`
+- Device / viewport：
+  - `set device "iPhone 14"`（Playwright 设备预设）
   - `set viewport 1280 720`
 
-## Security & privacy
+## 安全与隐私
 
-- The clawd browser profile may contain logged-in sessions; treat it as sensitive.
-- `browser act kind=evaluate` / `moltbot browser evaluate` and `wait --fn`
-  execute arbitrary JavaScript in the page context. Prompt injection can steer
-  this. Disable it with `browser.evaluateEnabled=false` if you do not need it.
-- For logins and anti-bot notes (X/Twitter, etc.), see [Browser login + X/Twitter posting](/tools/browser-login).
-- Keep the Gateway/node host private (loopback or tailnet-only).
-- Remote CDP endpoints are powerful; tunnel and protect them.
+- clawd 浏览器 profile 可能包含已登录会话；请视为敏感。
+- `browser act kind=evaluate` / `moltbot browser evaluate` 与 `wait --fn`
+  会在页面上下文执行任意 JS。提示注入可能影响此行为。
+  若不需要可设置 `browser.evaluateEnabled=false` 关闭。
+- 登录与反爬注意事项（X/Twitter 等）见 [Browser login + X/Twitter posting](/tools/browser-login)。
+- 保持 Gateway/node host 私有（仅 loopback 或 tailnet）。
+- 远程 CDP 端点权限很高；请通过隧道并加固。
 
-## Troubleshooting
+## 故障排查
 
-For Linux-specific issues (especially snap Chromium), see
-[Browser troubleshooting](/tools/browser-linux-troubleshooting).
+Linux 特定问题（尤其 snap Chromium）见
+[Browser troubleshooting](/tools/browser-linux-troubleshooting)。
 
-## Agent tools + how control works
+## Agent 工具与控制方式
 
-The agent gets **one tool** for browser automation:
+agent 只有**一个浏览器工具**：
 - `browser` — status/start/stop/tabs/open/focus/close/snapshot/screenshot/navigate/act
 
-How it maps:
-- `browser snapshot` returns a stable UI tree (AI or ARIA).
-- `browser act` uses the snapshot `ref` IDs to click/type/drag/select.
-- `browser screenshot` captures pixels (full page or element).
-- `browser` accepts:
-  - `profile` to choose a named browser profile (clawd, chrome, or remote CDP).
-  - `target` (`sandbox` | `host` | `node`) to select where the browser lives.
-  - In sandboxed sessions, `target: "host"` requires `agents.defaults.sandbox.browser.allowHostControl=true`.
-  - If `target` is omitted: sandboxed sessions default to `sandbox`, non-sandbox sessions default to `host`.
-  - If a browser-capable node is connected, the tool may auto-route to it unless you pin `target="host"` or `target="node"`.
+映射方式：
+- `browser snapshot` 返回稳定 UI 树（AI 或 ARIA）。
+- `browser act` 使用 `snapshot` 的 `ref` 进行点击/输入/拖拽/选择。
+- `browser screenshot` 捕获像素（全页或元素）。
+- `browser` 支持：
+  - `profile` 选择命名浏览器 profile（clawd、chrome、或远程 CDP）。
+  - `target`（`sandbox` | `host` | `node`）选择浏览器所在位置。
+  - 沙箱会话中，`target: "host"` 需要 `agents.defaults.sandbox.browser.allowHostControl=true`。
+  - 若省略 `target`：沙箱会话默认 `sandbox`，非沙箱会话默认 `host`。
+  - 若连接了可用的浏览器节点，工具可能自动路由，除非固定 `target="host"` 或 `target="node"`。
 
-This keeps the agent deterministic and avoids brittle selectors.
+这使 agent 保持确定性并避免脆弱的选择器。

@@ -1,146 +1,146 @@
 ---
-summary: "Install Moltbot (recommended installer, global install, or from source)"
+summary: "安装 Moltbot（推荐安装器、全局安装或源码安装）"
 read_when:
-  - Installing Moltbot
-  - You want to install from GitHub
+  - 安装 Moltbot
+  - 你想从 GitHub 安装
 ---
 
-# Install
+# 安装
 
-Use the installer unless you have a reason not to. It sets up the CLI and runs onboarding.
+除非有特殊原因，否则请使用安装器。它会设置 CLI 并运行引导流程。
 
-## Quick install (recommended)
+## 快速安装（推荐）
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash
 ```
 
-Windows (PowerShell):
+Windows（PowerShell）：
 
 ```powershell
 iwr -useb https://molt.bot/install.ps1 | iex
 ```
 
-Next step (if you skipped onboarding):
+下一步（如果你跳过了引导流程）：
 
 ```bash
 moltbot onboard --install-daemon
 ```
 
-## System requirements
+## 系统要求
 
 - **Node >=22**
-- macOS, Linux, or Windows via WSL2
-- `pnpm` only if you build from source
+- macOS、Linux，或通过 WSL2 的 Windows
+- 仅在源码构建时需要 `pnpm`
 
-## Choose your install path
+## 选择安装路径
 
-### 1) Installer script (recommended)
+### 1) 安装脚本（推荐）
 
-Installs `moltbot` globally via npm and runs onboarding.
+通过 npm 全局安装 `moltbot` 并运行引导流程。
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash
 ```
 
-Installer flags:
+安装器参数：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --help
 ```
 
-Details: [Installer internals](/install/installer).
+详情：[安装器内部机制](/install/installer)。
 
-Non-interactive (skip onboarding):
+非交互模式（跳过引导流程）：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --no-onboard
 ```
 
-### 2) Global install (manual)
+### 2) 全局安装（手动）
 
-If you already have Node:
+如果你已经安装了 Node：
 
 ```bash
 npm install -g moltbot@latest
 ```
 
-If you have libvips installed globally (common on macOS via Homebrew) and `sharp` fails to install, force prebuilt binaries:
+如果你已全局安装了 libvips（macOS 上通过 Homebrew 很常见）且 `sharp` 安装失败，强制使用预编译二进制：
 
 ```bash
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install -g moltbot@latest
 ```
 
-If you see `sharp: Please add node-gyp to your dependencies`, either install build tooling (macOS: Xcode CLT + `npm install -g node-gyp`) or use the `SHARP_IGNORE_GLOBAL_LIBVIPS=1` workaround above to skip the native build.
+如果看到 `sharp: Please add node-gyp to your dependencies`，要么安装构建工具（macOS：Xcode CLT + `npm install -g node-gyp`），要么使用上面的 `SHARP_IGNORE_GLOBAL_LIBVIPS=1` 变通方案跳过原生编译。
 
-Or:
+或者：
 
 ```bash
 pnpm add -g moltbot@latest
 ```
 
-Then:
+然后：
 
 ```bash
 moltbot onboard --install-daemon
 ```
 
-### 3) From source (contributors/dev)
+### 3) 从源码安装（贡献者和开发者）
 
 ```bash
 git clone https://github.com/moltbot/moltbot.git
 cd moltbot
 pnpm install
-pnpm ui:build # auto-installs UI deps on first run
+pnpm ui:build # 首次运行会自动安装 UI 依赖
 pnpm build
 moltbot onboard --install-daemon
 ```
 
-Tip: if you don’t have a global install yet, run repo commands via `pnpm moltbot ...`.
+提示：如果你尚未全局安装，可使用 `pnpm moltbot ...` 运行仓库内命令。
 
-### 4) Other install options
+### 4) 其他安装方式
 
-- Docker: [Docker](/install/docker)
-- Nix: [Nix](/install/nix)
-- Ansible: [Ansible](/install/ansible)
-- Bun (CLI only): [Bun](/install/bun)
+- Docker：[Docker](/install/docker)
+- Nix：[Nix](/install/nix)
+- Ansible：[Ansible](/install/ansible)
+- Bun（仅 CLI）：[Bun](/install/bun)
 
-## After install
+## 安装后
 
-- Run onboarding: `moltbot onboard --install-daemon`
-- Quick check: `moltbot doctor`
-- Check gateway health: `moltbot status` + `moltbot health`
-- Open the dashboard: `moltbot dashboard`
+- 运行引导：`moltbot onboard --install-daemon`
+- 快速检查：`moltbot doctor`
+- 检查 gateway 健康：`moltbot status` + `moltbot health`
+- 打开仪表盘：`moltbot dashboard`
 
-## Install method: npm vs git (installer)
+## 安装方式：npm 与 git（安装器）
 
-The installer supports two methods:
+安装器支持两种方式：
 
-- `npm` (default): `npm install -g moltbot@latest`
-- `git`: clone/build from GitHub and run from a source checkout
+- `npm`（默认）：`npm install -g moltbot@latest`
+- `git`：从 GitHub 克隆并构建，在源码检出目录中运行
 
-### CLI flags
+### CLI 参数
 
 ```bash
-# Explicit npm
+# 显式 npm
 curl -fsSL https://molt.bot/install.sh | bash -s -- --install-method npm
 
-# Install from GitHub (source checkout)
+# 从 GitHub 安装（源码检出）
 curl -fsSL https://molt.bot/install.sh | bash -s -- --install-method git
 ```
 
-Common flags:
+常用参数：
 
 - `--install-method npm|git`
-- `--git-dir <path>` (default: `~/moltbot`)
-- `--no-git-update` (skip `git pull` when using an existing checkout)
-- `--no-prompt` (disable prompts; required in CI/automation)
-- `--dry-run` (print what would happen; make no changes)
-- `--no-onboard` (skip onboarding)
+- `--git-dir <path>`（默认：`~/moltbot`）
+- `--no-git-update`（使用已有检出目录时跳过 `git pull`）
+- `--no-prompt`（禁用提示，CI 或自动化时必需）
+- `--dry-run`（只打印将要执行的动作，不做更改）
+- `--no-onboard`（跳过引导流程）
 
-### Environment variables
+### 环境变量
 
-Equivalent env vars (useful for automation):
+等价的环境变量（便于自动化）：
 
 - `CLAWDBOT_INSTALL_METHOD=git|npm`
 - `CLAWDBOT_GIT_DIR=...`
@@ -148,11 +148,11 @@ Equivalent env vars (useful for automation):
 - `CLAWDBOT_NO_PROMPT=1`
 - `CLAWDBOT_DRY_RUN=1`
 - `CLAWDBOT_NO_ONBOARD=1`
-- `SHARP_IGNORE_GLOBAL_LIBVIPS=0|1` (default: `1`; avoids `sharp` building against system libvips)
+- `SHARP_IGNORE_GLOBAL_LIBVIPS=0|1`（默认：`1`；避免 `sharp` 针对系统 libvips 构建）
 
-## Troubleshooting: `moltbot` not found (PATH)
+## 故障排查：找不到 `moltbot`（PATH）
 
-Quick diagnosis:
+快速诊断：
 
 ```bash
 node -v
@@ -161,21 +161,21 @@ npm prefix -g
 echo "$PATH"
 ```
 
-If `$(npm prefix -g)/bin` (macOS/Linux) or `$(npm prefix -g)` (Windows) is **not** present inside `echo "$PATH"`, your shell can’t find global npm binaries (including `moltbot`).
+如果 `$(npm prefix -g)/bin`（macOS/Linux）或 `$(npm prefix -g)`（Windows）**不在** `echo "$PATH"` 中，你的 shell 无法找到全局 npm 二进制（包括 `moltbot`）。
 
-Fix: add it to your shell startup file (zsh: `~/.zshrc`, bash: `~/.bashrc`):
+修复：把它加入 shell 启动文件（zsh：`~/.zshrc`，bash：`~/.bashrc`）：
 
 ```bash
 # macOS / Linux
 export PATH="$(npm prefix -g)/bin:$PATH"
 ```
 
-On Windows, add the output of `npm prefix -g` to your PATH.
+Windows 上，将 `npm prefix -g` 的输出加入 PATH。
 
-Then open a new terminal (or `rehash` in zsh / `hash -r` in bash).
+然后打开新的终端（或在 zsh 中执行 `rehash`，在 bash 中执行 `hash -r`）。
 
-## Update / uninstall
+## 更新与卸载
 
-- Updates: [Updating](/install/updating)
-- Migrate to a new machine: [Migrating](/install/migrating)
-- Uninstall: [Uninstall](/install/uninstall)
+- 更新：[Updating](/install/updating)
+- 迁移到新机器：[Migrating](/install/migrating)
+- 卸载：[Uninstall](/install/uninstall)

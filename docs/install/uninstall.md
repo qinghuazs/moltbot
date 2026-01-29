@@ -1,60 +1,60 @@
 ---
-summary: "Uninstall Moltbot completely (CLI, service, state, workspace)"
+summary: "完全卸载 Moltbot（CLI、服务、状态、工作区）"
 read_when:
-  - You want to remove Moltbot from a machine
-  - The gateway service is still running after uninstall
+  - 你想从机器上移除 Moltbot
+  - 卸载后 gateway 服务仍在运行
 ---
 
-# Uninstall
+# 卸载
 
-Two paths:
-- **Easy path** if `moltbot` is still installed.
-- **Manual service removal** if the CLI is gone but the service is still running.
+有两条路径：
+- **简单路径**：`moltbot` 仍在。
+- **手动移除服务**：CLI 已不存在但服务还在运行。
 
-## Easy path (CLI still installed)
+## 简单路径（CLI 仍已安装）
 
-Recommended: use the built-in uninstaller:
+推荐：使用内置卸载器：
 
 ```bash
 moltbot uninstall
 ```
 
-Non-interactive (automation / npx):
+非交互（自动化 / npx）：
 
 ```bash
 moltbot uninstall --all --yes --non-interactive
 npx -y moltbot uninstall --all --yes --non-interactive
 ```
 
-Manual steps (same result):
+手动步骤（结果相同）：
 
-1) Stop the gateway service:
+1) 停止 gateway 服务：
 
 ```bash
 moltbot gateway stop
 ```
 
-2) Uninstall the gateway service (launchd/systemd/schtasks):
+2) 卸载 gateway 服务（launchd/systemd/schtasks）：
 
 ```bash
 moltbot gateway uninstall
 ```
 
-3) Delete state + config:
+3) 删除状态与配置：
 
 ```bash
 rm -rf "${CLAWDBOT_STATE_DIR:-$HOME/.clawdbot}"
 ```
 
-If you set `CLAWDBOT_CONFIG_PATH` to a custom location outside the state dir, delete that file too.
+如果你将 `CLAWDBOT_CONFIG_PATH` 指向状态目录之外的自定义位置，也要删除该文件。
 
-4) Delete your workspace (optional, removes agent files):
+4) 删除工作区（可选，会移除 agent 文件）：
 
 ```bash
 rm -rf ~/clawd
 ```
 
-5) Remove the CLI install (pick the one you used):
+5) 移除 CLI 安装（选择你使用的方式）：
 
 ```bash
 npm rm -g moltbot
@@ -62,34 +62,34 @@ pnpm remove -g moltbot
 bun remove -g moltbot
 ```
 
-6) If you installed the macOS app:
+6) 如果你安装了 macOS 应用：
 
 ```bash
 rm -rf /Applications/Moltbot.app
 ```
 
-Notes:
-- If you used profiles (`--profile` / `CLAWDBOT_PROFILE`), repeat step 3 for each state dir (defaults are `~/.clawdbot-<profile>`).
-- In remote mode, the state dir lives on the **gateway host**, so run steps 1-4 there too.
+说明：
+- 如果你使用了 profiles（`--profile` / `CLAWDBOT_PROFILE`），对每个状态目录重复步骤 3（默认是 `~/.clawdbot-<profile>`）。
+- 远程模式下，状态目录在**gateway 主机**上，所以步骤 1-4 也要在那台机器执行。
 
-## Manual service removal (CLI not installed)
+## 手动移除服务（CLI 未安装）
 
-Use this if the gateway service keeps running but `moltbot` is missing.
+当 gateway 服务仍在运行但 `moltbot` 不存在时使用。
 
-### macOS (launchd)
+### macOS（launchd）
 
-Default label is `bot.molt.gateway` (or `bot.molt.<profile>`; legacy `com.clawdbot.*` may still exist):
+默认 label 是 `bot.molt.gateway`（或 `bot.molt.<profile>`；旧的 `com.clawdbot.*` 可能仍存在）：
 
 ```bash
 launchctl bootout gui/$UID/bot.molt.gateway
 rm -f ~/Library/LaunchAgents/bot.molt.gateway.plist
 ```
 
-If you used a profile, replace the label and plist name with `bot.molt.<profile>`. Remove any legacy `com.clawdbot.*` plists if present.
+如果你使用了 profile，把 label 和 plist 名替换为 `bot.molt.<profile>`。如存在旧的 `com.clawdbot.*` plists 也一并删除。
 
-### Linux (systemd user unit)
+### Linux（systemd 用户单元）
 
-Default unit name is `moltbot-gateway.service` (or `moltbot-gateway-<profile>.service`):
+默认 unit 名称是 `moltbot-gateway.service`（或 `moltbot-gateway-<profile>.service`）：
 
 ```bash
 systemctl --user disable --now moltbot-gateway.service
@@ -97,29 +97,29 @@ rm -f ~/.config/systemd/user/moltbot-gateway.service
 systemctl --user daemon-reload
 ```
 
-### Windows (Scheduled Task)
+### Windows（计划任务）
 
-Default task name is `Moltbot Gateway` (or `Moltbot Gateway (<profile>)`).
-The task script lives under your state dir.
+默认任务名称是 `Moltbot Gateway`（或 `Moltbot Gateway (<profile>)`）。
+任务脚本位于你的状态目录下。
 
 ```powershell
 schtasks /Delete /F /TN "Moltbot Gateway"
 Remove-Item -Force "$env:USERPROFILE\.clawdbot\gateway.cmd"
 ```
 
-If you used a profile, delete the matching task name and `~\.clawdbot-<profile>\gateway.cmd`.
+如果你使用了 profile，删除匹配的任务名称和 `~\.clawdbot-<profile>\gateway.cmd`。
 
-## Normal install vs source checkout
+## 普通安装与源码检出
 
-### Normal install (install.sh / npm / pnpm / bun)
+### 普通安装（install.sh / npm / pnpm / bun）
 
-If you used `https://molt.bot/install.sh` or `install.ps1`, the CLI was installed with `npm install -g moltbot@latest`.
-Remove it with `npm rm -g moltbot` (or `pnpm remove -g` / `bun remove -g` if you installed that way).
+如果你通过 `https://molt.bot/install.sh` 或 `install.ps1` 安装，CLI 是通过 `npm install -g moltbot@latest` 安装的。
+用 `npm rm -g moltbot` 移除（或 `pnpm remove -g` / `bun remove -g`）。
 
-### Source checkout (git clone)
+### 源码检出（git clone）
 
-If you run from a repo checkout (`git clone` + `moltbot ...` / `bun run moltbot ...`):
+如果你从仓库检出运行（`git clone` + `moltbot ...` / `bun run moltbot ...`）：
 
-1) Uninstall the gateway service **before** deleting the repo (use the easy path above or manual service removal).
-2) Delete the repo directory.
-3) Remove state + workspace as shown above.
+1) 在删除仓库前**先卸载 gateway 服务**（使用上面的简单路径或手动移除服务）。
+2) 删除仓库目录。
+3) 删除状态和工作区（如上）。

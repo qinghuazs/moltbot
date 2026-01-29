@@ -1,28 +1,28 @@
 ---
-summary: "Slash commands: text vs native, config, and supported commands"
+summary: "斜杠命令：文本 vs 原生、配置与支持的命令"
 read_when:
-  - Using or configuring chat commands
-  - Debugging command routing or permissions
+  - 使用或配置聊天命令
+  - 排查命令路由或权限
 ---
-# Slash commands
+# 斜杠命令
 
-Commands are handled by the Gateway. Most commands must be sent as a **standalone** message that starts with `/`.
-The host-only bash chat command uses `! <cmd>` (with `/bash <cmd>` as an alias).
+命令由 Gateway 处理。大多数命令必须作为**独立**消息发送，并以 `/` 开头。
+仅主机 bash 聊天命令使用 `! <cmd>`（`/bash <cmd>` 为别名）。
 
-There are two related systems:
+有两套相关系统：
 
-- **Commands**: standalone `/...` messages.
-- **Directives**: `/think`, `/verbose`, `/reasoning`, `/elevated`, `/exec`, `/model`, `/queue`.
-  - Directives are stripped from the message before the model sees it.
-  - In normal chat messages (not directive-only), they are treated as “inline hints” and do **not** persist session settings.
-  - In directive-only messages (the message contains only directives), they persist to the session and reply with an acknowledgement.
-  - Directives are only applied for **authorized senders** (channel allowlists/pairing plus `commands.useAccessGroups`).
-    Unauthorized senders see directives treated as plain text.
+- **Commands**：独立的 `/...` 消息。
+- **Directives**：`/think`、`/verbose`、`/reasoning`、`/elevated`、`/exec`、`/model`、`/queue`。
+  - Directives 会在模型看到消息前被剥离。
+  - 在普通聊天消息（非仅指令）中，它们作为“内联提示”处理，**不**持久化会话设置。
+  - 在仅指令消息中，它们会持久化到会话，并返回确认消息。
+  - Directives 仅对**授权发送者**生效（渠道 allowlist/配对 + `commands.useAccessGroups`）。
+    未授权发送者会把它们当普通文本。
 
-There are also a few **inline shortcuts** (allowlisted/authorized senders only): `/help`, `/commands`, `/status`, `/whoami` (`/id`).
-They run immediately, are stripped before the model sees the message, and the remaining text continues through the normal flow.
+还有少量**内联快捷指令**（仅 allowlist/授权发送者）：`/help`、`/commands`、`/status`、`/whoami`（`/id`）。
+它们会立即执行，在模型看到消息前被剥离，剩余文本继续正常流程。
 
-## Config
+## 配置
 
 ```json5
 {
@@ -40,94 +40,94 @@ They run immediately, are stripped before the model sees the message, and the re
 }
 ```
 
-- `commands.text` (default `true`) enables parsing `/...` in chat messages.
-  - On surfaces without native commands (WhatsApp/WebChat/Signal/iMessage/Google Chat/MS Teams), text commands still work even if you set this to `false`.
-- `commands.native` (default `"auto"`) registers native commands.
-  - Auto: on for Discord/Telegram; off for Slack (until you add slash commands); ignored for providers without native support.
-  - Set `channels.discord.commands.native`, `channels.telegram.commands.native`, or `channels.slack.commands.native` to override per provider (bool or `"auto"`).
-  - `false` clears previously registered commands on Discord/Telegram at startup. Slack commands are managed in the Slack app and are not removed automatically.
-- `commands.nativeSkills` (default `"auto"`) registers **skill** commands natively when supported.
-  - Auto: on for Discord/Telegram; off for Slack (Slack requires creating a slash command per skill).
-  - Set `channels.discord.commands.nativeSkills`, `channels.telegram.commands.nativeSkills`, or `channels.slack.commands.nativeSkills` to override per provider (bool or `"auto"`).
-- `commands.bash` (default `false`) enables `! <cmd>` to run host shell commands (`/bash <cmd>` is an alias; requires `tools.elevated` allowlists).
-- `commands.bashForegroundMs` (default `2000`) controls how long bash waits before switching to background mode (`0` backgrounds immediately).
-- `commands.config` (default `false`) enables `/config` (reads/writes `moltbot.json`).
-- `commands.debug` (default `false`) enables `/debug` (runtime-only overrides).
-- `commands.useAccessGroups` (default `true`) enforces allowlists/policies for commands.
+- `commands.text`（默认 `true`）启用聊天消息中的 `/...` 解析。
+  - 对于不支持原生命令的渠道（WhatsApp/WebChat/Signal/iMessage/Google Chat/MS Teams），即便设置为 `false`，文本命令仍可使用。
+- `commands.native`（默认 `"auto"`）注册原生命令。
+  - Auto：Discord/Telegram 开启；Slack 关闭（除非你添加 slash commands）；对不支持原生的 provider 忽略。
+  - 使用 `channels.discord.commands.native`、`channels.telegram.commands.native` 或 `channels.slack.commands.native` 按 provider 覆盖（bool 或 `"auto"`）。
+  - `false` 会在启动时清除 Discord/Telegram 已注册命令。Slack 命令由 Slack 应用管理，不会自动移除。
+- `commands.nativeSkills`（默认 `"auto"`）在支持的渠道注册**技能**命令。
+  - Auto：Discord/Telegram 开启；Slack 关闭（Slack 每个技能需要单独创建一个 slash command）。
+  - 使用 `channels.discord.commands.nativeSkills`、`channels.telegram.commands.nativeSkills` 或 `channels.slack.commands.nativeSkills` 覆盖（bool 或 `"auto"`）。
+- `commands.bash`（默认 `false`）启用 `! <cmd>` 执行宿主 shell 命令（`/bash <cmd>` 为别名；需要 `tools.elevated` allowlist）。
+- `commands.bashForegroundMs`（默认 `2000`）控制 bash 多久后切换为后台（`0` 立即后台）。
+- `commands.config`（默认 `false`）启用 `/config`（读取/写入 `moltbot.json`）。
+- `commands.debug`（默认 `false`）启用 `/debug`（仅运行时覆盖）。
+- `commands.useAccessGroups`（默认 `true`）对命令强制执行 allowlist/策略。
 
-## Command list
+## 命令列表
 
-Text + native (when enabled):
+文本 + 原生（启用时）：
 - `/help`
 - `/commands`
-- `/skill <name> [input]` (run a skill by name)
-- `/status` (show current status; includes provider usage/quota for the current model provider when available)
-- `/allowlist` (list/add/remove allowlist entries)
-- `/approve <id> allow-once|allow-always|deny` (resolve exec approval prompts)
-- `/context [list|detail|json]` (explain “context”; `detail` shows per-file + per-tool + per-skill + system prompt size)
-- `/whoami` (show your sender id; alias: `/id`)
-- `/subagents list|stop|log|info|send` (inspect, stop, log, or message sub-agent runs for the current session)
-- `/config show|get|set|unset` (persist config to disk, owner-only; requires `commands.config: true`)
-- `/debug show|set|unset|reset` (runtime overrides, owner-only; requires `commands.debug: true`)
-- `/usage off|tokens|full|cost` (per-response usage footer or local cost summary)
-- `/tts off|always|inbound|tagged|status|provider|limit|summary|audio` (control TTS; see [/tts](/tts))
-  - Discord: native command is `/voice` (Discord reserves `/tts`); text `/tts` still works.
+- `/skill <name> [input]`（按名称运行技能）
+- `/status`（显示当前状态；含当前模型提供方用量/配额，如可用）
+- `/allowlist`（列出/添加/移除 allowlist 条目）
+- `/approve <id> allow-once|allow-always|deny`（处理 exec 审批请求）
+- `/context [list|detail|json]`（解释“上下文”；`detail` 显示每文件/每工具/每技能/系统提示大小）
+- `/whoami`（显示你的 sender id；别名 `/id`）
+- `/subagents list|stop|log|info|send`（查看、停止、日志或发送子代理运行）
+- `/config show|get|set|unset`（持久化配置到磁盘，仅 owner；需要 `commands.config: true`）
+- `/debug show|set|unset|reset`（运行时覆盖，仅 owner；需要 `commands.debug: true`）
+- `/usage off|tokens|full|cost`（每条回复用量尾注或本地成本汇总）
+- `/tts off|always|inbound|tagged|status|provider|limit|summary|audio`（控制 TTS；见 [/tts](/tts)）
+  - Discord：原生命令为 `/voice`（Discord 保留 `/tts`）；文本 `/tts` 仍可用。
 - `/stop`
 - `/restart`
-- `/dock-telegram` (alias: `/dock_telegram`) (switch replies to Telegram)
-- `/dock-discord` (alias: `/dock_discord`) (switch replies to Discord)
-- `/dock-slack` (alias: `/dock_slack`) (switch replies to Slack)
-- `/activation mention|always` (groups only)
-- `/send on|off|inherit` (owner-only)
-- `/reset` or `/new [model]` (optional model hint; remainder is passed through)
-- `/think <off|minimal|low|medium|high|xhigh>` (dynamic choices by model/provider; aliases: `/thinking`, `/t`)
-- `/verbose on|full|off` (alias: `/v`)
-- `/reasoning on|off|stream` (alias: `/reason`; when on, sends a separate message prefixed `Reasoning:`; `stream` = Telegram draft only)
-- `/elevated on|off|ask|full` (alias: `/elev`; `full` skips exec approvals)
-- `/exec host=<sandbox|gateway|node> security=<deny|allowlist|full> ask=<off|on-miss|always> node=<id>` (send `/exec` to show current)
-- `/model <name>` (alias: `/models`; or `/<alias>` from `agents.defaults.models.*.alias`)
-- `/queue <mode>` (plus options like `debounce:2s cap:25 drop:summarize`; send `/queue` to see current settings)
-- `/bash <command>` (host-only; alias for `! <command>`; requires `commands.bash: true` + `tools.elevated` allowlists)
+- `/dock-telegram`（别名 `/dock_telegram`）（切换回复到 Telegram）
+- `/dock-discord`（别名 `/dock_discord`）（切换回复到 Discord）
+- `/dock-slack`（别名 `/dock_slack`）（切换回复到 Slack）
+- `/activation mention|always`（仅群聊）
+- `/send on|off|inherit`（仅 owner）
+- `/reset` 或 `/new [model]`（可选模型提示；剩余文本会继续传递）
+- `/think <off|minimal|low|medium|high|xhigh>`（按模型/provider 动态；别名 `/thinking`、`/t`）
+- `/verbose on|full|off`（别名 `/v`）
+- `/reasoning on|off|stream`（别名 `/reason`；开启时单独发送 `Reasoning:` 消息；`stream` = Telegram 草稿）
+- `/elevated on|off|ask|full`（别名 `/elev`；`full` 跳过 exec 审批）
+- `/exec host=<sandbox|gateway|node> security=<deny|allowlist|full> ask=<off|on-miss|always> node=<id>`（发送 `/exec` 可查看当前设置）
+- `/model <name>`（别名 `/models`；或 `/<alias>` 来自 `agents.defaults.models.*.alias`）
+- `/queue <mode>`（可带 `debounce:2s cap:25 drop:summarize` 等；发送 `/queue` 查看当前）
+- `/bash <command>`（仅宿主；`! <command>` 别名；需 `commands.bash: true` + `tools.elevated` allowlist）
 
-Text-only:
-- `/compact [instructions]` (see [/concepts/compaction](/concepts/compaction))
-- `! <command>` (host-only; one at a time; use `!poll` + `!stop` for long-running jobs)
-- `!poll` (check output / status; accepts optional `sessionId`; `/bash poll` also works)
-- `!stop` (stop the running bash job; accepts optional `sessionId`; `/bash stop` also works)
+仅文本：
+- `/compact [instructions]`（见 [/concepts/compaction](/concepts/compaction)）
+- `! <command>`（仅宿主；一次一个；长任务用 `!poll` + `!stop`）
+- `!poll`（检查输出/状态；可选 `sessionId`；`/bash poll` 同样可用）
+- `!stop`（停止 bash 任务；可选 `sessionId`；`/bash stop` 同样可用）
 
-Notes:
-- Commands accept an optional `:` between the command and args (e.g. `/think: high`, `/send: on`, `/help:`).
-- `/new <model>` accepts a model alias, `provider/model`, or a provider name (fuzzy match); if no match, the text is treated as the message body.
-- For full provider usage breakdown, use `moltbot status --usage`.
-- `/allowlist add|remove` requires `commands.config=true` and honors channel `configWrites`.
-- `/usage` controls the per-response usage footer; `/usage cost` prints a local cost summary from Moltbot session logs.
-- `/restart` is disabled by default; set `commands.restart: true` to enable it.
-- `/verbose` is meant for debugging and extra visibility; keep it **off** in normal use.
-- `/reasoning` (and `/verbose`) are risky in group settings: they may reveal internal reasoning or tool output you did not intend to expose. Prefer leaving them off, especially in group chats.
-- **Fast path:** command-only messages from allowlisted senders are handled immediately (bypass queue + model).
-- **Group mention gating:** command-only messages from allowlisted senders bypass mention requirements.
-- **Inline shortcuts (allowlisted senders only):** certain commands also work when embedded in a normal message and are stripped before the model sees the remaining text.
-  - Example: `hey /status` triggers a status reply, and the remaining text continues through the normal flow.
-- Currently: `/help`, `/commands`, `/status`, `/whoami` (`/id`).
-- Unauthorized command-only messages are silently ignored, and inline `/...` tokens are treated as plain text.
-- **Skill commands:** `user-invocable` skills are exposed as slash commands. Names are sanitized to `a-z0-9_` (max 32 chars); collisions get numeric suffixes (e.g. `_2`).
-  - `/skill <name> [input]` runs a skill by name (useful when native command limits prevent per-skill commands).
-  - By default, skill commands are forwarded to the model as a normal request.
-  - Skills may optionally declare `command-dispatch: tool` to route the command directly to a tool (deterministic, no model).
-  - Example: `/prose` (OpenProse plugin) — see [OpenProse](/prose).
-- **Native command arguments:** Discord uses autocomplete for dynamic options (and button menus when you omit required args). Telegram and Slack show a button menu when a command supports choices and you omit the arg.
+说明：
+- 命令可在命令与参数间加可选 `:`（如 `/think: high`、`/send: on`、`/help:`）。
+- `/new <model>` 可接受模型别名、`provider/model` 或 provider 名称（模糊匹配）；若未匹配，文本会作为消息正文。
+- 完整 provider 用量详见 `moltbot status --usage`。
+- `/allowlist add|remove` 需要 `commands.config=true` 且遵循渠道 `configWrites`。
+- `/usage` 控制每条回复用量尾注；`/usage cost` 输出 Moltbot 会话日志的本地成本汇总。
+- `/restart` 默认禁用；设置 `commands.restart: true` 启用。
+- `/verbose` 用于调试与可见性；正常使用应保持 **off**。
+- `/reasoning`（及 `/verbose`）在群聊中风险较高：可能泄露内部推理或工具输出。群聊建议关闭。
+- **快速路径：** allowlist 发送者的纯命令消息会立即处理（绕过队列 + 模型）。
+- **群聊提及门控：** allowlist 发送者的纯命令消息会绕过提及要求。
+- **内联快捷指令（仅 allowlist 发送者）：** 部分命令可内联在普通消息中并在模型前被剥离。
+  - 示例：`hey /status` 会触发状态回复，剩余文本继续正常流程。
+- 当前支持：`/help`、`/commands`、`/status`、`/whoami`（`/id`）。
+- 未授权的纯命令消息会被静默忽略；内联 `/...` token 视为普通文本。
+- **技能命令：** `user-invocable` 技能会暴露为斜杠命令。名称会清理为 `a-z0-9_`（最长 32）；冲突会添加数字后缀（如 `_2`）。
+  - `/skill <name> [input]` 按名称运行技能（当原生命令配额不足时很有用）。
+  - 默认会把技能命令作为普通请求转给模型。
+  - 技能可声明 `command-dispatch: tool`，将命令直接路由到工具（确定性，无模型）。
+  - 示例：`/prose`（OpenProse 插件）— 见 [OpenProse](/prose)。
+- **原生命令参数：** Discord 对动态选项有自动补全（缺少必填参数时提供按钮菜单）。Telegram 与 Slack 在命令支持选项时，会在缺少参数时显示按钮菜单。
 
-## Usage surfaces (what shows where)
+## 使用场景展示（在哪显示什么）
 
-- **Provider usage/quota** (example: “Claude 80% left”) shows up in `/status` for the current model provider when usage tracking is enabled.
-- **Per-response tokens/cost** is controlled by `/usage off|tokens|full` (appended to normal replies).
-- `/model status` is about **models/auth/endpoints**, not usage.
+- **Provider 用量/配额**（如 “Claude 80% left”）会在启用用量跟踪时显示在 `/status`（针对当前模型提供方）。
+- **每条回复 tokens/cost** 由 `/usage off|tokens|full` 控制（追加到正常回复）。
+- `/model status` 关注 **models/auth/endpoints**，不是用量。
 
-## Model selection (`/model`)
+## 模型选择（`/model`）
 
-`/model` is implemented as a directive.
+`/model` 以指令实现。
 
-Examples:
+示例：
 
 ```
 /model
@@ -138,16 +138,16 @@ Examples:
 /model status
 ```
 
-Notes:
-- `/model` and `/model list` show a compact, numbered picker (model family + available providers).
-- `/model <#>` selects from that picker (and prefers the current provider when possible).
-- `/model status` shows the detailed view, including configured provider endpoint (`baseUrl`) and API mode (`api`) when available.
+说明：
+- `/model` 与 `/model list` 显示紧凑编号选择器（模型家族 + 可用 provider）。
+- `/model <#>` 从选择器中选择（尽可能优先当前 provider）。
+- `/model status` 显示详细视图，包括 provider endpoint（`baseUrl`）与 API 模式（`api`）等信息。
 
-## Debug overrides
+## Debug 覆盖
 
-`/debug` lets you set **runtime-only** config overrides (memory, not disk). Owner-only. Disabled by default; enable with `commands.debug: true`.
+`/debug` 可设置**仅运行时**配置覆盖（内存态，不写盘）。仅 owner。默认禁用，需 `commands.debug: true`。
 
-Examples:
+示例：
 
 ```
 /debug show
@@ -157,15 +157,15 @@ Examples:
 /debug reset
 ```
 
-Notes:
-- Overrides apply immediately to new config reads, but do **not** write to `moltbot.json`.
-- Use `/debug reset` to clear all overrides and return to the on-disk config.
+说明：
+- 覆盖会立即生效，但**不会**写入 `moltbot.json`。
+- 使用 `/debug reset` 清除所有覆盖，回退到磁盘配置。
 
-## Config updates
+## 配置更新
 
-`/config` writes to your on-disk config (`moltbot.json`). Owner-only. Disabled by default; enable with `commands.config: true`.
+`/config` 会写入磁盘配置（`moltbot.json`）。仅 owner。默认禁用，需 `commands.config: true`。
 
-Examples:
+示例：
 
 ```
 /config show
@@ -175,16 +175,16 @@ Examples:
 /config unset messages.responsePrefix
 ```
 
-Notes:
-- Config is validated before write; invalid changes are rejected.
-- `/config` updates persist across restarts.
+说明：
+- 写入前会验证配置；无效变更会被拒绝。
+- `/config` 更新在重启后仍有效。
 
-## Surface notes
+## 渠道说明
 
-- **Text commands** run in the normal chat session (DMs share `main`, groups have their own session).
-- **Native commands** use isolated sessions:
-  - Discord: `agent:<agentId>:discord:slash:<userId>`
-  - Slack: `agent:<agentId>:slack:slash:<userId>` (prefix configurable via `channels.slack.slashCommand.sessionPrefix`)
-  - Telegram: `telegram:slash:<userId>` (targets the chat session via `CommandTargetSessionKey`)
-- **`/stop`** targets the active chat session so it can abort the current run.
-- **Slack:** `channels.slack.slashCommand` is still supported for a single `/clawd`-style command. If you enable `commands.native`, you must create one Slack slash command per built-in command (same names as `/help`). Command argument menus for Slack are delivered as ephemeral Block Kit buttons.
+- **文本命令** 在正常聊天会话中执行（私聊共享 `main`，群聊有独立会话）。
+- **原生命令** 使用隔离会话：
+  - Discord：`agent:<agentId>:discord:slash:<userId>`
+  - Slack：`agent:<agentId>:slack:slash:<userId>`（前缀可通过 `channels.slack.slashCommand.sessionPrefix` 配置）
+  - Telegram：`telegram:slash:<userId>`（通过 `CommandTargetSessionKey` 目标到聊天会话）
+- **`/stop`** 针对当前聊天会话，用于中止当前运行。
+- **Slack：** `channels.slack.slashCommand` 仍支持单个 `/clawd` 风格命令。若启用 `commands.native`，需在 Slack 应用中为每个内置命令创建一个 slash command（名称与 `/help` 列表一致）。Slack 的命令参数菜单以 ephemeral Block Kit 按钮提供。

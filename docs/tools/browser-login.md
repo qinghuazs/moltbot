@@ -1,47 +1,47 @@
 ---
-summary: "Manual logins for browser automation + X/Twitter posting"
+summary: "浏览器自动化的手动登录 + X/Twitter 发帖"
 read_when:
-  - You need to log into sites for browser automation
-  - You want to post updates to X/Twitter
+  - 需要为浏览器自动化登录站点
+  - 想在 X/Twitter 发布更新
 ---
 
-# Browser login + X/Twitter posting
+# 浏览器登录 + X/Twitter 发帖
 
-## Manual login (recommended)
+## 手动登录（推荐）
 
-When a site requires login, **sign in manually** in the **host** browser profile (the clawd browser).
+当站点需要登录时，请在**宿主**浏览器 profile（clawd 浏览器）中**手动登录**。
 
-Do **not** give the model your credentials. Automated logins often trigger anti‑bot defenses and can lock the account.
+不要把账号密码交给模型。自动化登录常触发反爬并可能锁号。
 
-Back to the main browser docs: [Browser](/tools/browser).
+返回主浏览器文档：[Browser](/tools/browser)。
 
-## Which Chrome profile is used?
+## 使用哪个 Chrome profile？
 
-Moltbot controls a **dedicated Chrome profile** (named `clawd`, orange‑tinted UI). This is separate from your daily browser profile.
+Moltbot 控制一个**专用 Chrome profile**（名为 `clawd`，UI 带橙色）。它与日常浏览器 profile 隔离。
 
-Two easy ways to access it:
+两种简单进入方式：
 
-1) **Ask the agent to open the browser** and then log in yourself.
-2) **Open it via CLI**:
+1) **让 agent 打开浏览器**，然后你手动登录。
+2) **用 CLI 打开**：
 
 ```bash
 moltbot browser start
 moltbot browser open https://x.com
 ```
 
-If you have multiple profiles, pass `--browser-profile <name>` (the default is `clawd`).
+若有多个 profile，传入 `--browser-profile <name>`（默认 `clawd`）。
 
-## X/Twitter: recommended flow
+## X/Twitter：推荐流程
 
-- **Read/search/threads:** use the **bird** CLI skill (no browser, stable).
-  - Repo: https://github.com/steipete/bird
-- **Post updates:** use the **host** browser (manual login).
+- **阅读/搜索/线程**：用 **bird** CLI skill（无需浏览器，稳定）。
+  - Repo：<https://github.com/steipete/bird>
+- **发布更新**：使用**宿主**浏览器（手动登录）。
 
-## Sandboxing + host browser access
+## 沙箱与宿主浏览器访问
 
-Sandboxed browser sessions are **more likely** to trigger bot detection. For X/Twitter (and other strict sites), prefer the **host** browser.
+沙箱浏览器会**更容易**触发反爬检测。X/Twitter 等严格站点建议使用**宿主**浏览器。
 
-If the agent is sandboxed, the browser tool defaults to the sandbox. To allow host control:
+若 agent 在沙箱中，browser 工具默认指向沙箱。要允许宿主控制：
 
 ```json5
 {
@@ -58,10 +58,10 @@ If the agent is sandboxed, the browser tool defaults to the sandbox. To allow ho
 }
 ```
 
-Then target the host browser:
+然后将浏览器指向宿主：
 
 ```bash
 moltbot browser open https://x.com --browser-profile clawd --target host
 ```
 
-Or disable sandboxing for the agent that posts updates.
+或对发布更新的 agent 直接关闭沙箱。
