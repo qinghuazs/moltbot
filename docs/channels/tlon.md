@@ -1,44 +1,41 @@
 ---
-summary: "Tlon/Urbit support status, capabilities, and configuration"
+summary: "Tlon/Urbit 支持状态、能力与配置"
 read_when:
-  - Working on Tlon/Urbit channel features
+  - 在处理 Tlon/Urbit 渠道功能时
 ---
-# Tlon (plugin)
+# Tlon（插件）
 
-Tlon is a decentralized messenger built on Urbit. Moltbot connects to your Urbit ship and can
-respond to DMs and group chat messages. Group replies require an @ mention by default and can
-be further restricted via allowlists.
+Tlon 是建立在 Urbit 之上的去中心化消息应用。Moltbot 连接到你的 Urbit ship，并可回复私聊与群聊消息。群聊默认需要 @ 提及，可通过 allowlist 进一步限制。
 
-Status: supported via plugin. DMs, group mentions, thread replies, and text-only media fallback
-(URL appended to caption). Reactions, polls, and native media uploads are not supported.
+状态：通过插件支持。支持私聊、群提及、线程回复与文本媒体兜底（在说明中追加 URL）。不支持反应、投票与原生媒体上传。
 
-## Plugin required
+## 需要插件
 
-Tlon ships as a plugin and is not bundled with the core install.
+Tlon 作为插件提供，不随核心安装包附带。
 
-Install via CLI (npm registry):
+通过 CLI 安装（npm registry）：
 
 ```bash
 moltbot plugins install @moltbot/tlon
 ```
 
-Local checkout (when running from a git repo):
+本地检出（从 git 仓库运行时）：
 
 ```bash
 moltbot plugins install ./extensions/tlon
 ```
 
-Details: [Plugins](/plugin)
+详情：见 [插件](/plugin)
 
-## Setup
+## 设置
 
-1) Install the Tlon plugin.
-2) Gather your ship URL and login code.
-3) Configure `channels.tlon`.
-4) Restart the gateway.
-5) DM the bot or mention it in a group channel.
+1) 安装 Tlon 插件。
+2) 准备 ship URL 与登录码。
+3) 配置 `channels.tlon`。
+4) 重启 gateway。
+5) 私聊机器人或在群频道中 @ 它。
 
-Minimal config (single account):
+最小配置（单账号）：
 
 ```json5
 {
@@ -53,9 +50,9 @@ Minimal config (single account):
 }
 ```
 
-## Group channels
+## 群频道
 
-Auto-discovery is enabled by default. You can also pin channels manually:
+默认启用自动发现。也可手动固定频道：
 
 ```json5
 {
@@ -70,7 +67,7 @@ Auto-discovery is enabled by default. You can also pin channels manually:
 }
 ```
 
-Disable auto-discovery:
+禁用自动发现：
 
 ```json5
 {
@@ -82,9 +79,9 @@ Disable auto-discovery:
 }
 ```
 
-## Access control
+## 访问控制
 
-DM allowlist (empty = allow all):
+私聊 allowlist（为空 = 全部允许）：
 
 ```json5
 {
@@ -96,7 +93,7 @@ DM allowlist (empty = allow all):
 }
 ```
 
-Group authorization (restricted by default):
+群聊授权（默认限制）：
 
 ```json5
 {
@@ -119,15 +116,15 @@ Group authorization (restricted by default):
 }
 ```
 
-## Delivery targets (CLI/cron)
+## 投递目标（CLI/cron）
 
-Use these with `moltbot message send` or cron delivery:
+用于 `moltbot message send` 或 cron 投递：
 
-- DM: `~sampel-palnet` or `dm/~sampel-palnet`
-- Group: `chat/~host-ship/channel` or `group:~host-ship/channel`
+- 私聊：`~sampel-palnet` 或 `dm/~sampel-palnet`
+- 群聊：`chat/~host-ship/channel` 或 `group:~host-ship/channel`
 
-## Notes
+## 说明
 
-- Group replies require a mention (e.g. `~your-bot-ship`) to respond.
-- Thread replies: if the inbound message is in a thread, Moltbot replies in-thread.
-- Media: `sendMedia` falls back to text + URL (no native upload).
+- 群聊回复需要提及（例如 `~your-bot-ship`）。
+- 线程回复：若入站消息在 thread 中，Moltbot 会在同一 thread 回复。
+- 媒体：`sendMedia` 会降级为文本 + URL（不支持原生上传）。

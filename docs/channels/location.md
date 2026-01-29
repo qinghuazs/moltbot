@@ -1,48 +1,48 @@
 ---
-summary: "Inbound channel location parsing (Telegram + WhatsApp) and context fields"
+summary: "渠道入站位置解析（Telegram + WhatsApp）与上下文字段"
 read_when:
-  - Adding or modifying channel location parsing
-  - Using location context fields in agent prompts or tools
+  - 添加或修改渠道位置解析
+  - 在 agent 提示或工具中使用位置上下文字段
 ---
 
-# Channel location parsing
+# 渠道位置解析
 
-Moltbot normalizes shared locations from chat channels into:
-- human-readable text appended to the inbound body, and
-- structured fields in the auto-reply context payload.
+Moltbot 会将聊天渠道共享的位置规范化为：
+- 追加到入站正文的可读文本，以及
+- 自动回复上下文 payload 中的结构化字段。
 
-Currently supported:
-- **Telegram** (location pins + venues + live locations)
-- **WhatsApp** (locationMessage + liveLocationMessage)
-- **Matrix** (`m.location` with `geo_uri`)
+当前支持：
+- **Telegram**（位置 pin + 场所 + 实时位置）
+- **WhatsApp**（locationMessage + liveLocationMessage）
+- **Matrix**（带 `geo_uri` 的 `m.location`）
 
-## Text formatting
-Locations are rendered as friendly lines without brackets:
+## 文本格式
+位置会被渲染为易读行且不带括号：
 
-- Pin:
+- Pin：
   - `📍 48.858844, 2.294351 ±12m`
-- Named place:
+- 命名地点：
   - `📍 Eiffel Tower — Champ de Mars, Paris (48.858844, 2.294351 ±12m)`
-- Live share:
+- 实时共享：
   - `🛰 Live location: 48.858844, 2.294351 ±12m`
 
-If the channel includes a caption/comment, it is appended on the next line:
+若渠道包含 caption/comment，会追加在下一行：
 ```
 📍 48.858844, 2.294351 ±12m
 Meet here
 ```
 
-## Context fields
-When a location is present, these fields are added to `ctx`:
-- `LocationLat` (number)
-- `LocationLon` (number)
-- `LocationAccuracy` (number, meters; optional)
-- `LocationName` (string; optional)
-- `LocationAddress` (string; optional)
-- `LocationSource` (`pin | place | live`)
-- `LocationIsLive` (boolean)
+## 上下文字段
+当包含位置时，会在 `ctx` 中添加这些字段：
+- `LocationLat`（number）
+- `LocationLon`（number）
+- `LocationAccuracy`（number，米；可选）
+- `LocationName`（string；可选）
+- `LocationAddress`（string；可选）
+- `LocationSource`（`pin | place | live`）
+- `LocationIsLive`（boolean）
 
-## Channel notes
-- **Telegram**: venues map to `LocationName/LocationAddress`; live locations use `live_period`.
-- **WhatsApp**: `locationMessage.comment` and `liveLocationMessage.caption` are appended as the caption line.
-- **Matrix**: `geo_uri` is parsed as a pin location; altitude is ignored and `LocationIsLive` is always false.
+## 渠道说明
+- **Telegram**：venue 映射到 `LocationName/LocationAddress`；实时位置使用 `live_period`。
+- **WhatsApp**：`locationMessage.comment` 与 `liveLocationMessage.caption` 会作为 caption 追加。
+- **Matrix**：`geo_uri` 解析为 pin 位置；忽略海拔，`LocationIsLive` 始终为 false。

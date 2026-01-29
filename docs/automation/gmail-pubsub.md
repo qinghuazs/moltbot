@@ -1,24 +1,23 @@
 ---
-summary: "Gmail Pub/Sub push wired into Moltbot webhooks via gogcli"
+summary: "通过 gogcli 将 Gmail Pub/Sub 推送接入 Moltbot webhook"
 read_when:
-  - Wiring Gmail inbox triggers to Moltbot
-  - Setting up Pub/Sub push for agent wake
+  - 将 Gmail 收件箱触发接入 Moltbot
+  - 设置 Pub/Sub push 用于唤醒 agent
 ---
 
 # Gmail Pub/Sub -> Moltbot
 
-Goal: Gmail watch -> Pub/Sub push -> `gog gmail watch serve` -> Moltbot webhook.
+目标：Gmail watch → Pub/Sub push → `gog gmail watch serve` → Moltbot webhook。
 
-## Prereqs
+## 前置条件
 
-- `gcloud` installed and logged in ([install guide](https://docs.cloud.google.com/sdk/docs/install-sdk)).
-- `gog` (gogcli) installed and authorized for the Gmail account ([gogcli.sh](https://gogcli.sh/)).
-- Moltbot hooks enabled (see [Webhooks](/automation/webhook)).
-- `tailscale` logged in ([tailscale.com](https://tailscale.com/)). Supported setup uses Tailscale Funnel for the public HTTPS endpoint.
-  Other tunnel services can work, but are DIY/unsupported and require manual wiring.
-  Right now, Tailscale is what we support.
+- 安装并登录 `gcloud`（[安装指南](https://docs.cloud.google.com/sdk/docs/install-sdk)）。
+- 安装并授权 `gog`（gogcli）用于 Gmail 账号（[gogcli.sh](https://gogcli.sh/)）。
+- 启用 Moltbot hooks（见 [Webhooks](/automation/webhook)）。
+- 登录 `tailscale`（[tailscale.com](https://tailscale.com/)）。推荐使用 Tailscale Funnel 作为公网 HTTPS 入口。
+  其他隧道服务也可用，但需手动配置（不提供支持）。目前仅支持 Tailscale。
 
-Example hook config (enable Gmail preset mapping):
+示例 hooks 配置（启用 Gmail 预设映射）：
 
 ```json5
 {
@@ -31,8 +30,7 @@ Example hook config (enable Gmail preset mapping):
 }
 ```
 
-To deliver the Gmail summary to a chat surface, override the preset with a mapping
-that sets `deliver` + optional `channel`/`to`:
+若要将 Gmail 摘要投递到聊天渠道，请用 mapping 覆盖 preset，设置 `deliver` + 可选 `channel`/`to`：
 
 ```json5
 {
@@ -59,14 +57,13 @@ that sets `deliver` + optional `channel`/`to`:
 }
 ```
 
-If you want a fixed channel, set `channel` + `to`. Otherwise `channel: "last"`
-uses the last delivery route (falls back to WhatsApp).
+若要固定渠道，设置 `channel` + `to`。否则 `channel: "last"` 使用最后一次投递路由（回退到 WhatsApp）。
 
-To force a cheaper model for Gmail runs, set `model` in the mapping
-(`provider/model` or alias). If you enforce `agents.defaults.models`, include it there.
+如需为 Gmail 运行强制使用更便宜的模型，在 mapping 中设置 `model`
+（`provider/model` 或别名）。若启用 `agents.defaults.models` 限制，需将该模型加入 allowlist。
 
-To set a default model and thinking level specifically for Gmail hooks, add
-`hooks.gmail.model` / `hooks.gmail.thinking` in your config:
+如需为 Gmail hook 设置默认模型与思考级别，在配置中添加
+`hooks.gmail.model` / `hooks.gmail.thinking`：
 
 ```json5
 {
@@ -79,80 +76,80 @@ To set a default model and thinking level specifically for Gmail hooks, add
 }
 ```
 
-Notes:
-- Per-hook `model`/`thinking` in the mapping still overrides these defaults.
-- Fallback order: `hooks.gmail.model` → `agents.defaults.model.fallbacks` → primary (auth/rate-limit/timeouts).
-- If `agents.defaults.models` is set, the Gmail model must be in the allowlist.
-- Gmail hook content is wrapped with external-content safety boundaries by default.
-  To disable (dangerous), set `hooks.gmail.allowUnsafeExternalContent: true`.
+说明：
+- mapping 中的 `model`/`thinking` 仍会覆盖这些默认值。
+- 回退顺序：`hooks.gmail.model` → `agents.defaults.model.fallbacks` → primary（auth/限流/超时）。
+- 若设置 `agents.defaults.models`，Gmail 模型必须在 allowlist 中。
+- Gmail hook 内容默认包裹外部内容安全边界。
+  若需禁用（危险），设置 `hooks.gmail.allowUnsafeExternalContent: true`。
 
-To customize payload handling further, add `hooks.mappings` or a JS/TS transform module
-under `hooks.transformsDir` (see [Webhooks](/automation/webhook)).
+如需进一步自定义 payload 处理，可添加 `hooks.mappings` 或在 `hooks.transformsDir`
+中放置 JS/TS transform 模块（见 [Webhooks](/automation/webhook)）。
 
-## Wizard (recommended)
+## 向导（推荐）
 
-Use the Moltbot helper to wire everything together (installs deps on macOS via brew):
+使用 Moltbot 助手一键打通（macOS 会通过 brew 安装依赖）：
 
 ```bash
 moltbot webhooks gmail setup \
   --account moltbot@gmail.com
 ```
 
-Defaults:
-- Uses Tailscale Funnel for the public push endpoint.
-- Writes `hooks.gmail` config for `moltbot webhooks gmail run`.
-- Enables the Gmail hook preset (`hooks.presets: ["gmail"]`).
+默认行为：
+- 使用 Tailscale Funnel 作为公网 push 入口。
+- 写入 `hooks.gmail` 配置供 `moltbot webhooks gmail run` 使用。
+- 启用 Gmail hook 预设（`hooks.presets: ["gmail"]`）。
 
-Path note: when `tailscale.mode` is enabled, Moltbot automatically sets
-`hooks.gmail.serve.path` to `/` and keeps the public path at
-`hooks.gmail.tailscale.path` (default `/gmail-pubsub`) because Tailscale
-strips the set-path prefix before proxying.
-If you need the backend to receive the prefixed path, set
-`hooks.gmail.tailscale.target` (or `--tailscale-target`) to a full URL like
-`http://127.0.0.1:8788/gmail-pubsub` and match `hooks.gmail.serve.path`.
+路径说明：当启用 `tailscale.mode` 时，Moltbot 自动设置
+`hooks.gmail.serve.path` 为 `/`，并将公网路径保持为
+`hooks.gmail.tailscale.path`（默认 `/gmail-pubsub`），因为 Tailscale
+在转发前会剥离 set-path 前缀。
+若需要后端收到带前缀路径，请设置
+`hooks.gmail.tailscale.target`（或 `--tailscale-target`）为完整 URL，例如
+`http://127.0.0.1:8788/gmail-pubsub`，并匹配 `hooks.gmail.serve.path`。
 
-Want a custom endpoint? Use `--push-endpoint <url>` or `--tailscale off`.
+需要自定义端点？用 `--push-endpoint <url>` 或 `--tailscale off`。
 
-Platform note: on macOS the wizard installs `gcloud`, `gogcli`, and `tailscale`
-via Homebrew; on Linux install them manually first.
+平台说明：macOS 上向导会通过 Homebrew 安装 `gcloud`、`gogcli` 与 `tailscale`；
+Linux 上需先手动安装。
 
-Gateway auto-start (recommended):
-- When `hooks.enabled=true` and `hooks.gmail.account` is set, the Gateway starts
-  `gog gmail watch serve` on boot and auto-renews the watch.
-- Set `CLAWDBOT_SKIP_GMAIL_WATCHER=1` to opt out (useful if you run the daemon yourself).
-- Do not run the manual daemon at the same time, or you will hit
-  `listen tcp 127.0.0.1:8788: bind: address already in use`.
+Gateway 自动启动（推荐）：
+- 当 `hooks.enabled=true` 且设置了 `hooks.gmail.account`，Gateway 会在启动时运行
+  `gog gmail watch serve` 并自动续期。
+- 设置 `CLAWDBOT_SKIP_GMAIL_WATCHER=1` 可选择退出（当你自行运行守护进程时有用）。
+- 不要同时运行手动守护进程，否则会出现
+  `listen tcp 127.0.0.1:8788: bind: address already in use`。
 
-Manual daemon (starts `gog gmail watch serve` + auto-renew):
+手动守护进程（启动 `gog gmail watch serve` + 自动续期）：
 
 ```bash
 moltbot webhooks gmail run
 ```
 
-## One-time setup
+## 一次性设置
 
-1) Select the GCP project **that owns the OAuth client** used by `gog`.
+1) 选择**拥有 OAuth 客户端**的 GCP 项目：
 
 ```bash
 gcloud auth login
 gcloud config set project <project-id>
 ```
 
-Note: Gmail watch requires the Pub/Sub topic to live in the same project as the OAuth client.
+注意：Gmail watch 要求 Pub/Sub 主题与 OAuth 客户端在同一项目中。
 
-2) Enable APIs:
+2) 启用 API：
 
 ```bash
 gcloud services enable gmail.googleapis.com pubsub.googleapis.com
 ```
 
-3) Create a topic:
+3) 创建 topic：
 
 ```bash
 gcloud pubsub topics create gog-gmail-watch
 ```
 
-4) Allow Gmail push to publish:
+4) 允许 Gmail push 发布：
 
 ```bash
 gcloud pubsub topics add-iam-policy-binding gog-gmail-watch \
@@ -160,7 +157,7 @@ gcloud pubsub topics add-iam-policy-binding gog-gmail-watch \
   --role=roles/pubsub.publisher
 ```
 
-## Start the watch
+## 启动 watch
 
 ```bash
 gog gmail watch start \
@@ -169,11 +166,11 @@ gog gmail watch start \
   --topic projects/<project-id>/topics/gog-gmail-watch
 ```
 
-Save the `history_id` from the output (for debugging).
+记录输出中的 `history_id`（用于排障）。
 
-## Run the push handler
+## 运行 push 处理器
 
-Local example (shared token auth):
+本地示例（共享 token 认证）：
 
 ```bash
 gog gmail watch serve \
@@ -188,23 +185,23 @@ gog gmail watch serve \
   --max-bytes 20000
 ```
 
-Notes:
-- `--token` protects the push endpoint (`x-gog-token` or `?token=`).
-- `--hook-url` points to Moltbot `/hooks/gmail` (mapped; isolated run + summary to main).
-- `--include-body` and `--max-bytes` control the body snippet sent to Moltbot.
+说明：
+- `--token` 保护 push 端点（`x-gog-token` 或 `?token=`）。
+- `--hook-url` 指向 Moltbot `/hooks/gmail`（映射；隔离运行 + 主会话摘要）。
+- `--include-body` 与 `--max-bytes` 控制发送给 Moltbot 的正文片段。
 
-Recommended: `moltbot webhooks gmail run` wraps the same flow and auto-renews the watch.
+推荐使用 `moltbot webhooks gmail run`，它封装同样流程并自动续期。
 
-## Expose the handler (advanced, unsupported)
+## 暴露处理器（高级，不支持）
 
-If you need a non-Tailscale tunnel, wire it manually and use the public URL in the push
-subscription (unsupported, no guardrails):
+若需要非 Tailscale 隧道，请手动配置并在 push 订阅中使用公网 URL
+（不提供支持，无防护）：
 
 ```bash
 cloudflared tunnel --url http://127.0.0.1:8788 --no-autoupdate
 ```
 
-Use the generated URL as the push endpoint:
+使用生成的 URL 作为 push endpoint：
 
 ```bash
 gcloud pubsub subscriptions create gog-gmail-watch-push \
@@ -212,15 +209,15 @@ gcloud pubsub subscriptions create gog-gmail-watch-push \
   --push-endpoint "https://<public-url>/gmail-pubsub?token=<shared>"
 ```
 
-Production: use a stable HTTPS endpoint and configure Pub/Sub OIDC JWT, then run:
+生产环境：使用稳定 HTTPS 端点并配置 Pub/Sub OIDC JWT，然后运行：
 
 ```bash
 gog gmail watch serve --verify-oidc --oidc-email <svc@...>
 ```
 
-## Test
+## 测试
 
-Send a message to the watched inbox:
+向被监控的收件箱发送一封邮件：
 
 ```bash
 gog gmail send \
@@ -230,20 +227,20 @@ gog gmail send \
   --body "ping"
 ```
 
-Check watch state and history:
+检查 watch 状态与历史：
 
 ```bash
 gog gmail watch status --account moltbot@gmail.com
 gog gmail history --account moltbot@gmail.com --since <historyId>
 ```
 
-## Troubleshooting
+## 故障排查
 
-- `Invalid topicName`: project mismatch (topic not in the OAuth client project).
-- `User not authorized`: missing `roles/pubsub.publisher` on the topic.
-- Empty messages: Gmail push only provides `historyId`; fetch via `gog gmail history`.
+- `Invalid topicName`：项目不匹配（topic 不在 OAuth 客户端项目内）。
+- `User not authorized`：topic 缺少 `roles/pubsub.publisher`。
+- 空消息：Gmail push 仅提供 `historyId`，需通过 `gog gmail history` 拉取。
 
-## Cleanup
+## 清理
 
 ```bash
 gog gmail watch stop --account moltbot@gmail.com

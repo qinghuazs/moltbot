@@ -1,16 +1,16 @@
 ---
-summary: "Poll sending via gateway + CLI"
+summary: "通过 gateway + CLI 发送投票"
 read_when:
-  - Adding or modifying poll support
-  - Debugging poll sends from the CLI or gateway
+  - 添加或修改投票支持
+  - 排查 CLI 或 gateway 的投票发送
 ---
-# Polls
+# 投票
 
 
-## Supported channels
-- WhatsApp (web channel)
+## 支持的渠道
+- WhatsApp（web 渠道）
 - Discord
-- MS Teams (Adaptive Cards)
+- MS Teams（Adaptive Cards）
 
 ## CLI
 
@@ -32,32 +32,31 @@ moltbot message poll --channel msteams --target conversation:19:abc@thread.tacv2
   --poll-question "Lunch?" --poll-option "Pizza" --poll-option "Sushi"
 ```
 
-Options:
-- `--channel`: `whatsapp` (default), `discord`, or `msteams`
-- `--poll-multi`: allow selecting multiple options
-- `--poll-duration-hours`: Discord-only (defaults to 24 when omitted)
+选项：
+- `--channel`：`whatsapp`（默认）、`discord` 或 `msteams`
+- `--poll-multi`：允许多选
+- `--poll-duration-hours`：仅 Discord（省略时默认 24）
 
 ## Gateway RPC
 
-Method: `poll`
+方法：`poll`
 
-Params:
-- `to` (string, required)
-- `question` (string, required)
-- `options` (string[], required)
-- `maxSelections` (number, optional)
-- `durationHours` (number, optional)
-- `channel` (string, optional, default: `whatsapp`)
-- `idempotencyKey` (string, required)
+参数：
+- `to`（string，必填）
+- `question`（string，必填）
+- `options`（string[]，必填）
+- `maxSelections`（number，可选）
+- `durationHours`（number，可选）
+- `channel`（string，可选，默认 `whatsapp`）
+- `idempotencyKey`（string，必填）
 
-## Channel differences
-- WhatsApp: 2-12 options, `maxSelections` must be within option count, ignores `durationHours`.
-- Discord: 2-10 options, `durationHours` clamped to 1-768 hours (default 24). `maxSelections > 1` enables multi-select; Discord does not support a strict selection count.
-- MS Teams: Adaptive Card polls (Moltbot-managed). No native poll API; `durationHours` is ignored.
+## 渠道差异
+- WhatsApp：2–12 个选项，`maxSelections` 必须在选项数量内，忽略 `durationHours`。
+- Discord：2–10 个选项，`durationHours` 限制为 1–768 小时（默认 24）。`maxSelections > 1` 启用多选；Discord 不支持“严格选 N 个”。
+- MS Teams：Adaptive Card 投票（由 Moltbot 管理）。无原生投票 API，忽略 `durationHours`。
 
-## Agent tool (Message)
-Use the `message` tool with `poll` action (`to`, `pollQuestion`, `pollOption`, optional `pollMulti`, `pollDurationHours`, `channel`).
+## Agent 工具（Message）
+使用 `message` 工具的 `poll` 动作（`to`、`pollQuestion`、`pollOption`，可选 `pollMulti`、`pollDurationHours`、`channel`）。
 
-Note: Discord has no “pick exactly N” mode; `pollMulti` maps to multi-select.
-Teams polls are rendered as Adaptive Cards and require the gateway to stay online
-to record votes in `~/.clawdbot/msteams-polls.json`.
+注意：Discord 没有“必须选 N 个”模式；`pollMulti` 只是多选。
+Teams 投票以 Adaptive Card 渲染，需要 gateway 在线以记录投票结果（存储于 `~/.clawdbot/msteams-polls.json`）。
