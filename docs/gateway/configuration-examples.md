@@ -1,17 +1,17 @@
 ---
-summary: "Schema-accurate configuration examples for common Moltbot setups"
+summary: "符合 schema 的常见 Moltbot 配置示例"
 read_when:
-  - Learning how to configure Moltbot
-  - Looking for configuration examples
-  - Setting up Moltbot for the first time
+  - 学习如何配置 Moltbot
+  - 查找配置示例
+  - 第一次设置 Moltbot
 ---
-# Configuration Examples
+# 配置示例
 
-Examples below are aligned with the current config schema. For the exhaustive reference and per-field notes, see [Configuration](/gateway/configuration).
+以下示例与当前配置 schema 对齐。完整参考与字段说明见 [Configuration](/gateway/configuration)。
 
-## Quick start
+## 快速开始
 
-### Absolute minimum
+### 绝对最小配置
 ```json5
 {
   agent: { workspace: "~/clawd" },
@@ -19,9 +19,9 @@ Examples below are aligned with the current config schema. For the exhaustive re
 }
 ```
 
-Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
+保存到 `~/.clawdbot/moltbot.json`，然后你可以从该号码私聊机器人。
 
-### Recommended starter
+### 推荐起步配置
 ```json5
 {
   identity: {
@@ -42,13 +42,13 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-## Expanded example (major options)
+## 扩展示例（主要选项）
 
-> JSON5 lets you use comments and trailing commas. Regular JSON works too.
+> JSON5 支持注释与尾逗号，普通 JSON 也可。
 
 ```json5
 {
-  // Environment + shell
+  // 环境与 shell
   env: {
     OPENROUTER_API_KEY: "sk-or-...",
     vars: {
@@ -60,7 +60,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Auth profile metadata (secrets live in auth-profiles.json)
+  // 认证配置元数据（密钥在 auth-profiles.json 中）
   auth: {
     profiles: {
       "anthropic:me@example.com": { provider: "anthropic", mode: "oauth", email: "me@example.com" },
@@ -75,14 +75,14 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Identity
+  // 身份
   identity: {
     name: "Samantha",
     theme: "helpful sloth",
     emoji: "🦥"
   },
 
-  // Logging
+  // 日志
   logging: {
     level: "info",
     file: "/tmp/moltbot/moltbot.log",
@@ -91,7 +91,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     redactSensitive: "tools"
   },
 
-  // Message formatting
+  // 消息格式
   messages: {
     messagePrefix: "[moltbot]",
     responsePrefix: ">",
@@ -99,7 +99,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     ackReactionScope: "group-mentions"
   },
 
-  // Routing + queue
+  // 路由与队列
   routing: {
     groupChat: {
       mentionPatterns: ["@clawd", "moltbot"],
@@ -122,7 +122,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Tooling
+  // 工具
   tools: {
     media: {
       audio: {
@@ -130,7 +130,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
         maxBytes: 20971520,
         models: [
           { provider: "openai", model: "gpt-4o-mini-transcribe" },
-          // Optional CLI fallback (Whisper binary):
+          // 可选 CLI 兜底（Whisper 二进制）：
           // { type: "cli", command: "whisper", args: ["--model", "base", "{{MediaPath}}"] }
         ],
         timeoutSeconds: 120
@@ -143,7 +143,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Session behavior
+  // 会话行为
   session: {
     scope: "per-sender",
     reset: {
@@ -165,7 +165,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Channels
+  // 渠道
   channels: {
     whatsapp: {
       dmPolicy: "pairing",
@@ -187,7 +187,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     discord: {
       enabled: true,
       token: "YOUR_DISCORD_BOT_TOKEN",
-      dm: { enabled: true, allowFrom: ["steipete"] },
+      dm: { enabled: true, allowFrom: ["user"] },
       guilds: {
         "123456789012345678": {
           slug: "friends-of-clawd",
@@ -217,7 +217,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Agent runtime
+  // Agent 运行时
   agents: {
     defaults: {
       workspace: "~/clawd",
@@ -302,7 +302,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
       allowFrom: {
         whatsapp: ["+15555550123"],
         telegram: ["123456789"],
-        discord: ["steipete"],
+        discord: ["user"],
         slack: ["U123"],
         signal: ["+15555550123"],
         imessage: ["user@example.com"],
@@ -311,7 +311,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Custom model providers
+  // 自定义模型提供方
   models: {
     mode: "merge",
     providers: {
@@ -337,7 +337,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Cron jobs
+  // 定时任务
   cron: {
     enabled: true,
     store: "~/.clawdbot/cron/cron.json",
@@ -384,7 +384,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
     }
   },
 
-  // Gateway + networking
+  // 网关与网络
   gateway: {
     mode: "local",
     port: 18789,
@@ -421,9 +421,9 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-## Common patterns
+## 常见模式
 
-### Multi-platform setup
+### 多平台配置
 ```json5
 {
   agent: { workspace: "~/clawd" },
@@ -443,7 +443,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-### OAuth with API key failover
+### OAuth + API 密钥故障切换
 ```json5
 {
   auth: {
@@ -472,7 +472,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-### Anthropic subscription + API key, MiniMax fallback
+### Anthropic 订阅 + API 密钥，MiniMax 兜底
 ```json5
 {
   auth: {
@@ -510,7 +510,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-### Work bot (restricted access)
+### 工作机器人（受限访问）
 ```json5
 {
   identity: {
@@ -534,7 +534,7 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-### Local models only
+### 仅本地模型
 ```json5
 {
   agent: {
@@ -565,9 +565,9 @@ Save to `~/.clawdbot/moltbot.json` and you can DM the bot from that number.
 }
 ```
 
-## Tips
+## 提示
 
-- If you set `dmPolicy: "open"`, the matching `allowFrom` list must include `"*"`.
-- Provider IDs differ (phone numbers, user IDs, channel IDs). Use the provider docs to confirm the format.
-- Optional sections to add later: `web`, `browser`, `ui`, `discovery`, `canvasHost`, `talk`, `signal`, `imessage`.
-- See [Providers](/channels/whatsapp) and [Troubleshooting](/gateway/troubleshooting) for deeper setup notes.
+- 如果你设置 `dmPolicy: "open"`，对应的 `allowFrom` 必须包含 `"*"`。
+- Provider ID 格式不同（手机号、用户 ID、频道 ID）。请参考对应提供方文档确认格式。
+- 后续可选添加的部分：`web`、`browser`、`ui`、`discovery`、`canvasHost`、`talk`、`signal`、`imessage`。
+- 更深入的配置说明见 [Providers](/channels/whatsapp) 与 [Troubleshooting](/gateway/troubleshooting)。

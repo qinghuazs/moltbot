@@ -1,32 +1,31 @@
 ---
-summary: "Model authentication: OAuth, API keys, and setup-token"
+summary: "模型认证：OAuth、API 密钥和 setup-token"
 read_when:
-  - Debugging model auth or OAuth expiry
-  - Documenting authentication or credential storage
+  - 排查模型认证或 OAuth 过期问题
+  - 编写认证或凭据存储相关文档
 ---
-# Authentication
+# 认证
 
-Moltbot supports OAuth and API keys for model providers. For Anthropic
-accounts, we recommend using an **API key**. For Claude subscription access,
-use the long‑lived token created by `claude setup-token`.
+Moltbot 支持模型提供方的 OAuth 和 API 密钥。对于 Anthropic
+账户，我们建议使用 **API 密钥**。如果使用 Claude 订阅访问，
+请使用 `claude setup-token` 创建的长期令牌。
 
-See [/concepts/oauth](/concepts/oauth) for the full OAuth flow and storage
-layout.
+完整的 OAuth 流程与存储布局请见：[/concepts/oauth](/concepts/oauth)。
 
-## Recommended Anthropic setup (API key)
+## 推荐的 Anthropic 配置（API 密钥）
 
-If you’re using Anthropic directly, use an API key.
+如果你直接使用 Anthropic，请使用 API 密钥。
 
-1) Create an API key in the Anthropic Console.
-2) Put it on the **gateway host** (the machine running `moltbot gateway`).
+1) 在 Anthropic Console 中创建一个 API 密钥。
+2) 将其放在 **网关主机**（运行 `moltbot gateway` 的机器）上。
 
 ```bash
 export ANTHROPIC_API_KEY="..."
 moltbot models status
 ```
 
-3) If the Gateway runs under systemd/launchd, prefer putting the key in
-`~/.clawdbot/.env` so the daemon can read it:
+3) 如果 Gateway 运行在 systemd/launchd 下，建议把密钥放在
+`~/.clawdbot/.env` 中，方便守护进程读取：
 
 ```bash
 cat >> ~/.clawdbot/.env <<'EOF'
@@ -34,84 +33,86 @@ ANTHROPIC_API_KEY=...
 EOF
 ```
 
-Then restart the daemon (or restart your Gateway process) and re-check:
+然后重启守护进程（或重启你的 Gateway 进程）并重新检查：
 
 ```bash
 moltbot models status
 moltbot doctor
 ```
 
-If you’d rather not manage env vars yourself, the onboarding wizard can store
-API keys for daemon use: `moltbot onboard`.
+如果你不想手动管理环境变量，也可以使用引导向导存储
+可供守护进程使用的 API 密钥：`moltbot onboard`。
 
-See [Help](/help) for details on env inheritance (`env.shellEnv`,
-`~/.clawdbot/.env`, systemd/launchd).
+关于环境变量继承（`env.shellEnv`、`~/.clawdbot/.env`、systemd/launchd）的细节，
+请参见 [Help](/help)。
 
-## Anthropic: setup-token (subscription auth)
+## Anthropic：setup-token（订阅认证）
 
-For Anthropic, the recommended path is an **API key**. If you’re using a Claude
-subscription, the setup-token flow is also supported. Run it on the **gateway host**:
+对 Anthropic 而言，推荐路径仍是 **API 密钥**。如果你使用 Claude
+订阅，也支持 setup-token 流程。请在 **网关主机** 上运行：
 
 ```bash
 claude setup-token
 ```
 
-Then paste it into Moltbot:
+然后粘贴到 Moltbot：
 
 ```bash
 moltbot models auth setup-token --provider anthropic
 ```
 
-If the token was created on another machine, paste it manually:
+如果令牌是在另一台机器上创建的，请手动粘贴：
 
 ```bash
 moltbot models auth paste-token --provider anthropic
 ```
 
-If you see an Anthropic error like:
+如果你看到类似这样的 Anthropic 报错：
 
 ```
 This credential is only authorized for use with Claude Code and cannot be used for other API requests.
 ```
 
-…use an Anthropic API key instead.
+…请改用 Anthropic API 密钥。
 
-Manual token entry (any provider; writes `auth-profiles.json` + updates config):
+手动录入令牌（任意提供方；写入 `auth-profiles.json` 并更新配置）：
 
 ```bash
 moltbot models auth paste-token --provider anthropic
 moltbot models auth paste-token --provider openrouter
 ```
 
-Automation-friendly check (exit `1` when expired/missing, `2` when expiring):
+适合自动化的检测方式（过期或缺失退出码为 `1`，即将过期为 `2`）：
 
 ```bash
 moltbot models status --check
 ```
 
-Optional ops scripts (systemd/Termux) are documented here:
+可选的运维脚本（systemd/Termux）文档见：
 [/automation/auth-monitoring](/automation/auth-monitoring)
 
-> `claude setup-token` requires an interactive TTY.
+> `claude setup-token` 需要交互式 TTY。
 
-## Checking model auth status
+## 检查模型认证状态
 
 ```bash
 moltbot models status
 moltbot doctor
 ```
 
-## Controlling which credential is used
+## 控制使用哪条凭据
 
-### Per-session (chat command)
+### 按会话（聊天命令）
 
-Use `/model <alias-or-id>@<profileId>` to pin a specific provider credential for the current session (example profile ids: `anthropic:default`, `anthropic:work`).
+使用 `/model <alias-or-id>@<profileId>` 将当前会话固定到某个提供方凭据
+（示例 profile id：`anthropic:default`、`anthropic:work`）。
 
-Use `/model` (or `/model list`) for a compact picker; use `/model status` for the full view (candidates + next auth profile, plus provider endpoint details when configured).
+使用 `/model`（或 `/model list`）打开精简选择器；使用 `/model status`
+查看完整视图（候选项 + 下一条认证配置，且在配置时会显示提供方端点细节）。
 
-### Per-agent (CLI override)
+### 按代理（CLI 覆盖）
 
-Set an explicit auth profile order override for an agent (stored in that agent’s `auth-profiles.json`):
+为某个代理设置显式的认证配置顺序覆盖（存储在该代理的 `auth-profiles.json` 中）：
 
 ```bash
 moltbot models auth order get --provider anthropic
@@ -119,25 +120,25 @@ moltbot models auth order set --provider anthropic anthropic:default
 moltbot models auth order clear --provider anthropic
 ```
 
-Use `--agent <id>` to target a specific agent; omit it to use the configured default agent.
+使用 `--agent <id>` 指定某个代理；省略则使用配置的默认代理。
 
-## Troubleshooting
+## 故障排查
 
 ### “No credentials found”
 
-If the Anthropic token profile is missing, run `claude setup-token` on the
-**gateway host**, then re-check:
+如果缺少 Anthropic 令牌配置，请在 **网关主机** 上运行
+`claude setup-token`，然后重新检查：
 
 ```bash
 moltbot models status
 ```
 
-### Token expiring/expired
+### 令牌即将过期或已过期
 
-Run `moltbot models status` to confirm which profile is expiring. If the profile
-is missing, rerun `claude setup-token` and paste the token again.
+运行 `moltbot models status` 确认即将过期的是哪条配置。如果配置缺失，
+请重新运行 `claude setup-token` 并再次粘贴令牌。
 
-## Requirements
+## 要求
 
-- Claude Max or Pro subscription (for `claude setup-token`)
-- Claude Code CLI installed (`claude` command available)
+- Claude Max 或 Pro 订阅（用于 `claude setup-token`）
+- 已安装 Claude Code CLI（`claude` 命令可用）

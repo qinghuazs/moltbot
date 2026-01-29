@@ -1,48 +1,48 @@
 ---
-summary: "Expose an OpenResponses-compatible /v1/responses HTTP endpoint from the Gateway"
+summary: "从 Gateway 暴露兼容 OpenResponses 的 /v1/responses HTTP 端点"
 read_when:
-  - Integrating clients that speak the OpenResponses API
-  - You want item-based inputs, client tool calls, or SSE events
+  - 集成支持 OpenResponses API 的客户端
+  - 需要基于 item 的输入、客户端工具调用或 SSE 事件
 ---
-# OpenResponses API (HTTP)
+# OpenResponses API（HTTP）
 
-Moltbot’s Gateway can serve an OpenResponses-compatible `POST /v1/responses` endpoint.
+Moltbot 的 Gateway 可提供兼容 OpenResponses 的 `POST /v1/responses` 端点。
 
-This endpoint is **disabled by default**. Enable it in config first.
+该端点 **默认关闭**，需在配置中启用。
 
 - `POST /v1/responses`
-- Same port as the Gateway (WS + HTTP multiplex): `http://<gateway-host>:<port>/v1/responses`
+- 与 Gateway 同端口（WS + HTTP 复用）：`http://<gateway-host>:<port>/v1/responses`
 
-Under the hood, requests are executed as a normal Gateway agent run (same codepath as
-`moltbot agent`), so routing/permissions/config match your Gateway.
+底层请求会作为普通 Gateway agent 运行（与 `moltbot agent` 同代码路径），
+因此路由/权限/配置都与 Gateway 一致。
 
-## Authentication
+## 认证
 
-Uses the Gateway auth configuration. Send a bearer token:
+使用 Gateway 的认证配置。发送 bearer token：
 
 - `Authorization: Bearer <token>`
 
-Notes:
-- When `gateway.auth.mode="token"`, use `gateway.auth.token` (or `CLAWDBOT_GATEWAY_TOKEN`).
-- When `gateway.auth.mode="password"`, use `gateway.auth.password` (or `CLAWDBOT_GATEWAY_PASSWORD`).
+说明：
+- 当 `gateway.auth.mode="token"` 时，使用 `gateway.auth.token`（或 `CLAWDBOT_GATEWAY_TOKEN`）。
+- 当 `gateway.auth.mode="password"` 时，使用 `gateway.auth.password`（或 `CLAWDBOT_GATEWAY_PASSWORD`）。
 
-## Choosing an agent
+## 选择 agent
 
-No custom headers required: encode the agent id in the OpenResponses `model` field:
+无需自定义 header：在 OpenResponses `model` 字段中编码 agent id：
 
-- `model: "moltbot:<agentId>"` (example: `"moltbot:main"`, `"moltbot:beta"`)
-- `model: "agent:<agentId>"` (alias)
+- `model: "moltbot:<agentId>"`（示例：`"moltbot:main"`、`"moltbot:beta"`）
+- `model: "agent:<agentId>"`（别名）
 
-Or target a specific Moltbot agent by header:
+或通过 header 指定特定 Moltbot agent：
 
-- `x-moltbot-agent-id: <agentId>` (default: `main`)
+- `x-moltbot-agent-id: <agentId>`（默认：`main`）
 
-Advanced:
-- `x-moltbot-session-key: <sessionKey>` to fully control session routing.
+高级：
+- `x-moltbot-session-key: <sessionKey>` 可完全控制会话路由。
 
-## Enabling the endpoint
+## 启用端点
 
-Set `gateway.http.endpoints.responses.enabled` to `true`:
+将 `gateway.http.endpoints.responses.enabled` 设为 `true`：
 
 ```json5
 {
@@ -56,9 +56,9 @@ Set `gateway.http.endpoints.responses.enabled` to `true`:
 }
 ```
 
-## Disabling the endpoint
+## 禁用端点
 
-Set `gateway.http.endpoints.responses.enabled` to `false`:
+将 `gateway.http.endpoints.responses.enabled` 设为 `false`：
 
 ```json5
 {
@@ -72,26 +72,26 @@ Set `gateway.http.endpoints.responses.enabled` to `false`:
 }
 ```
 
-## Session behavior
+## 会话行为
 
-By default the endpoint is **stateless per request** (a new session key is generated each call).
+默认该端点 **每次请求无状态**（每次调用都会生成新的 session key）。
 
-If the request includes an OpenResponses `user` string, the Gateway derives a stable session key
-from it, so repeated calls can share an agent session.
+若请求包含 OpenResponses `user` 字符串，Gateway 会基于其派生稳定的 session key，
+便于多次调用共享同一 agent 会话。
 
-## Request shape (supported)
+## 请求形状（已支持）
 
-The request follows the OpenResponses API with item-based input. Current support:
+请求遵循 OpenResponses API 的 item 输入模式。当前支持：
 
-- `input`: string or array of item objects.
-- `instructions`: merged into the system prompt.
-- `tools`: client tool definitions (function tools).
-- `tool_choice`: filter or require client tools.
-- `stream`: enables SSE streaming.
-- `max_output_tokens`: best-effort output limit (provider dependent).
-- `user`: stable session routing.
+- `input`：字符串或 item 对象数组。
+- `instructions`：合并进 system prompt。
+- `tools`：客户端工具定义（function 工具）。
+- `tool_choice`：筛选或要求客户端工具。
+- `stream`：启用 SSE 流式。
+- `max_output_tokens`：尽力限制输出（依赖 provider）。
+- `user`：稳定会话路由。
 
-Accepted but **currently ignored**:
+已接受但 **目前忽略**：
 
 - `max_tool_calls`
 - `reasoning`
@@ -100,18 +100,18 @@ Accepted but **currently ignored**:
 - `previous_response_id`
 - `truncation`
 
-## Items (input)
+## Items（input）
 
 ### `message`
-Roles: `system`, `developer`, `user`, `assistant`.
+角色：`system`、`developer`、`user`、`assistant`。
 
-- `system` and `developer` are appended to the system prompt.
-- The most recent `user` or `function_call_output` item becomes the “current message.”
-- Earlier user/assistant messages are included as history for context.
+- `system` 与 `developer` 会追加到 system prompt。
+- 最新的 `user` 或 `function_call_output` item 会成为“当前消息”。
+- 之前的 user/assistant 消息作为历史上下文。
 
-### `function_call_output` (turn-based tools)
+### `function_call_output`（回合式工具）
 
-Send tool results back to the model:
+把工具结果返回给模型：
 
 ```json
 {
@@ -121,20 +121,20 @@ Send tool results back to the model:
 }
 ```
 
-### `reasoning` and `item_reference`
+### `reasoning` 与 `item_reference`
 
-Accepted for schema compatibility but ignored when building the prompt.
+为 schema 兼容而接受，但构建 prompt 时忽略。
 
-## Tools (client-side function tools)
+## Tools（客户端函数工具）
 
-Provide tools with `tools: [{ type: "function", function: { name, description?, parameters? } }]`.
+通过 `tools: [{ type: "function", function: { name, description?, parameters? } }]` 提供工具。
 
-If the agent decides to call a tool, the response returns a `function_call` output item.
-You then send a follow-up request with `function_call_output` to continue the turn.
+如果 agent 决定调用工具，响应会返回 `function_call` 输出 item。
+然后你再发送带 `function_call_output` 的后续请求继续该回合。
 
-## Images (`input_image`)
+## 图片（`input_image`）
 
-Supports base64 or URL sources:
+支持 base64 或 URL 来源：
 
 ```json
 {
@@ -143,12 +143,12 @@ Supports base64 or URL sources:
 }
 ```
 
-Allowed MIME types (current): `image/jpeg`, `image/png`, `image/gif`, `image/webp`.
-Max size (current): 10MB.
+允许的 MIME 类型（当前）：`image/jpeg`、`image/png`、`image/gif`、`image/webp`。
+最大大小（当前）：10MB。
 
-## Files (`input_file`)
+## 文件（`input_file`）
 
-Supports base64 or URL sources:
+支持 base64 或 URL 来源：
 
 ```json
 {
@@ -162,28 +162,27 @@ Supports base64 or URL sources:
 }
 ```
 
-Allowed MIME types (current): `text/plain`, `text/markdown`, `text/html`, `text/csv`,
-`application/json`, `application/pdf`.
+允许的 MIME 类型（当前）：`text/plain`、`text/markdown`、`text/html`、`text/csv`、
+`application/json`、`application/pdf`。
 
-Max size (current): 5MB.
+最大大小（当前）：5MB。
 
-Current behavior:
-- File content is decoded and added to the **system prompt**, not the user message,
-  so it stays ephemeral (not persisted in session history).
-- PDFs are parsed for text. If little text is found, the first pages are rasterized
-  into images and passed to the model.
+当前行为：
+- 文件内容会被解码并加入 **system prompt**，而非用户消息，
+  因此是临时的（不会写入会话历史）。
+- PDF 会被解析为文本。若文本较少，会将前几页栅格化为图片并传给模型。
 
-PDF parsing uses the Node-friendly `pdfjs-dist` legacy build (no worker). The modern
-PDF.js build expects browser workers/DOM globals, so it is not used in the Gateway.
+PDF 解析使用 Node 友好的 `pdfjs-dist` legacy build（不含 worker）。现代 PDF.js
+构建需要浏览器 worker/DOM 全局，因此不用于 Gateway。
 
-URL fetch defaults:
+URL 拉取默认值：
 - `files.allowUrl`: `true`
 - `images.allowUrl`: `true`
-- Requests are guarded (DNS resolution, private IP blocking, redirect caps, timeouts).
+- 请求受保护（DNS 解析、私有 IP 阻断、重定向上限、超时）。
 
-## File + image limits (config)
+## 文件与图片限制（配置）
 
-Defaults can be tuned under `gateway.http.endpoints.responses`:
+可在 `gateway.http.endpoints.responses` 下调整默认值：
 
 ```json5
 {
@@ -220,7 +219,7 @@ Defaults can be tuned under `gateway.http.endpoints.responses`:
 }
 ```
 
-Defaults when omitted:
+省略时默认值：
 - `maxBodyBytes`: 20MB
 - `files.maxBytes`: 5MB
 - `files.maxChars`: 200k
@@ -233,15 +232,15 @@ Defaults when omitted:
 - `images.maxRedirects`: 3
 - `images.timeoutMs`: 10s
 
-## Streaming (SSE)
+## 流式（SSE）
 
-Set `stream: true` to receive Server-Sent Events (SSE):
+设置 `stream: true` 以接收 Server-Sent Events（SSE）：
 
 - `Content-Type: text/event-stream`
-- Each event line is `event: <type>` and `data: <json>`
-- Stream ends with `data: [DONE]`
+- 每条事件为 `event: <type>` 与 `data: <json>`
+- 结束时发送 `data: [DONE]`
 
-Event types currently emitted:
+当前发出的事件类型：
 - `response.created`
 - `response.in_progress`
 - `response.output_item.added`
@@ -251,28 +250,28 @@ Event types currently emitted:
 - `response.content_part.done`
 - `response.output_item.done`
 - `response.completed`
-- `response.failed` (on error)
+- `response.failed`（错误时）
 
-## Usage
+## 用量
 
-`usage` is populated when the underlying provider reports token counts.
+当底层 provider 报告 token 计数时，会填充 `usage`。
 
-## Errors
+## 错误
 
-Errors use a JSON object like:
+错误使用如下 JSON 对象：
 
 ```json
 { "error": { "message": "...", "type": "invalid_request_error" } }
 ```
 
-Common cases:
-- `401` missing/invalid auth
-- `400` invalid request body
-- `405` wrong method
+常见情况：
+- `401` 认证缺失/无效
+- `400` 请求体非法
+- `405` 方法错误
 
-## Examples
+## 示例
 
-Non-streaming:
+非流式：
 ```bash
 curl -sS http://127.0.0.1:18789/v1/responses \
   -H 'Authorization: Bearer YOUR_TOKEN' \
@@ -284,7 +283,7 @@ curl -sS http://127.0.0.1:18789/v1/responses \
   }'
 ```
 
-Streaming:
+流式：
 ```bash
 curl -N http://127.0.0.1:18789/v1/responses \
   -H 'Authorization: Bearer YOUR_TOKEN' \
