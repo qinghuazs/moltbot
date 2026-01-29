@@ -1,41 +1,41 @@
 ---
-summary: "Mattermost bot setup and Moltbot config"
+summary: "Mattermost 机器人设置与 Moltbot 配置"
 read_when:
-  - Setting up Mattermost
-  - Debugging Mattermost routing
+  - 设置 Mattermost
+  - 排查 Mattermost 路由
 ---
 
-# Mattermost (plugin)
+# Mattermost（插件）
 
-Status: supported via plugin (bot token + WebSocket events). Channels, groups, and DMs are supported.
-Mattermost is a self-hostable team messaging platform; see the official site at
-[mattermost.com](https://mattermost.com) for product details and downloads.
+状态：通过插件支持（bot token + WebSocket 事件）。支持频道、群组与私聊。
+Mattermost 是可自托管的团队消息平台；产品详情与下载见
+[mattermost.com](https://mattermost.com)。
 
-## Plugin required
-Mattermost ships as a plugin and is not bundled with the core install.
+## 需要插件
+Mattermost 作为插件提供，不随核心安装包附带。
 
-Install via CLI (npm registry):
+通过 CLI 安装（npm registry）：
 ```bash
 moltbot plugins install @moltbot/mattermost
 ```
 
-Local checkout (when running from a git repo):
+本地检出（从 git 仓库运行时）：
 ```bash
 moltbot plugins install ./extensions/mattermost
 ```
 
-If you choose Mattermost during configure/onboarding and a git checkout is detected,
-Moltbot will offer the local install path automatically.
+若在配置/引导中选择 Mattermost 且检测到 git 检出，
+Moltbot 会自动提供本地安装路径。
 
-Details: [Plugins](/plugin)
+详情：见 [插件](/plugin)
 
-## Quick setup
-1) Install the Mattermost plugin.
-2) Create a Mattermost bot account and copy the **bot token**.
-3) Copy the Mattermost **base URL** (e.g., `https://chat.example.com`).
-4) Configure Moltbot and start the gateway.
+## 快速上手
+1) 安装 Mattermost 插件。
+2) 创建 Mattermost 机器人账号并复制 **bot token**。
+3) 复制 Mattermost **base URL**（如 `https://chat.example.com`）。
+4) 配置 Moltbot 并启动 gateway。
 
-Minimal config:
+最小配置：
 ```json5
 {
   channels: {
@@ -49,22 +49,22 @@ Minimal config:
 }
 ```
 
-## Environment variables (default account)
-Set these on the gateway host if you prefer env vars:
+## 环境变量（默认账号）
+若偏好 env 变量，在 gateway 主机设置：
 
 - `MATTERMOST_BOT_TOKEN=...`
 - `MATTERMOST_URL=https://chat.example.com`
 
-Env vars apply only to the **default** account (`default`). Other accounts must use config values.
+环境变量只对**默认**账号（`default`）生效；其他账号必须用配置。
 
-## Chat modes
-Mattermost responds to DMs automatically. Channel behavior is controlled by `chatmode`:
+## 聊天模式
+Mattermost 会自动回复私聊。频道行为由 `chatmode` 控制：
 
-- `oncall` (default): respond only when @mentioned in channels.
-- `onmessage`: respond to every channel message.
-- `onchar`: respond when a message starts with a trigger prefix.
+- `oncall`（默认）：仅在频道被 @ 提及才回复。
+- `onmessage`：对每条频道消息回复。
+- `onchar`：当消息以触发前缀开头时回复。
 
-Config example:
+配置示例：
 ```json5
 {
   channels: {
@@ -76,33 +76,33 @@ Config example:
 }
 ```
 
-Notes:
-- `onchar` still responds to explicit @mentions.
-- `channels.mattermost.requireMention` is honored for legacy configs but `chatmode` is preferred.
+说明：
+- `onchar` 仍会响应显式 @ 提及。
+- `channels.mattermost.requireMention` 会兼容旧配置，但推荐使用 `chatmode`。
 
-## Access control (DMs)
-- Default: `channels.mattermost.dmPolicy = "pairing"` (unknown senders get a pairing code).
-- Approve via:
+## 访问控制（私聊）
+- 默认：`channels.mattermost.dmPolicy = "pairing"`（陌生发送者收到配对码）。
+- 批准方式：
   - `moltbot pairing list mattermost`
   - `moltbot pairing approve mattermost <CODE>`
-- Public DMs: `channels.mattermost.dmPolicy="open"` plus `channels.mattermost.allowFrom=["*"]`.
+- 开放私聊：`channels.mattermost.dmPolicy="open"` 且 `channels.mattermost.allowFrom=["*"]`。
 
-## Channels (groups)
-- Default: `channels.mattermost.groupPolicy = "allowlist"` (mention-gated).
-- Allowlist senders with `channels.mattermost.groupAllowFrom` (user IDs or `@username`).
-- Open channels: `channels.mattermost.groupPolicy="open"` (mention-gated).
+## 频道（群组）
+- 默认：`channels.mattermost.groupPolicy = "allowlist"`（提及门控）。
+- 用 `channels.mattermost.groupAllowFrom` 允许发送者（用户 ID 或 `@username`）。
+- 开放频道：`channels.mattermost.groupPolicy="open"`（仍提及门控）。
 
-## Targets for outbound delivery
-Use these target formats with `moltbot message send` or cron/webhooks:
+## 出站投递目标
+用于 `moltbot message send` 或 cron/webhook 的目标格式：
 
-- `channel:<id>` for a channel
-- `user:<id>` for a DM
-- `@username` for a DM (resolved via the Mattermost API)
+- `channel:<id>` 发送到频道
+- `user:<id>` 发送私聊
+- `@username` 发送私聊（通过 Mattermost API 解析）
 
-Bare IDs are treated as channels.
+裸 ID 会被当作频道。
 
-## Multi-account
-Mattermost supports multiple accounts under `channels.mattermost.accounts`:
+## 多账号
+Mattermost 支持 `channels.mattermost.accounts` 多账号：
 
 ```json5
 {
@@ -117,7 +117,7 @@ Mattermost supports multiple accounts under `channels.mattermost.accounts`:
 }
 ```
 
-## Troubleshooting
-- No replies in channels: ensure the bot is in the channel and mention it (oncall), use a trigger prefix (onchar), or set `chatmode: "onmessage"`.
-- Auth errors: check the bot token, base URL, and whether the account is enabled.
-- Multi-account issues: env vars only apply to the `default` account.
+## 故障排查
+- 频道无回复：确认机器人已在频道内并被提及（oncall），使用触发前缀（onchar），或设 `chatmode: "onmessage"`。
+- 认证错误：检查 bot token、base URL 与账号是否启用。
+- 多账号问题：环境变量仅应用于 `default` 账号。

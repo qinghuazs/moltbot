@@ -1,49 +1,47 @@
 ---
-summary: "Network hub: gateway surfaces, pairing, discovery, and security"
+summary: "网络枢纽：网关接口、配对、发现与安全"
 read_when:
-  - You need the network architecture + security overview
-  - You are debugging local vs tailnet access or pairing
-  - You want the canonical list of networking docs
+  - 需要网络架构与安全概览
+  - 排查本地 vs tailnet 访问或配对问题
+  - 获取网络相关文档的权威列表
 ---
-# Network hub
+# 网络枢纽
 
-This hub links the core docs for how Moltbot connects, pairs, and secures
-devices across localhost, LAN, and tailnet.
+本枢纽链接 Moltbot 在 localhost、LAN 与 tailnet 上连接、配对与安全的核心文档。
 
-## Core model
+## 核心模型
 
 - [Gateway architecture](/concepts/architecture)
 - [Gateway protocol](/gateway/protocol)
 - [Gateway runbook](/gateway)
 - [Web surfaces + bind modes](/web)
 
-## Pairing + identity
+## 配对与身份
 
-- [Pairing overview (DM + nodes)](/start/pairing)
+- [Pairing overview（DM + 节点）](/start/pairing)
 - [Gateway-owned node pairing](/gateway/pairing)
-- [Devices CLI (pairing + token rotation)](/cli/devices)
-- [Pairing CLI (DM approvals)](/cli/pairing)
+- [Devices CLI（配对 + token 轮换）](/cli/devices)
+- [Pairing CLI（DM 审批）](/cli/pairing)
 
-Local trust:
-- Local connections (loopback or the gateway host’s own tailnet address) can be
-  auto‑approved for pairing to keep same‑host UX smooth.
-- Non‑local tailnet/LAN clients still require explicit pairing approval.
+本地信任：
+- 本地连接（loopback 或网关主机自身 tailnet 地址）可自动批准配对，保证同机体验流畅。
+- 非本地 tailnet/LAN 客户端仍需要显式配对审批。
 
-## Discovery + transports
+## 发现与传输
 
 - [Discovery & transports](/gateway/discovery)
 - [Bonjour / mDNS](/gateway/bonjour)
-- [Remote access (SSH)](/gateway/remote)
+- [Remote access（SSH）](/gateway/remote)
 - [Tailscale](/gateway/tailscale)
 
-## Nodes + transports
+## 节点与传输
 
 - [Nodes overview](/nodes)
-- [Bridge protocol (legacy nodes)](/gateway/bridge-protocol)
+- [Bridge protocol（遗留节点）](/gateway/bridge-protocol)
 - [Node runbook: iOS](/platforms/ios)
 - [Node runbook: Android](/platforms/android)
 
-## Security
+## 安全
 
 - [Security overview](/gateway/security)
 - [Gateway config reference](/gateway/configuration)

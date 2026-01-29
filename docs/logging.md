@@ -1,30 +1,29 @@
 ---
-summary: "Logging overview: file logs, console output, CLI tailing, and the Control UI"
+summary: "日志概览：文件日志、控制台输出、CLI 尾随与 Control UI"
 read_when:
-  - You need a beginner-friendly overview of logging
-  - You want to configure log levels or formats
-  - You are troubleshooting and need to find logs quickly
+  - 需要入门级日志概览
+  - 想配置日志级别或格式
+  - 排障时需要快速定位日志
 ---
 
-# Logging
+# 日志
 
-Moltbot logs in two places:
+Moltbot 在两个地方记录日志：
 
-- **File logs** (JSON lines) written by the Gateway.
-- **Console output** shown in terminals and the Control UI.
+- **文件日志**（JSON 行），由 Gateway 写入。
+- **控制台输出**，显示在终端与 Control UI 中。
 
-This page explains where logs live, how to read them, and how to configure log
-levels and formats.
+本页说明日志位置、如何阅读，以及如何配置级别与格式。
 
-## Where logs live
+## 日志位置
 
-By default, the Gateway writes a rolling log file under:
+默认情况下，Gateway 会把滚动日志写到：
 
 `/tmp/moltbot/moltbot-YYYY-MM-DD.log`
 
-The date uses the gateway host's local timezone.
+日期使用网关主机的本地时区。
 
-You can override this in `~/.clawdbot/moltbot.json`:
+可在 `~/.clawdbot/moltbot.json` 中覆盖：
 
 ```json
 {
@@ -34,70 +33,69 @@ You can override this in `~/.clawdbot/moltbot.json`:
 }
 ```
 
-## How to read logs
+## 如何查看日志
 
-### CLI: live tail (recommended)
+### CLI：实时尾随（推荐）
 
-Use the CLI to tail the gateway log file via RPC:
+通过 CLI 使用 RPC 尾随网关日志：
 
 ```bash
 moltbot logs --follow
 ```
 
-Output modes:
+输出模式：
 
-- **TTY sessions**: pretty, colorized, structured log lines.
-- **Non-TTY sessions**: plain text.
-- `--json`: line-delimited JSON (one log event per line).
-- `--plain`: force plain text in TTY sessions.
-- `--no-color`: disable ANSI colors.
+- **TTY 会话**：漂亮格式、彩色、结构化日志行。
+- **非 TTY 会话**：纯文本。
+- `--json`：JSON 行（每行一个日志事件）。
+- `--plain`：在 TTY 中强制纯文本。
+- `--no-color`：禁用 ANSI 颜色。
 
-In JSON mode, the CLI emits `type`-tagged objects:
+在 JSON 模式下，CLI 输出带 `type` 标签的对象：
 
-- `meta`: stream metadata (file, cursor, size)
-- `log`: parsed log entry
-- `notice`: truncation / rotation hints
-- `raw`: unparsed log line
+- `meta`：流元信息（文件、游标、大小）
+- `log`：解析后的日志条目
+- `notice`：截断 / 轮转提示
+- `raw`：未解析日志行
 
-If the Gateway is unreachable, the CLI prints a short hint to run:
+如果 Gateway 不可达，CLI 会提示运行：
 
 ```bash
 moltbot doctor
 ```
 
-### Control UI (web)
+### Control UI（Web）
 
-The Control UI’s **Logs** tab tails the same file using `logs.tail`.
-See [/web/control-ui](/web/control-ui) for how to open it.
+Control UI 的 **Logs** 标签通过 `logs.tail` 尾随同一文件。
+如何打开见 [/web/control-ui](/web/control-ui)。
 
-### Channel-only logs
+### 仅通道日志
 
-To filter channel activity (WhatsApp/Telegram/etc), use:
+筛选通道活动（WhatsApp/Telegram 等）：
 
 ```bash
 moltbot channels logs --channel whatsapp
 ```
 
-## Log formats
+## 日志格式
 
-### File logs (JSONL)
+### 文件日志（JSONL）
 
-Each line in the log file is a JSON object. The CLI and Control UI parse these
-entries to render structured output (time, level, subsystem, message).
+日志文件每行一个 JSON 对象。CLI 与 Control UI 解析这些条目并渲染结构化输出（时间、级别、子系统、消息）。
 
-### Console output
+### 控制台输出
 
-Console logs are **TTY-aware** and formatted for readability:
+控制台日志 **感知 TTY** 并以可读性格式化：
 
-- Subsystem prefixes (e.g. `gateway/channels/whatsapp`)
-- Level coloring (info/warn/error)
-- Optional compact or JSON mode
+- 子系统前缀（如 `gateway/channels/whatsapp`）
+- 级别颜色（info/warn/error）
+- 可选的紧凑或 JSON 模式
 
-Console formatting is controlled by `logging.consoleStyle`.
+控制台格式由 `logging.consoleStyle` 控制。
 
-## Configuring logging
+## 日志配置
 
-All logging configuration lives under `logging` in `~/.clawdbot/moltbot.json`.
+所有日志配置都在 `~/.clawdbot/moltbot.json` 的 `logging` 下。
 
 ```json
 {
@@ -114,75 +112,72 @@ All logging configuration lives under `logging` in `~/.clawdbot/moltbot.json`.
 }
 ```
 
-### Log levels
+### 日志级别
 
-- `logging.level`: **file logs** (JSONL) level.
-- `logging.consoleLevel`: **console** verbosity level.
+- `logging.level`：**文件日志**（JSONL）级别。
+- `logging.consoleLevel`：**控制台**详细度。
 
-`--verbose` only affects console output; it does not change file log levels.
+`--verbose` 只影响控制台输出；不会改变文件日志级别。
 
-### Console styles
+### 控制台样式
 
-`logging.consoleStyle`:
+`logging.consoleStyle`：
 
-- `pretty`: human-friendly, colored, with timestamps.
-- `compact`: tighter output (best for long sessions).
-- `json`: JSON per line (for log processors).
+- `pretty`：友好格式、带颜色、含时间戳。
+- `compact`：更紧凑（适合长会话）。
+- `json`：每行 JSON（便于处理）。
 
-### Redaction
+### 脱敏
 
-Tool summaries can redact sensitive tokens before they hit the console:
+工具摘要可在输出到控制台前屏蔽敏感 token：
 
-- `logging.redactSensitive`: `off` | `tools` (default: `tools`)
-- `logging.redactPatterns`: list of regex strings to override the default set
+- `logging.redactSensitive`：`off` | `tools`（默认：`tools`）
+- `logging.redactPatterns`：覆盖默认集合的正则字符串列表
 
-Redaction affects **console output only** and does not alter file logs.
+脱敏仅影响 **控制台输出**，不会修改文件日志。
 
-## Diagnostics + OpenTelemetry
+## Diagnostics 与 OpenTelemetry
 
-Diagnostics are structured, machine-readable events for model runs **and**
-message-flow telemetry (webhooks, queueing, session state). They do **not**
-replace logs; they exist to feed metrics, traces, and other exporters.
+Diagnostics 是结构化、可机读的事件，用于模型运行 **以及** 消息流遥测（webhooks、队列、会话状态）。它们 **不** 取代日志；用于喂给指标、链路与其他导出器。
 
-Diagnostics events are emitted in-process, but exporters only attach when
-diagnostics + the exporter plugin are enabled.
+Diagnostics 事件在进程内发出，但只有在启用 diagnostics 与导出插件时才会附加导出器。
 
-### OpenTelemetry vs OTLP
+### OpenTelemetry 与 OTLP
 
-- **OpenTelemetry (OTel)**: the data model + SDKs for traces, metrics, and logs.
-- **OTLP**: the wire protocol used to export OTel data to a collector/backend.
-- Moltbot exports via **OTLP/HTTP (protobuf)** today.
+- **OpenTelemetry（OTel）**：用于 trace、metrics、logs 的数据模型 + SDK。
+- **OTLP**：将 OTel 数据导出到采集器/后端的协议。
+- Moltbot 目前通过 **OTLP/HTTP（protobuf）** 导出。
 
-### Signals exported
+### 导出的信号
 
-- **Metrics**: counters + histograms (token usage, message flow, queueing).
-- **Traces**: spans for model usage + webhook/message processing.
-- **Logs**: exported over OTLP when `diagnostics.otel.logs` is enabled. Log
-  volume can be high; keep `logging.level` and exporter filters in mind.
+- **Metrics**：计数器 + 直方图（token 使用、消息流、排队）。
+- **Traces**：模型使用与 webhook/消息处理的 spans。
+- **Logs**：当启用 `diagnostics.otel.logs` 时通过 OTLP 导出日志。
+  日志量可能很大，请结合 `logging.level` 与导出器过滤。
 
-### Diagnostic event catalog
+### 诊断事件目录
 
-Model usage:
-- `model.usage`: tokens, cost, duration, context, provider/model/channel, session ids.
+模型使用：
+- `model.usage`：tokens、成本、耗时、上下文、provider/model/channel、session ids。
 
-Message flow:
-- `webhook.received`: webhook ingress per channel.
-- `webhook.processed`: webhook handled + duration.
-- `webhook.error`: webhook handler errors.
-- `message.queued`: message enqueued for processing.
-- `message.processed`: outcome + duration + optional error.
+消息流：
+- `webhook.received`：按通道的 webhook 入站。
+- `webhook.processed`：webhook 处理 + 时长。
+- `webhook.error`：webhook 处理错误。
+- `message.queued`：消息入队。
+- `message.processed`：结果 + 时长 + 可选错误。
 
-Queue + session:
-- `queue.lane.enqueue`: command queue lane enqueue + depth.
-- `queue.lane.dequeue`: command queue lane dequeue + wait time.
-- `session.state`: session state transition + reason.
-- `session.stuck`: session stuck warning + age.
-- `run.attempt`: run retry/attempt metadata.
-- `diagnostic.heartbeat`: aggregate counters (webhooks/queue/session).
+队列 + 会话：
+- `queue.lane.enqueue`：命令队列 lane 入队 + 深度。
+- `queue.lane.dequeue`：命令队列 lane 出队 + 等待时间。
+- `session.state`：会话状态变化 + 原因。
+- `session.stuck`：会话卡住告警 + 时长。
+- `run.attempt`：运行重试/尝试元数据。
+- `diagnostic.heartbeat`：聚合计数器（webhooks/queue/session）。
 
-### Enable diagnostics (no exporter)
+### 启用 diagnostics（无导出）
 
-Use this if you want diagnostics events available to plugins or custom sinks:
+当你希望插件或自定义 sink 读取 diagnostics 事件时使用：
 
 ```json
 {
@@ -192,10 +187,10 @@ Use this if you want diagnostics events available to plugins or custom sinks:
 }
 ```
 
-### Diagnostics flags (targeted logs)
+### Diagnostics flags（定向日志）
 
-Use flags to turn on extra, targeted debug logs without raising `logging.level`.
-Flags are case-insensitive and support wildcards (e.g. `telegram.*` or `*`).
+用 flags 打开额外的定向 debug 日志，而无需提升 `logging.level`。
+flags 不区分大小写并支持通配符（如 `telegram.*` 或 `*`）。
 
 ```json
 {
@@ -205,21 +200,21 @@ Flags are case-insensitive and support wildcards (e.g. `telegram.*` or `*`).
 }
 ```
 
-Env override (one-off):
+环境变量覆盖（一次性）：
 
 ```
 CLAWDBOT_DIAGNOSTICS=telegram.http,telegram.payload
 ```
 
-Notes:
-- Flag logs go to the standard log file (same as `logging.file`).
-- Output is still redacted according to `logging.redactSensitive`.
-- Full guide: [/diagnostics/flags](/diagnostics/flags).
+说明：
+- flag 日志写入标准日志文件（与 `logging.file` 相同）。
+- 输出仍会按 `logging.redactSensitive` 脱敏。
+- 完整指南：[/diagnostics/flags](/diagnostics/flags)。
 
-### Export to OpenTelemetry
+### 导出到 OpenTelemetry
 
-Diagnostics can be exported via the `diagnostics-otel` plugin (OTLP/HTTP). This
-works with any OpenTelemetry collector/backend that accepts OTLP/HTTP.
+通过 `diagnostics-otel` 插件（OTLP/HTTP）导出 diagnostics。
+兼容任何支持 OTLP/HTTP 的 OpenTelemetry 采集器/后端。
 
 ```json
 {
@@ -248,96 +243,91 @@ works with any OpenTelemetry collector/backend that accepts OTLP/HTTP.
 }
 ```
 
-Notes:
-- You can also enable the plugin with `moltbot plugins enable diagnostics-otel`.
-- `protocol` currently supports `http/protobuf` only. `grpc` is ignored.
-- Metrics include token usage, cost, context size, run duration, and message-flow
-  counters/histograms (webhooks, queueing, session state, queue depth/wait).
-- Traces/metrics can be toggled with `traces` / `metrics` (default: on). Traces
-  include model usage spans plus webhook/message processing spans when enabled.
-- Set `headers` when your collector requires auth.
-- Environment variables supported: `OTEL_EXPORTER_OTLP_ENDPOINT`,
-  `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_PROTOCOL`.
+说明：
+- 也可用 `moltbot plugins enable diagnostics-otel` 启用插件。
+- `protocol` 目前仅支持 `http/protobuf`，`grpc` 会被忽略。
+- Metrics 包含 token 使用、成本、上下文大小、运行耗时以及消息流计数/直方图（webhooks、队列、会话状态、队列深度/等待）。
+- Traces/Metrics 可用 `traces` / `metrics` 开关（默认开启）。Traces 包含模型使用 spans 与 webhook/消息处理 spans（启用时）。
+- 采集器需要认证时可设置 `headers`。
+- 支持环境变量：`OTEL_EXPORTER_OTLP_ENDPOINT`、`OTEL_SERVICE_NAME`、`OTEL_EXPORTER_OTLP_PROTOCOL`。
 
-### Exported metrics (names + types)
+### 导出指标（名称 + 类型）
 
-Model usage:
-- `moltbot.tokens` (counter, attrs: `moltbot.token`, `moltbot.channel`,
-  `moltbot.provider`, `moltbot.model`)
-- `moltbot.cost.usd` (counter, attrs: `moltbot.channel`, `moltbot.provider`,
-  `moltbot.model`)
-- `moltbot.run.duration_ms` (histogram, attrs: `moltbot.channel`,
-  `moltbot.provider`, `moltbot.model`)
-- `moltbot.context.tokens` (histogram, attrs: `moltbot.context`,
-  `moltbot.channel`, `moltbot.provider`, `moltbot.model`)
+模型使用：
+- `moltbot.tokens`（counter，attrs：`moltbot.token`、`moltbot.channel`、
+  `moltbot.provider`、`moltbot.model`）
+- `moltbot.cost.usd`（counter，attrs：`moltbot.channel`、`moltbot.provider`、
+  `moltbot.model`）
+- `moltbot.run.duration_ms`（histogram，attrs：`moltbot.channel`、
+  `moltbot.provider`、`moltbot.model`）
+- `moltbot.context.tokens`（histogram，attrs：`moltbot.context`、
+  `moltbot.channel`、`moltbot.provider`、`moltbot.model`）
 
-Message flow:
-- `moltbot.webhook.received` (counter, attrs: `moltbot.channel`,
-  `moltbot.webhook`)
-- `moltbot.webhook.error` (counter, attrs: `moltbot.channel`,
-  `moltbot.webhook`)
-- `moltbot.webhook.duration_ms` (histogram, attrs: `moltbot.channel`,
-  `moltbot.webhook`)
-- `moltbot.message.queued` (counter, attrs: `moltbot.channel`,
-  `moltbot.source`)
-- `moltbot.message.processed` (counter, attrs: `moltbot.channel`,
-  `moltbot.outcome`)
-- `moltbot.message.duration_ms` (histogram, attrs: `moltbot.channel`,
-  `moltbot.outcome`)
+消息流：
+- `moltbot.webhook.received`（counter，attrs：`moltbot.channel`、
+  `moltbot.webhook`）
+- `moltbot.webhook.error`（counter，attrs：`moltbot.channel`、
+  `moltbot.webhook`）
+- `moltbot.webhook.duration_ms`（histogram，attrs：`moltbot.channel`、
+  `moltbot.webhook`）
+- `moltbot.message.queued`（counter，attrs：`moltbot.channel`、
+  `moltbot.source`）
+- `moltbot.message.processed`（counter，attrs：`moltbot.channel`、
+  `moltbot.outcome`）
+- `moltbot.message.duration_ms`（histogram，attrs：`moltbot.channel`、
+  `moltbot.outcome`）
 
-Queues + sessions:
-- `moltbot.queue.lane.enqueue` (counter, attrs: `moltbot.lane`)
-- `moltbot.queue.lane.dequeue` (counter, attrs: `moltbot.lane`)
-- `moltbot.queue.depth` (histogram, attrs: `moltbot.lane` or
-  `moltbot.channel=heartbeat`)
-- `moltbot.queue.wait_ms` (histogram, attrs: `moltbot.lane`)
-- `moltbot.session.state` (counter, attrs: `moltbot.state`, `moltbot.reason`)
-- `moltbot.session.stuck` (counter, attrs: `moltbot.state`)
-- `moltbot.session.stuck_age_ms` (histogram, attrs: `moltbot.state`)
-- `moltbot.run.attempt` (counter, attrs: `moltbot.attempt`)
+队列 + 会话：
+- `moltbot.queue.lane.enqueue`（counter，attrs：`moltbot.lane`）
+- `moltbot.queue.lane.dequeue`（counter，attrs：`moltbot.lane`）
+- `moltbot.queue.depth`（histogram，attrs：`moltbot.lane` 或
+  `moltbot.channel=heartbeat`）
+- `moltbot.queue.wait_ms`（histogram，attrs：`moltbot.lane`）
+- `moltbot.session.state`（counter，attrs：`moltbot.state`、`moltbot.reason`）
+- `moltbot.session.stuck`（counter，attrs：`moltbot.state`）
+- `moltbot.session.stuck_age_ms`（histogram，attrs：`moltbot.state`）
+- `moltbot.run.attempt`（counter，attrs：`moltbot.attempt`）
 
-### Exported spans (names + key attributes)
+### 导出 spans（名称 + 关键属性）
 
 - `moltbot.model.usage`
-  - `moltbot.channel`, `moltbot.provider`, `moltbot.model`
-  - `moltbot.sessionKey`, `moltbot.sessionId`
-  - `moltbot.tokens.*` (input/output/cache_read/cache_write/total)
+  - `moltbot.channel`、`moltbot.provider`、`moltbot.model`
+  - `moltbot.sessionKey`、`moltbot.sessionId`
+  - `moltbot.tokens.*`（input/output/cache_read/cache_write/total）
 - `moltbot.webhook.processed`
-  - `moltbot.channel`, `moltbot.webhook`, `moltbot.chatId`
+  - `moltbot.channel`、`moltbot.webhook`、`moltbot.chatId`
 - `moltbot.webhook.error`
-  - `moltbot.channel`, `moltbot.webhook`, `moltbot.chatId`,
+  - `moltbot.channel`、`moltbot.webhook`、`moltbot.chatId`、
     `moltbot.error`
 - `moltbot.message.processed`
-  - `moltbot.channel`, `moltbot.outcome`, `moltbot.chatId`,
-    `moltbot.messageId`, `moltbot.sessionKey`, `moltbot.sessionId`,
+  - `moltbot.channel`、`moltbot.outcome`、`moltbot.chatId`、
+    `moltbot.messageId`、`moltbot.sessionKey`、`moltbot.sessionId`、
     `moltbot.reason`
 - `moltbot.session.stuck`
-  - `moltbot.state`, `moltbot.ageMs`, `moltbot.queueDepth`,
-    `moltbot.sessionKey`, `moltbot.sessionId`
+  - `moltbot.state`、`moltbot.ageMs`、`moltbot.queueDepth`、
+    `moltbot.sessionKey`、`moltbot.sessionId`
 
-### Sampling + flushing
+### 采样与刷新
 
-- Trace sampling: `diagnostics.otel.sampleRate` (0.0–1.0, root spans only).
-- Metric export interval: `diagnostics.otel.flushIntervalMs` (min 1000ms).
+- Trace 采样：`diagnostics.otel.sampleRate`（0.0–1.0，仅 root spans）。
+- Metrics 导出间隔：`diagnostics.otel.flushIntervalMs`（最小 1000ms）。
 
-### Protocol notes
+### 协议说明
 
-- OTLP/HTTP endpoints can be set via `diagnostics.otel.endpoint` or
-  `OTEL_EXPORTER_OTLP_ENDPOINT`.
-- If the endpoint already contains `/v1/traces` or `/v1/metrics`, it is used as-is.
-- If the endpoint already contains `/v1/logs`, it is used as-is for logs.
-- `diagnostics.otel.logs` enables OTLP log export for the main logger output.
+- OTLP/HTTP 端点可通过 `diagnostics.otel.endpoint` 或
+  `OTEL_EXPORTER_OTLP_ENDPOINT` 设置。
+- 若端点已包含 `/v1/traces` 或 `/v1/metrics`，会按原样使用。
+- 若端点已包含 `/v1/logs`，日志也按原样使用。
+- `diagnostics.otel.logs` 启用主日志器的 OTLP 日志导出。
 
-### Log export behavior
+### 日志导出行为
 
-- OTLP logs use the same structured records written to `logging.file`.
-- Respect `logging.level` (file log level). Console redaction does **not** apply
-  to OTLP logs.
-- High-volume installs should prefer OTLP collector sampling/filtering.
+- OTLP 日志使用与 `logging.file` 相同的结构化记录。
+- 遵循 `logging.level`（文件日志级别）。控制台脱敏 **不** 适用于 OTLP 日志。
+- 高流量部署应使用 OTLP 采集器的采样/过滤。
 
-## Troubleshooting tips
+## 排障提示
 
-- **Gateway not reachable?** Run `moltbot doctor` first.
-- **Logs empty?** Check that the Gateway is running and writing to the file path
-  in `logging.file`.
-- **Need more detail?** Set `logging.level` to `debug` or `trace` and retry.
+- **Gateway 不可达？** 先运行 `moltbot doctor`。
+- **日志为空？** 检查 Gateway 是否运行且写入 `logging.file` 指定路径。
+- **需要更多细节？** 将 `logging.level` 设为 `debug` 或 `trace` 后重试。

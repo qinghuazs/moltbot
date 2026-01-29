@@ -1,160 +1,158 @@
 ---
-title: Formal Verification (Security Models)
-summary: Machine-checked security models for Moltbot’s highest-risk paths.
+title: 形式化验证（安全模型）
+summary: Moltbot 高风险路径的机器校验安全模型。
 permalink: /security/formal-verification/
 ---
 
-# Formal Verification (Security Models)
+# 形式化验证（安全模型）
 
-This page tracks Moltbot’s **formal security models** (TLA+/TLC today; more as needed).
+本页追踪 Moltbot 的 **形式化安全模型**（当前为 TLA+/TLC；后续按需扩展）。
 
-> Note: some older links may refer to the previous project name.
+> 注意：部分旧链接可能仍使用之前的项目名。
 
-**Goal (north star):** provide a machine-checked argument that Moltbot enforces its
-intended security policy (authorization, session isolation, tool gating, and
-misconfiguration safety), under explicit assumptions.
+**目标（北极星）：** 在明确假设下，给出机器校验的论证，说明 Moltbot 按预期安全策略运行（授权、会话隔离、工具门控、误配置安全）。
 
-**What this is (today):** an executable, attacker-driven **security regression suite**:
-- Each claim has a runnable model-check over a finite state space.
-- Many claims have a paired **negative model** that produces a counterexample trace for a realistic bug class.
+**这是什么（当前）：** 一个可执行、以攻击者视角驱动的 **安全回归测试套件**：
+- 每个主张都有可运行的有限状态空间模型检查。
+- 许多主张配有 **负向模型**，可生成现实 bug 类别的反例轨迹。
 
-**What this is not (yet):** a proof that “Moltbot is secure in all respects” or that the full TypeScript implementation is correct.
+**这还不是什么：** 不是“所有方面都安全”的证明，也不是 TypeScript 实现完全正确的证明。
 
-## Where the models live
+## 模型仓库位置
 
-Models are maintained in a separate repo: [vignesh07/clawdbot-formal-models](https://github.com/vignesh07/clawdbot-formal-models).
+模型维护在独立仓库：[vignesh07/clawdbot-formal-models](https://github.com/vignesh07/clawdbot-formal-models)。
 
-## Important caveats
+## 重要限制
 
-- These are **models**, not the full TypeScript implementation. Drift between model and code is possible.
-- Results are bounded by the state space explored by TLC; “green” does not imply security beyond the modeled assumptions and bounds.
-- Some claims rely on explicit environmental assumptions (e.g., correct deployment, correct configuration inputs).
+- 这些是 **模型**，不是完整 TypeScript 实现；模型与代码可能存在漂移。
+- 结果受 TLC 探索的状态空间限制；“绿色”并不意味着超出建模假设与范围的安全性。
+- 部分主张依赖明确的环境假设（如正确部署、正确输入配置）。
 
-## Reproducing results
+## 复现结果
 
-Today, results are reproduced by cloning the models repo locally and running TLC (see below). A future iteration could offer:
-- CI-run models with public artifacts (counterexample traces, run logs)
-- a hosted “run this model” workflow for small, bounded checks
+当前复现方式是本地克隆模型仓库并运行 TLC（见下文）。未来可能提供：
+- CI 运行并发布产物（反例轨迹、运行日志）
+- 用于小范围检查的托管“运行模型”流程
 
-Getting started:
+开始方式：
 
 ```bash
 git clone https://github.com/vignesh07/clawdbot-formal-models
 cd clawdbot-formal-models
 
-# Java 11+ required (TLC runs on the JVM).
-# The repo vendors a pinned `tla2tools.jar` (TLA+ tools) and provides `bin/tlc` + Make targets.
+# 需要 Java 11+（TLC 运行在 JVM 上）。
+# 仓库包含固定版本的 `tla2tools.jar`（TLA+ 工具）并提供 `bin/tlc` + Make 目标。
 
 make <target>
 ```
 
-### Gateway exposure and open gateway misconfiguration
+### Gateway 暴露与开放网关误配置
 
-**Claim:** binding beyond loopback without auth can make remote compromise possible / increases exposure; token/password blocks unauth attackers (per the model assumptions).
+**主张：** 超出 loopback 绑定且无认证会导致远程攻破可能/暴露增加；token/password 可阻止未授权攻击者（在模型假设下）。
 
-- Green runs:
+- 绿色运行：
   - `make gateway-exposure-v2`
   - `make gateway-exposure-v2-protected`
-- Red (expected):
+- 红色（预期）：
   - `make gateway-exposure-v2-negative`
 
-See also: `docs/gateway-exposure-matrix.md` in the models repo.
+另见：模型仓库的 `docs/gateway-exposure-matrix.md`。
 
-### Nodes.run pipeline (highest-risk capability)
+### Nodes.run 流水线（最高风险能力）
 
-**Claim:** `nodes.run` requires (a) node command allowlist plus declared commands and (b) live approval when configured; approvals are tokenized to prevent replay (in the model).
+**主张：** `nodes.run` 需要 (a) 节点命令 allowlist + 声明命令，且 (b) 配置了实时审批时必须审批；审批使用 token 化以防重放（在模型中）。
 
-- Green runs:
+- 绿色运行：
   - `make nodes-pipeline`
   - `make approvals-token`
-- Red (expected):
+- 红色（预期）：
   - `make nodes-pipeline-negative`
   - `make approvals-token-negative`
 
-### Pairing store (DM gating)
+### 配对存储（DM 门控）
 
-**Claim:** pairing requests respect TTL and pending-request caps.
+**主张：** 配对请求遵守 TTL 与待处理请求上限。
 
-- Green runs:
+- 绿色运行：
   - `make pairing`
   - `make pairing-cap`
-- Red (expected):
+- 红色（预期）：
   - `make pairing-negative`
   - `make pairing-cap-negative`
 
-### Ingress gating (mentions + control-command bypass)
+### 入站门控（提及 + 控制命令绕过）
 
-**Claim:** in group contexts requiring mention, an unauthorized “control command” cannot bypass mention gating.
+**主张：** 在需要提及的群场景中，未授权的“控制命令”不能绕过提及门控。
 
-- Green:
+- 绿色：
   - `make ingress-gating`
-- Red (expected):
+- 红色（预期）：
   - `make ingress-gating-negative`
 
-### Routing/session-key isolation
+### 路由/会话键隔离
 
-**Claim:** DMs from distinct peers do not collapse into the same session unless explicitly linked/configured.
+**主张：** 不同私信发起者不会合并到同一会话，除非明确链接/配置。
 
-- Green:
+- 绿色：
   - `make routing-isolation`
-- Red (expected):
+- 红色（预期）：
   - `make routing-isolation-negative`
 
 
-## v1++: additional bounded models (concurrency, retries, trace correctness)
+## v1++：额外有界模型（并发、重试、轨迹正确性）
 
-These are follow-on models that tighten fidelity around real-world failure modes (non-atomic updates, retries, and message fan-out).
+这些后续模型提高对真实世界故障模式的逼真度（非原子更新、重试、消息扇出）。
 
-### Pairing store concurrency / idempotency
+### 配对存储并发 / 幂等性
 
-**Claim:** a pairing store should enforce `MaxPending` and idempotency even under interleavings (i.e., “check-then-write” must be atomic / locked; refresh shouldn’t create duplicates).
+**主张：** 配对存储在交错并发下仍应强制 `MaxPending` 与幂等性（即 “检查后写入” 必须原子/加锁；刷新不应产生重复）。
 
-What it means:
-- Under concurrent requests, you can’t exceed `MaxPending` for a channel.
-- Repeated requests/refreshes for the same `(channel, sender)` should not create duplicate live pending rows.
+含义：
+- 并发请求下，不能超过渠道的 `MaxPending`。
+- 对同一 `(channel, sender)` 的重复请求/刷新不应产生重复的待处理记录。
 
-- Green runs:
-  - `make pairing-race` (atomic/locked cap check)
+- 绿色运行：
+  - `make pairing-race`（原子/加锁的上限检查）
   - `make pairing-idempotency`
   - `make pairing-refresh`
   - `make pairing-refresh-race`
-- Red (expected):
-  - `make pairing-race-negative` (non-atomic begin/commit cap race)
+- 红色（预期）：
+  - `make pairing-race-negative`（非原子 begin/commit 上限竞争）
   - `make pairing-idempotency-negative`
   - `make pairing-refresh-negative`
   - `make pairing-refresh-race-negative`
 
-### Ingress trace correlation / idempotency
+### 入站轨迹关联 / 幂等性
 
-**Claim:** ingestion should preserve trace correlation across fan-out and be idempotent under provider retries.
+**主张：** 入站处理应在扇出时保持轨迹关联，并在 provider 重试时保持幂等。
 
-What it means:
-- When one external event becomes multiple internal messages, every part keeps the same trace/event identity.
-- Retries do not result in double-processing.
-- If provider event IDs are missing, dedupe falls back to a safe key (e.g., trace ID) to avoid dropping distinct events.
+含义：
+- 一个外部事件变成多个内部消息时，每部分保持相同 trace/event 身份。
+- 重试不会导致重复处理。
+- 若 provider 事件 ID 缺失，去重应回退到安全 key（如 trace ID），以避免丢弃不同事件。
 
-- Green:
+- 绿色：
   - `make ingress-trace`
   - `make ingress-trace2`
   - `make ingress-idempotency`
   - `make ingress-dedupe-fallback`
-- Red (expected):
+- 红色（预期）：
   - `make ingress-trace-negative`
   - `make ingress-trace2-negative`
   - `make ingress-idempotency-negative`
   - `make ingress-dedupe-fallback-negative`
 
-### Routing dmScope precedence + identityLinks
+### 路由 dmScope 优先级 + identityLinks
 
-**Claim:** routing must keep DM sessions isolated by default, and only collapse sessions when explicitly configured (channel precedence + identity links).
+**主张：** 路由默认保持 DM 会话隔离，仅在明确配置时合并（按渠道优先级 + identity links）。
 
-What it means:
-- Channel-specific dmScope overrides must win over global defaults.
-- identityLinks should collapse only within explicit linked groups, not across unrelated peers.
+含义：
+- 渠道级 dmScope 覆盖必须优先于全局默认。
+- identityLinks 只能在明确的链接组内合并，而不是跨不相关 peers。
 
-- Green:
+- 绿色：
   - `make routing-precedence`
   - `make routing-identitylinks`
-- Red (expected):
+- 红色（预期）：
   - `make routing-precedence-negative`
   - `make routing-identitylinks-negative`

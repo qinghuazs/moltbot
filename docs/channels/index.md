@@ -1,43 +1,43 @@
 ---
-summary: "Messaging platforms Moltbot can connect to"
+summary: "Moltbot 可连接的消息平台"
 read_when:
-  - You want to choose a chat channel for Moltbot
-  - You need a quick overview of supported messaging platforms
+  - 你想为 Moltbot 选择一个聊天渠道
+  - 你需要快速了解支持的消息平台
 ---
-# Chat Channels
+# 聊天渠道
 
-Moltbot can talk to you on any chat app you already use. Each channel connects via the Gateway.
-Text is supported everywhere; media and reactions vary by channel.
+Moltbot 可以在你已经使用的任何聊天应用上与您对话。每个渠道都通过 Gateway 连接。
+文本在所有渠道都支持；媒体与表情反应会因渠道而异。
 
-## Supported channels
+## 支持的渠道
 
-- [WhatsApp](/channels/whatsapp) — Most popular; uses Baileys and requires QR pairing.
-- [Telegram](/channels/telegram) — Bot API via grammY; supports groups.
-- [Discord](/channels/discord) — Discord Bot API + Gateway; supports servers, channels, and DMs.
-- [Slack](/channels/slack) — Bolt SDK; workspace apps.
-- [Google Chat](/channels/googlechat) — Google Chat API app via HTTP webhook.
-- [Mattermost](/channels/mattermost) — Bot API + WebSocket; channels, groups, DMs (plugin, installed separately).
-- [Signal](/channels/signal) — signal-cli; privacy-focused.
-- [BlueBubbles](/channels/bluebubbles) — **Recommended for iMessage**; uses the BlueBubbles macOS server REST API with full feature support (edit, unsend, effects, reactions, group management — edit currently broken on macOS 26 Tahoe).
-- [iMessage](/channels/imessage) — macOS only; native integration via imsg (legacy, consider BlueBubbles for new setups).
-- [Microsoft Teams](/channels/msteams) — Bot Framework; enterprise support (plugin, installed separately).
-- [LINE](/channels/line) — LINE Messaging API bot (plugin, installed separately).
-- [Nextcloud Talk](/channels/nextcloud-talk) — Self-hosted chat via Nextcloud Talk (plugin, installed separately).
-- [Matrix](/channels/matrix) — Matrix protocol (plugin, installed separately).
-- [Nostr](/channels/nostr) — Decentralized DMs via NIP-04 (plugin, installed separately).
-- [Tlon](/channels/tlon) — Urbit-based messenger (plugin, installed separately).
-- [Twitch](/channels/twitch) — Twitch chat via IRC connection (plugin, installed separately).
-- [Zalo](/channels/zalo) — Zalo Bot API; Vietnam's popular messenger (plugin, installed separately).
-- [Zalo Personal](/channels/zalouser) — Zalo personal account via QR login (plugin, installed separately).
-- [WebChat](/web/webchat) — Gateway WebChat UI over WebSocket.
+- [WhatsApp](/channels/whatsapp) — 最常用；使用 Baileys，需要扫码配对。
+- [Telegram](/channels/telegram) — 通过 grammY 的 Bot API；支持群组。
+- [Discord](/channels/discord) — Discord Bot API + Gateway；支持服务器、频道与私信。
+- [Slack](/channels/slack) — Bolt SDK；工作区应用。
+- [Google Chat](/channels/googlechat) — Google Chat API 应用，通过 HTTP webhook。
+- [Mattermost](/channels/mattermost) — Bot API + WebSocket；频道、群组、私信（插件，需单独安装）。
+- [Signal](/channels/signal) — signal-cli；偏隐私。
+- [BlueBubbles](/channels/bluebubbles) — **iMessage 推荐方案**；使用 BlueBubbles macOS 服务器 REST API，功能完整（编辑、撤回、效果、表情反应、群管理等 — 目前在 macOS 26 Tahoe 上编辑功能不可用）。
+- [iMessage](/channels/imessage) — 仅 macOS；通过 imsg 原生集成（遗留方案，新部署建议使用 BlueBubbles）。
+- [Microsoft Teams](/channels/msteams) — Bot Framework；企业支持（插件，需单独安装）。
+- [LINE](/channels/line) — LINE Messaging API 机器人（插件，需单独安装）。
+- [Nextcloud Talk](/channels/nextcloud-talk) — 通过 Nextcloud Talk 自托管聊天（插件，需单独安装）。
+- [Matrix](/channels/matrix) — Matrix 协议（插件，需单独安装）。
+- [Nostr](/channels/nostr) — 通过 NIP-04 的去中心化私信（插件，需单独安装）。
+- [Tlon](/channels/tlon) — 基于 Urbit 的消息应用（插件，需单独安装）。
+- [Twitch](/channels/twitch) — 通过 IRC 连接的 Twitch 聊天（插件，需单独安装）。
+- [Zalo](/channels/zalo) — Zalo Bot API；越南常用消息应用（插件，需单独安装）。
+- [Zalo Personal](/channels/zalouser) — 通过扫码登录的 Zalo 个人号（插件，需单独安装）。
+- [WebChat](/web/webchat) — 通过 WebSocket 的 Gateway WebChat UI。
 
-## Notes
+## 说明
 
-- Channels can run simultaneously; configure multiple and Moltbot will route per chat.
-- Fastest setup is usually **Telegram** (simple bot token). WhatsApp requires QR pairing and
-  stores more state on disk.
-- Group behavior varies by channel; see [Groups](/concepts/groups).
-- DM pairing and allowlists are enforced for safety; see [Security](/gateway/security).
-- Telegram internals: [grammY notes](/channels/grammy).
-- Troubleshooting: [Channel troubleshooting](/channels/troubleshooting).
-- Model providers are documented separately; see [Model Providers](/providers/models).
+- 渠道可同时运行；配置多个后，Moltbot 会按聊天路由。
+- 最快的上手方式通常是 **Telegram**（简单的 bot token）。WhatsApp 需要扫码配对，
+  且会在磁盘上存更多状态。
+- 群组行为因渠道而异；参见 [群组](/concepts/groups)。
+- 为安全起见会强制私信配对与允许列表；参见 [安全](/gateway/security)。
+- Telegram 内部实现说明：见 [grammY 说明](/channels/grammy)。
+- 故障排查：见 [渠道排查](/channels/troubleshooting)。
+- 模型提供方另有文档；见 [模型提供方](/providers/models)。

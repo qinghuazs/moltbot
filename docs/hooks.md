@@ -1,68 +1,68 @@
 ---
-summary: "Hooks: event-driven automation for commands and lifecycle events"
+summary: "Hooks：面向命令与生命周期事件的事件驱动自动化"
 read_when:
-  - You want event-driven automation for /new, /reset, /stop, and agent lifecycle events
-  - You want to build, install, or debug hooks
+  - 需要对 /new、/reset、/stop 与 agent 生命周期事件做自动化
+  - 想构建、安装或调试 hooks
 ---
 # Hooks
 
-Hooks provide an extensible event-driven system for automating actions in response to agent commands and events. Hooks are automatically discovered from directories and can be managed via CLI commands, similar to how skills work in Moltbot.
+Hooks 提供一个可扩展的事件驱动系统，用于在 agent 命令与事件发生时自动执行动作。Hooks 会从目录自动发现，并可通过 CLI 管理，类似 Moltbot 的 skills。
 
-## Getting Oriented
+## 快速了解
 
-Hooks are small scripts that run when something happens. There are two kinds:
+Hooks 是在事件发生时运行的小脚本。有两类：
 
-- **Hooks** (this page): run inside the Gateway when agent events fire, like `/new`, `/reset`, `/stop`, or lifecycle events.
-- **Webhooks**: external HTTP webhooks that let other systems trigger work in Moltbot. See [Webhook Hooks](/automation/webhook) or use `moltbot webhooks` for Gmail helper commands.
+- **Hooks**（本页）：在 Gateway 内运行，响应 /new、/reset、/stop 或生命周期事件等。
+- **Webhooks**：外部 HTTP webhook，用于让其他系统触发 Moltbot。见 [Webhook Hooks](/automation/webhook) 或使用 `moltbot webhooks` 的 Gmail 辅助命令。
   
-Hooks can also be bundled inside plugins; see [Plugins](/plugin#plugin-hooks).
+Hooks 也可被打包在插件中；见 [Plugins](/plugin#plugin-hooks)。
 
-Common uses:
-- Save a memory snapshot when you reset a session
-- Keep an audit trail of commands for troubleshooting or compliance
-- Trigger follow-up automation when a session starts or ends
-- Write files into the agent workspace or call external APIs when events fire
+常见用途：
+- 会话重置时保存记忆快照
+- 为排障或合规记录命令审计日志
+- 会话开始/结束时触发自动化
+- 在事件触发时写入工作区文件或调用外部 API
 
-If you can write a small TypeScript function, you can write a hook. Hooks are discovered automatically, and you enable or disable them via the CLI.
+只要能写一个小的 TypeScript 函数，就能写 hook。Hooks 会被自动发现，你可通过 CLI 启用或禁用。
 
-## Overview
+## 概览
 
-The hooks system allows you to:
-- Save session context to memory when `/new` is issued
-- Log all commands for auditing
-- Trigger custom automations on agent lifecycle events
-- Extend Moltbot's behavior without modifying core code
+Hooks 系统允许你：
+- `/new` 时把会话上下文存入记忆
+- 记录所有命令便于审计
+- 在 agent 生命周期事件上触发自定义自动化
+- 不改核心代码即可扩展 Moltbot 行为
 
-## Getting Started
+## 入门
 
-### Bundled Hooks
+### 内置 Hooks
 
-Moltbot ships with four bundled hooks that are automatically discovered:
+Moltbot 内置四个 hooks，会自动发现：
 
-- **💾 session-memory**: Saves session context to your agent workspace (default `~/clawd/memory/`) when you issue `/new`
-- **📝 command-logger**: Logs all command events to `~/.clawdbot/logs/commands.log`
-- **🚀 boot-md**: Runs `BOOT.md` when the gateway starts (requires internal hooks enabled)
-- **😈 soul-evil**: Swaps injected `SOUL.md` content with `SOUL_EVIL.md` during a purge window or by random chance
+- **💾 session-memory**：在你发出 `/new` 时将会话上下文保存到 agent 工作区（默认 `~/clawd/memory/`）
+- **📝 command-logger**：将所有命令事件记录到 `~/.clawdbot/logs/commands.log`
+- **🚀 boot-md**：Gateway 启动时运行 `BOOT.md`（需要开启 internal hooks）
+- **😈 soul-evil**：在清洗窗口或随机情况下，将注入的 `SOUL.md` 内容替换为 `SOUL_EVIL.md`
 
-List available hooks:
+列出可用 hooks：
 
 ```bash
 moltbot hooks list
 ```
 
-Enable a hook:
+启用 hook：
 
 ```bash
 moltbot hooks enable session-memory
 ```
 
-Check hook status:
+查看 hook 状态：
 
 ```bash
 moltbot hooks check
 ```
 
-Get detailed information:
+查看详细信息：
 
 ```bash
 moltbot hooks info session-memory
@@ -70,36 +70,35 @@ moltbot hooks info session-memory
 
 ### Onboarding
 
-During onboarding (`moltbot onboard`), you'll be prompted to enable recommended hooks. The wizard automatically discovers eligible hooks and presents them for selection.
+在 onboarding（`moltbot onboard`）期间，会提示启用推荐 hooks。向导会自动发现可用 hooks 并供选择。
 
-## Hook Discovery
+## Hook 发现
 
-Hooks are automatically discovered from three directories (in order of precedence):
+Hooks 会自动从三个目录发现（按优先级）：
 
-1. **Workspace hooks**: `<workspace>/hooks/` (per-agent, highest precedence)
-2. **Managed hooks**: `~/.clawdbot/hooks/` (user-installed, shared across workspaces)
-3. **Bundled hooks**: `<moltbot>/dist/hooks/bundled/` (shipped with Moltbot)
+1. **工作区 hooks**：`<workspace>/hooks/`（每 agent，最高优先级）
+2. **托管 hooks**：`~/.clawdbot/hooks/`（用户安装，跨工作区共享）
+3. **内置 hooks**：`<moltbot>/dist/hooks/bundled/`（随 Moltbot 发布）
 
-Managed hook directories can be either a **single hook** or a **hook pack** (package directory).
+托管目录既可为 **单个 hook**，也可为 **hook pack**（包目录）。
 
-Each hook is a directory containing:
+每个 hook 是一个目录，包含：
 
 ```
 my-hook/
-├── HOOK.md          # Metadata + documentation
-└── handler.ts       # Handler implementation
+├── HOOK.md          # 元数据 + 文档
+└── handler.ts       # 处理逻辑
 ```
 
-## Hook Packs (npm/archives)
+## Hook Packs（npm/归档）
 
-Hook packs are standard npm packages that export one or more hooks via `moltbot.hooks` in
-`package.json`. Install them with:
+Hook pack 是标准 npm 包，通过 `package.json` 中的 `moltbot.hooks` 导出多个 hooks。使用以下命令安装：
 
 ```bash
 moltbot hooks install <path-or-spec>
 ```
 
-Example `package.json`:
+示例 `package.json`：
 
 ```json
 {
@@ -111,14 +110,14 @@ Example `package.json`:
 }
 ```
 
-Each entry points to a hook directory containing `HOOK.md` and `handler.ts` (or `index.ts`).
-Hook packs can ship dependencies; they will be installed under `~/.clawdbot/hooks/<id>`.
+每个条目指向包含 `HOOK.md` 与 `handler.ts`（或 `index.ts`）的 hook 目录。
+Hook pack 可携带依赖；安装在 `~/.clawdbot/hooks/<id>`。
 
-## Hook Structure
+## Hook 结构
 
-### HOOK.md Format
+### HOOK.md 格式
 
-The `HOOK.md` file contains metadata in YAML frontmatter plus Markdown documentation:
+`HOOK.md` 包含 YAML frontmatter 元数据与 Markdown 文档：
 
 ```markdown
 ---
@@ -147,26 +146,26 @@ Detailed documentation goes here...
 No configuration needed.
 ```
 
-### Metadata Fields
+### 元数据字段
 
-The `metadata.moltbot` object supports:
+`metadata.moltbot` 支持：
 
-- **`emoji`**: Display emoji for CLI (e.g., `"💾"`)
-- **`events`**: Array of events to listen for (e.g., `["command:new", "command:reset"]`)
-- **`export`**: Named export to use (defaults to `"default"`)
-- **`homepage`**: Documentation URL
-- **`requires`**: Optional requirements
-  - **`bins`**: Required binaries on PATH (e.g., `["git", "node"]`)
-  - **`anyBins`**: At least one of these binaries must be present
-  - **`env`**: Required environment variables
-  - **`config`**: Required config paths (e.g., `["workspace.dir"]`)
-  - **`os`**: Required platforms (e.g., `["darwin", "linux"]`)
-- **`always`**: Bypass eligibility checks (boolean)
-- **`install`**: Installation methods (for bundled hooks: `[{"id":"bundled","kind":"bundled"}]`)
+- **`emoji`**：CLI 展示用 emoji（如 `"💾"`）
+- **`events`**：监听的事件数组（如 `['command:new', 'command:reset']`）
+- **`export`**：使用的命名导出（默认 `"default"`）
+- **`homepage`**：文档 URL
+- **`requires`**：可选要求
+  - **`bins`**：PATH 中需要的二进制（如 `['git', 'node']`）
+  - **`anyBins`**：至少满足其中一个二进制
+  - **`env`**：所需环境变量
+  - **`config`**：所需配置路径（如 `['workspace.dir']`）
+  - **`os`**：所需平台（如 `['darwin', 'linux']`）
+- **`always`**：跳过可用性检查（布尔）
+- **`install`**：安装方式（内置 hooks：`[{"id":"bundled","kind":"bundled"}]`）
 
-### Handler Implementation
+### Handler 实现
 
-The `handler.ts` file exports a `HookHandler` function:
+`handler.ts` 导出 `HookHandler` 函数：
 
 ```typescript
 import type { HookHandler } from '../../src/hooks/hooks.js';
@@ -190,9 +189,9 @@ const myHandler: HookHandler = async (event) => {
 export default myHandler;
 ```
 
-#### Event Context
+#### 事件上下文
 
-Each event includes:
+每个事件包含：
 
 ```typescript
 {
@@ -214,58 +213,58 @@ Each event includes:
 }
 ```
 
-## Event Types
+## 事件类型
 
-### Command Events
+### 命令事件
 
-Triggered when agent commands are issued:
+当 agent 命令触发时：
 
-- **`command`**: All command events (general listener)
-- **`command:new`**: When `/new` command is issued
-- **`command:reset`**: When `/reset` command is issued
-- **`command:stop`**: When `/stop` command is issued
+- **`command`**：所有命令事件（通用监听）
+- **`command:new`**：发出 `/new`
+- **`command:reset`**：发出 `/reset`
+- **`command:stop`**：发出 `/stop`
 
-### Agent Events
+### Agent 事件
 
-- **`agent:bootstrap`**: Before workspace bootstrap files are injected (hooks may mutate `context.bootstrapFiles`)
+- **`agent:bootstrap`**：工作区 bootstrap 文件注入前（hooks 可修改 `context.bootstrapFiles`）
 
-### Gateway Events
+### Gateway 事件
 
-Triggered when the gateway starts:
+Gateway 启动后触发：
 
-- **`gateway:startup`**: After channels start and hooks are loaded
+- **`gateway:startup`**：通道启动且 hooks 加载后
 
-### Tool Result Hooks (Plugin API)
+### 工具结果 Hooks（插件 API）
 
-These hooks are not event-stream listeners; they let plugins synchronously adjust tool results before Moltbot persists them.
+这些 hooks 不是事件流监听器，而是让插件在 Moltbot 持久化前同步调整工具结果。
 
-- **`tool_result_persist`**: transform tool results before they are written to the session transcript. Must be synchronous; return the updated tool result payload or `undefined` to keep it as-is. See [Agent Loop](/concepts/agent-loop).
+- **`tool_result_persist`**：在写入会话转录前转换工具结果。必须同步；返回更新后的结果或 `undefined` 保持不变。见 [Agent Loop](/concepts/agent-loop)。
 
-### Future Events
+### 未来事件
 
-Planned event types:
+计划事件类型：
 
-- **`session:start`**: When a new session begins
-- **`session:end`**: When a session ends
-- **`agent:error`**: When an agent encounters an error
-- **`message:sent`**: When a message is sent
-- **`message:received`**: When a message is received
+- **`session:start`**：新会话开始
+- **`session:end`**：会话结束
+- **`agent:error`**：agent 出错
+- **`message:sent`**：消息发送
+- **`message:received`**：消息接收
 
-## Creating Custom Hooks
+## 创建自定义 Hooks
 
-### 1. Choose Location
+### 1. 选择位置
 
-- **Workspace hooks** (`<workspace>/hooks/`): Per-agent, highest precedence
-- **Managed hooks** (`~/.clawdbot/hooks/`): Shared across workspaces
+- **工作区 hooks**（`<workspace>/hooks/`）：每 agent，优先级最高
+- **托管 hooks**（`~/.clawdbot/hooks/`）：跨工作区共享
 
-### 2. Create Directory Structure
+### 2. 创建目录结构
 
 ```bash
 mkdir -p ~/.clawdbot/hooks/my-hook
 cd ~/.clawdbot/hooks/my-hook
 ```
 
-### 3. Create HOOK.md
+### 3. 创建 HOOK.md
 
 ```markdown
 ---
@@ -279,7 +278,7 @@ metadata: {"moltbot":{"emoji":"🎯","events":["command:new"]}}
 This hook does something useful when you issue `/new`.
 ```
 
-### 4. Create handler.ts
+### 4. 创建 handler.ts
 
 ```typescript
 import type { HookHandler } from '../../src/hooks/hooks.js';
@@ -296,7 +295,7 @@ const handler: HookHandler = async (event) => {
 export default handler;
 ```
 
-### 5. Enable and Test
+### 5. 启用并测试
 
 ```bash
 # Verify hook is discovered
@@ -311,9 +310,9 @@ moltbot hooks enable my-hook
 # Send /new via your messaging channel
 ```
 
-## Configuration
+## 配置
 
-### New Config Format (Recommended)
+### 新配置格式（推荐）
 
 ```json
 {
@@ -329,9 +328,9 @@ moltbot hooks enable my-hook
 }
 ```
 
-### Per-Hook Configuration
+### 按 Hook 配置
 
-Hooks can have custom configuration:
+Hooks 可携带自定义配置：
 
 ```json
 {
@@ -351,9 +350,9 @@ Hooks can have custom configuration:
 }
 ```
 
-### Extra Directories
+### 额外目录
 
-Load hooks from additional directories:
+从额外目录加载 hooks：
 
 ```json
 {
@@ -368,9 +367,9 @@ Load hooks from additional directories:
 }
 ```
 
-### Legacy Config Format (Still Supported)
+### 旧配置格式（仍支持）
 
-The old config format still works for backwards compatibility:
+旧配置仍可用于兼容：
 
 ```json
 {
@@ -389,11 +388,11 @@ The old config format still works for backwards compatibility:
 }
 ```
 
-**Migration**: Use the new discovery-based system for new hooks. Legacy handlers are loaded after directory-based hooks.
+**迁移**：新 hooks 推荐使用基于发现的系统。旧 handler 会在基于目录的 hooks 之后加载。
 
-## CLI Commands
+## CLI 命令
 
-### List Hooks
+### 列出 Hooks
 
 ```bash
 # List all hooks
@@ -409,7 +408,7 @@ moltbot hooks list --verbose
 moltbot hooks list --json
 ```
 
-### Hook Information
+### Hook 信息
 
 ```bash
 # Show detailed info about a hook
@@ -419,7 +418,7 @@ moltbot hooks info session-memory
 moltbot hooks info session-memory --json
 ```
 
-### Check Eligibility
+### 检查可用性
 
 ```bash
 # Show eligibility summary
@@ -429,7 +428,7 @@ moltbot hooks check
 moltbot hooks check --json
 ```
 
-### Enable/Disable
+### 启用/禁用
 
 ```bash
 # Enable a hook
@@ -439,25 +438,25 @@ moltbot hooks enable session-memory
 moltbot hooks disable command-logger
 ```
 
-## Bundled Hooks
+## 内置 Hooks
 
 ### session-memory
 
-Saves session context to memory when you issue `/new`.
+当你发出 `/new` 时保存会话上下文到记忆。
 
-**Events**: `command:new`
+**事件**：`command:new`
 
-**Requirements**: `workspace.dir` must be configured
+**要求**：必须配置 `workspace.dir`
 
-**Output**: `<workspace>/memory/YYYY-MM-DD-slug.md` (defaults to `~/clawd`)
+**输出**：`<workspace>/memory/YYYY-MM-DD-slug.md`（默认 `~/clawd`）
 
-**What it does**:
-1. Uses the pre-reset session entry to locate the correct transcript
-2. Extracts the last 15 lines of conversation
-3. Uses LLM to generate a descriptive filename slug
-4. Saves session metadata to a dated memory file
+**行为**：
+1. 使用重置前的会话条目定位正确转录
+2. 提取最近 15 行对话
+3. 用 LLM 生成描述性文件名 slug
+4. 将会话元信息保存到带日期的记忆文件
 
-**Example output**:
+**输出示例**：
 
 ```markdown
 # Session: 2026-01-16 14:30:00 UTC
@@ -467,12 +466,12 @@ Saves session context to memory when you issue `/new`.
 - **Source**: telegram
 ```
 
-**Filename examples**:
+**文件名示例**：
 - `2026-01-16-vendor-pitch.md`
 - `2026-01-16-api-design.md`
-- `2026-01-16-1430.md` (fallback timestamp if slug generation fails)
+- `2026-01-16-1430.md`（slug 失败时回退为时间戳）
 
-**Enable**:
+**启用：**
 
 ```bash
 moltbot hooks enable session-memory
@@ -480,27 +479,27 @@ moltbot hooks enable session-memory
 
 ### command-logger
 
-Logs all command events to a centralized audit file.
+将所有命令事件记录到集中审计文件。
 
-**Events**: `command`
+**事件**：`command`
 
-**Requirements**: None
+**要求**：无
 
-**Output**: `~/.clawdbot/logs/commands.log`
+**输出**：`~/.clawdbot/logs/commands.log`
 
-**What it does**:
-1. Captures event details (command action, timestamp, session key, sender ID, source)
-2. Appends to log file in JSONL format
-3. Runs silently in the background
+**行为**：
+1. 捕获事件细节（命令动作、时间戳、会话 key、sender ID、source）
+2. 以 JSONL 格式追加到日志文件
+3. 在后台静默运行
 
-**Example log entries**:
+**日志示例**：
 
 ```jsonl
 {"timestamp":"2026-01-16T14:30:00.000Z","action":"new","sessionKey":"agent:main:main","senderId":"+1234567890","source":"telegram"}
 {"timestamp":"2026-01-16T15:45:22.000Z","action":"stop","sessionKey":"agent:main:main","senderId":"user@example.com","source":"whatsapp"}
 ```
 
-**View logs**:
+**查看日志：**
 
 ```bash
 # View recent commands
@@ -513,7 +512,7 @@ cat ~/.clawdbot/logs/commands.log | jq .
 grep '"action":"new"' ~/.clawdbot/logs/commands.log | jq .
 ```
 
-**Enable**:
+**启用：**
 
 ```bash
 moltbot hooks enable command-logger
@@ -521,21 +520,21 @@ moltbot hooks enable command-logger
 
 ### soul-evil
 
-Swaps injected `SOUL.md` content with `SOUL_EVIL.md` during a purge window or by random chance.
+在清洗窗口或随机情况下，将注入的 `SOUL.md` 内容替换为 `SOUL_EVIL.md`。
 
-**Events**: `agent:bootstrap`
+**事件**：`agent:bootstrap`
 
-**Docs**: [SOUL Evil Hook](/hooks/soul-evil)
+**文档**：[SOUL Evil Hook](/hooks/soul-evil)
 
-**Output**: No files written; swaps happen in-memory only.
+**输出**：不写文件，仅内存替换。
 
-**Enable**:
+**启用：**
 
 ```bash
 moltbot hooks enable soul-evil
 ```
 
-**Config**:
+**配置：**
 
 ```json
 {
@@ -557,46 +556,46 @@ moltbot hooks enable soul-evil
 
 ### boot-md
 
-Runs `BOOT.md` when the gateway starts (after channels start).
-Internal hooks must be enabled for this to run.
+Gateway 启动后运行 `BOOT.md`（通道启动后）。
+需要启用 internal hooks。
 
-**Events**: `gateway:startup`
+**事件**：`gateway:startup`
 
-**Requirements**: `workspace.dir` must be configured
+**要求**：必须配置 `workspace.dir`
 
-**What it does**:
-1. Reads `BOOT.md` from your workspace
-2. Runs the instructions via the agent runner
-3. Sends any requested outbound messages via the message tool
+**行为**：
+1. 从工作区读取 `BOOT.md`
+2. 使用 agent runner 执行指令
+3. 通过 message 工具发送请求的外发消息
 
-**Enable**:
+**启用：**
 
 ```bash
 moltbot hooks enable boot-md
 ```
 
-## Best Practices
+## 最佳实践
 
-### Keep Handlers Fast
+### 保持处理器轻量
 
-Hooks run during command processing. Keep them lightweight:
+Hooks 在命令处理过程中运行，保持轻量：
 
 ```typescript
-// ✓ Good - async work, returns immediately
+// ✓ 好 - 异步工作，立即返回
 const handler: HookHandler = async (event) => {
   void processInBackground(event); // Fire and forget
 };
 
-// ✗ Bad - blocks command processing
+// ✗ 差 - 阻塞命令处理
 const handler: HookHandler = async (event) => {
   await slowDatabaseQuery(event);
   await evenSlowerAPICall(event);
 };
 ```
 
-### Handle Errors Gracefully
+### 优雅处理错误
 
-Always wrap risky operations:
+风险操作要包裹：
 
 ```typescript
 const handler: HookHandler = async (event) => {
@@ -609,9 +608,9 @@ const handler: HookHandler = async (event) => {
 };
 ```
 
-### Filter Events Early
+### 早过滤事件
 
-Return early if the event isn't relevant:
+不相关事件直接返回：
 
 ```typescript
 const handler: HookHandler = async (event) => {
@@ -624,25 +623,25 @@ const handler: HookHandler = async (event) => {
 };
 ```
 
-### Use Specific Event Keys
+### 使用具体事件键
 
-Specify exact events in metadata when possible:
+尽量在元数据里使用精确事件：
 
 ```yaml
 metadata: {"moltbot":{"events":["command:new"]}}  # Specific
 ```
 
-Rather than:
+而不是：
 
 ```yaml
 metadata: {"moltbot":{"events":["command"]}}      # General - more overhead
 ```
 
-## Debugging
+## 调试
 
-### Enable Hook Logging
+### 启用 Hook 日志
 
-The gateway logs hook loading at startup:
+Gateway 启动时会记录 hook 加载：
 
 ```
 Registered hook: session-memory -> command:new
@@ -650,17 +649,17 @@ Registered hook: command-logger -> command
 Registered hook: boot-md -> gateway:startup
 ```
 
-### Check Discovery
+### 检查发现
 
-List all discovered hooks:
+列出所有已发现 hooks：
 
 ```bash
 moltbot hooks list --verbose
 ```
 
-### Check Registration
+### 检查注册
 
-In your handler, log when it's called:
+在 handler 中打印调用日志：
 
 ```typescript
 const handler: HookHandler = async (event) => {
@@ -669,33 +668,33 @@ const handler: HookHandler = async (event) => {
 };
 ```
 
-### Verify Eligibility
+### 验证可用性
 
-Check why a hook isn't eligible:
+查看 hook 为何不可用：
 
 ```bash
 moltbot hooks info my-hook
 ```
 
-Look for missing requirements in the output.
+查看输出中的缺失项。
 
-## Testing
+## 测试
 
-### Gateway Logs
+### Gateway 日志
 
-Monitor gateway logs to see hook execution:
+监控 gateway 日志以查看 hook 执行：
 
 ```bash
 # macOS
 ./scripts/clawlog.sh -f
 
-# Other platforms
+# 其他平台
 tail -f ~/.clawdbot/gateway.log
 ```
 
-### Test Hooks Directly
+### 直接测试 Hooks
 
-Test your handlers in isolation:
+在隔离环境测试 handler：
 
 ```typescript
 import { test } from 'vitest';
@@ -713,21 +712,21 @@ test('my handler works', async () => {
 });
 ```
 
-## Architecture
+## 架构
 
-### Core Components
+### 核心组件
 
-- **`src/hooks/types.ts`**: Type definitions
-- **`src/hooks/workspace.ts`**: Directory scanning and loading
-- **`src/hooks/frontmatter.ts`**: HOOK.md metadata parsing
-- **`src/hooks/config.ts`**: Eligibility checking
-- **`src/hooks/hooks-status.ts`**: Status reporting
-- **`src/hooks/loader.ts`**: Dynamic module loader
-- **`src/cli/hooks-cli.ts`**: CLI commands
-- **`src/gateway/server-startup.ts`**: Loads hooks at gateway start
-- **`src/auto-reply/reply/commands-core.ts`**: Triggers command events
+- **`src/hooks/types.ts`**：类型定义
+- **`src/hooks/workspace.ts`**：目录扫描与加载
+- **`src/hooks/frontmatter.ts`**：HOOK.md 元数据解析
+- **`src/hooks/config.ts`**：可用性检查
+- **`src/hooks/hooks-status.ts`**：状态上报
+- **`src/hooks/loader.ts`**：动态模块加载
+- **`src/cli/hooks-cli.ts`**：CLI 命令
+- **`src/gateway/server-startup.ts`**：网关启动加载 hooks
+- **`src/auto-reply/reply/commands-core.ts`**：触发命令事件
 
-### Discovery Flow
+### 发现流程
 
 ```
 Gateway startup
@@ -743,7 +742,7 @@ Load handlers from eligible hooks
 Register handlers for events
 ```
 
-### Event Flow
+### 事件流程
 
 ```
 User sends /new
@@ -759,70 +758,70 @@ Command processing continues
 Session reset
 ```
 
-## Troubleshooting
+## 故障排查
 
-### Hook Not Discovered
+### Hook 未被发现
 
-1. Check directory structure:
+1. 检查目录结构：
    ```bash
    ls -la ~/.clawdbot/hooks/my-hook/
    # Should show: HOOK.md, handler.ts
    ```
 
-2. Verify HOOK.md format:
+2. 检查 HOOK.md 格式：
    ```bash
    cat ~/.clawdbot/hooks/my-hook/HOOK.md
    # Should have YAML frontmatter with name and metadata
    ```
 
-3. List all discovered hooks:
+3. 列出所有已发现 hooks：
    ```bash
    moltbot hooks list
    ```
 
-### Hook Not Eligible
+### Hook 不可用
 
-Check requirements:
+检查 requirements：
 
 ```bash
 moltbot hooks info my-hook
 ```
 
-Look for missing:
-- Binaries (check PATH)
-- Environment variables
-- Config values
-- OS compatibility
+查看缺失项：
+- 二进制（检查 PATH）
+- 环境变量
+- 配置值
+- OS 兼容性
 
-### Hook Not Executing
+### Hook 未执行
 
-1. Verify hook is enabled:
+1. 确认 hook 已启用：
    ```bash
    moltbot hooks list
    # Should show ✓ next to enabled hooks
    ```
 
-2. Restart your gateway process so hooks reload.
+2. 重启 gateway 进程以重新加载 hooks。
 
-3. Check gateway logs for errors:
+3. 检查 gateway 日志错误：
    ```bash
    ./scripts/clawlog.sh | grep hook
    ```
 
-### Handler Errors
+### Handler 错误
 
-Check for TypeScript/import errors:
+检查 TypeScript/import 错误：
 
 ```bash
 # Test import directly
 node -e "import('./path/to/handler.ts').then(console.log)"
 ```
 
-## Migration Guide
+## 迁移指南
 
-### From Legacy Config to Discovery
+### 从旧配置迁移到发现机制
 
-**Before**:
+**Before**：
 
 ```json
 {
@@ -840,15 +839,15 @@ node -e "import('./path/to/handler.ts').then(console.log)"
 }
 ```
 
-**After**:
+**After**：
 
-1. Create hook directory:
+1. 创建 hook 目录：
    ```bash
    mkdir -p ~/.clawdbot/hooks/my-hook
    mv ./hooks/handlers/my-handler.ts ~/.clawdbot/hooks/my-hook/handler.ts
    ```
 
-2. Create HOOK.md:
+2. 创建 HOOK.md：
    ```markdown
    ---
    name: my-hook
@@ -861,7 +860,7 @@ node -e "import('./path/to/handler.ts').then(console.log)"
    Does something useful.
    ```
 
-3. Update config:
+3. 更新配置：
    ```json
    {
      "hooks": {
@@ -875,20 +874,20 @@ node -e "import('./path/to/handler.ts').then(console.log)"
    }
    ```
 
-4. Verify and restart your gateway process:
+4. 验证并重启 gateway：
    ```bash
    moltbot hooks list
    # Should show: 🎯 my-hook ✓
    ```
 
-**Benefits of migration**:
-- Automatic discovery
-- CLI management
-- Eligibility checking
-- Better documentation
-- Consistent structure
+**迁移收益**：
+- 自动发现
+- CLI 管理
+- 可用性检查
+- 更好的文档
+- 统一结构
 
-## See Also
+## 另见
 
 - [CLI Reference: hooks](/cli/hooks)
 - [Bundled Hooks README](https://github.com/moltbot/moltbot/tree/main/src/hooks/bundled)

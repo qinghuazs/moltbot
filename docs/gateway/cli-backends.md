@@ -1,39 +1,36 @@
 ---
-summary: "CLI backends: text-only fallback via local AI CLIs"
+summary: "CLI 后端：通过本地 AI CLI 的纯文本兜底"
 read_when:
-  - You want a reliable fallback when API providers fail
-  - You are running Claude Code CLI or other local AI CLIs and want to reuse them
-  - You need a text-only, tool-free path that still supports sessions and images
+  - 当 API 提供方失败时需要可靠兜底
+  - 运行 Claude Code CLI 或其他本地 AI CLI 并希望复用
+  - 需要一个纯文本、无工具但支持会话和图片的路径
 ---
-# CLI backends (fallback runtime)
+# CLI 后端（兜底运行时）
 
-Moltbot can run **local AI CLIs** as a **text-only fallback** when API providers are down,
-rate-limited, or temporarily misbehaving. This is intentionally conservative:
+当 API 提供方宕机、限流或临时异常时，Moltbot 可运行 **本地 AI CLI** 作为 **纯文本兜底**。这是刻意保守的：
 
-- **Tools are disabled** (no tool calls).
-- **Text in → text out** (reliable).
-- **Sessions are supported** (so follow-up turns stay coherent).
-- **Images can be passed through** if the CLI accepts image paths.
+- **禁用工具**（不进行工具调用）。
+- **文本输入 → 文本输出**（可靠）。
+- **支持会话**（后续对话保持一致）。
+- **可传图片**（若 CLI 接受图片路径）。
 
-This is designed as a **safety net** rather than a primary path. Use it when you
-want “always works” text responses without relying on external APIs.
+这是一个 **安全网** 而非主路径。用于在不依赖外部 API 的情况下确保“始终可用”的文本回复。
 
-## Beginner-friendly quick start
+## 入门快速开始
 
-You can use Claude Code CLI **without any config** (Moltbot ships a built-in default):
+无需配置即可使用 Claude Code CLI（Moltbot 内置默认）：
 
 ```bash
 moltbot agent --message "hi" --model claude-cli/opus-4.5
 ```
 
-Codex CLI also works out of the box:
+Codex CLI 也可直接使用：
 
 ```bash
 moltbot agent --message "hi" --model codex-cli/gpt-5.2-codex
 ```
 
-If your gateway runs under launchd/systemd and PATH is minimal, add just the
-command path:
+若你的 gateway 运行在 launchd/systemd 且 PATH 很精简，补充命令路径即可：
 
 ```json5
 {
@@ -49,11 +46,11 @@ command path:
 }
 ```
 
-That’s it. No keys, no extra auth config needed beyond the CLI itself.
+这样就可以了。不需要额外 key 或认证配置（CLI 自身的认证除外）。
 
-## Using it as a fallback
+## 作为 fallback 使用
 
-Add a CLI backend to your fallback list so it only runs when primary models fail:
+将 CLI 后端加入 fallback 列表，只在主模型失败时运行：
 
 ```json5
 {
@@ -74,27 +71,26 @@ Add a CLI backend to your fallback list so it only runs when primary models fail
 }
 ```
 
-Notes:
-- If you use `agents.defaults.models` (allowlist), you must include `claude-cli/...`.
-- If the primary provider fails (auth, rate limits, timeouts), Moltbot will
-  try the CLI backend next.
+说明：
+- 若使用 `agents.defaults.models`（allowlist），必须包含 `claude-cli/...`。
+- 主提供方失败（认证、限流、超时）时，Moltbot 会尝试 CLI 后端。
 
-## Configuration overview
+## 配置概览
 
-All CLI backends live under:
+所有 CLI 后端位于：
 
 ```
 agents.defaults.cliBackends
 ```
 
-Each entry is keyed by a **provider id** (e.g. `claude-cli`, `my-cli`).
-The provider id becomes the left side of your model ref:
+每个条目以 **provider id** 为键（如 `claude-cli`、`my-cli`）。
+该 id 会成为 model 引用的左侧：
 
 ```
 <provider>/<model>
 ```
 
-### Example configuration
+### 配置示例
 
 ```json5
 {
@@ -129,56 +125,51 @@ The provider id becomes the left side of your model ref:
 }
 ```
 
-## How it works
+## 工作原理
 
-1) **Selects a backend** based on the provider prefix (`claude-cli/...`).
-2) **Builds a system prompt** using the same Moltbot prompt + workspace context.
-3) **Executes the CLI** with a session id (if supported) so history stays consistent.
-4) **Parses output** (JSON or plain text) and returns the final text.
-5) **Persists session ids** per backend, so follow-ups reuse the same CLI session.
+1) **按 provider 前缀选择后端**（`claude-cli/...`）。
+2) **构建系统提示**（使用 Moltbot prompt + 工作区上下文）。
+3) **执行 CLI**，带 session id（若支持）以保持历史一致。
+4) **解析输出**（JSON 或纯文本）并返回最终文本。
+5) **持久化 session id**（按后端），使后续会话复用同一 CLI 会话。
 
-## Sessions
+## 会话
 
-- If the CLI supports sessions, set `sessionArg` (e.g. `--session-id`) or
-  `sessionArgs` (placeholder `{sessionId}`) when the ID needs to be inserted
-  into multiple flags.
-- If the CLI uses a **resume subcommand** with different flags, set
-  `resumeArgs` (replaces `args` when resuming) and optionally `resumeOutput`
-  (for non-JSON resumes).
-- `sessionMode`:
-  - `always`: always send a session id (new UUID if none stored).
-  - `existing`: only send a session id if one was stored before.
-  - `none`: never send a session id.
+- 若 CLI 支持会话，设置 `sessionArg`（如 `--session-id`）或
+  `sessionArgs`（当 session id 需要插入多个参数时使用占位符 `{sessionId}`）。
+- 若 CLI 使用 **resume 子命令** 且参数不同，设置
+  `resumeArgs`（恢复时替换 `args`）并可选 `resumeOutput`
+  （用于非 JSON 的恢复输出）。
+- `sessionMode`：
+  - `always`：总是发送 session id（若无存储则生成新 UUID）。
+  - `existing`：仅在已有存储时发送 session id。
+  - `none`：从不发送 session id。
 
-## Images (pass-through)
+## 图片（透传）
 
-If your CLI accepts image paths, set `imageArg`:
+若 CLI 接受图片路径，设置 `imageArg`：
 
 ```json5
 imageArg: "--image",
 imageMode: "repeat"
 ```
 
-Moltbot will write base64 images to temp files. If `imageArg` is set, those
-paths are passed as CLI args. If `imageArg` is missing, Moltbot appends the
-file paths to the prompt (path injection), which is enough for CLIs that auto-
-load local files from plain paths (Claude Code CLI behavior).
+Moltbot 会把 base64 图片写入临时文件。若设置 `imageArg`，路径会作为 CLI 参数传递。若未设置，Moltbot 会把文件路径追加到 prompt（路径注入），对可从纯路径自动加载本地文件的 CLI 也足够（Claude Code CLI 行为）。
 
-## Inputs / outputs
+## 输入 / 输出
 
-- `output: "json"` (default) tries to parse JSON and extract text + session id.
-- `output: "jsonl"` parses JSONL streams (Codex CLI `--json`) and extracts the
-  last agent message plus `thread_id` when present.
-- `output: "text"` treats stdout as the final response.
+- `output: "json"`（默认）尝试解析 JSON 并提取文本 + session id。
+- `output: "jsonl"` 解析 JSONL 流（Codex CLI `--json`）并提取最后一条 agent 消息与 `thread_id`（若存在）。
+- `output: "text"` 将 stdout 作为最终响应。
 
-Input modes:
-- `input: "arg"` (default) passes the prompt as the last CLI arg.
-- `input: "stdin"` sends the prompt via stdin.
-- If the prompt is very long and `maxPromptArgChars` is set, stdin is used.
+输入模式：
+- `input: "arg"`（默认）将 prompt 作为 CLI 最后一个参数。
+- `input: "stdin"` 通过 stdin 发送 prompt。
+- 若 prompt 很长且设置了 `maxPromptArgChars`，会改用 stdin。
 
-## Defaults (built-in)
+## 默认值（内置）
 
-Moltbot ships a default for `claude-cli`:
+Moltbot 内置 `claude-cli` 默认值：
 
 - `command: "claude"`
 - `args: ["-p", "--output-format", "json", "--dangerously-skip-permissions"]`
@@ -189,7 +180,7 @@ Moltbot ships a default for `claude-cli`:
 - `systemPromptWhen: "first"`
 - `sessionMode: "always"`
 
-Moltbot also ships a default for `codex-cli`:
+Moltbot 也内置 `codex-cli` 默认值：
 
 - `command: "codex"`
 - `args: ["exec","--json","--color","never","--sandbox","read-only","--skip-git-repo-check"]`
@@ -200,22 +191,18 @@ Moltbot also ships a default for `codex-cli`:
 - `imageArg: "--image"`
 - `sessionMode: "existing"`
 
-Override only if needed (common: absolute `command` path).
+只有在需要时才覆盖（常见：使用绝对 `command` 路径）。
 
-## Limitations
+## 限制
 
-- **No Moltbot tools** (the CLI backend never receives tool calls). Some CLIs
-  may still run their own agent tooling.
-- **No streaming** (CLI output is collected then returned).
-- **Structured outputs** depend on the CLI’s JSON format.
-- **Codex CLI sessions** resume via text output (no JSONL), which is less
-  structured than the initial `--json` run. Moltbot sessions still work
-  normally.
+- **无 Moltbot 工具**（CLI 后端不会收到工具调用）。部分 CLI 可能仍会运行自身工具。
+- **无流式**（收集输出后再返回）。
+- **结构化输出** 依赖 CLI 的 JSON 格式。
+- **Codex CLI 会话** 的恢复输出是纯文本（非 JSONL），结构化程度低于首次 `--json` 运行。Moltbot 会话仍可正常工作。
 
-## Troubleshooting
+## 排障
 
-- **CLI not found**: set `command` to a full path.
-- **Wrong model name**: use `modelAliases` to map `provider/model` → CLI model.
-- **No session continuity**: ensure `sessionArg` is set and `sessionMode` is not
-  `none` (Codex CLI currently cannot resume with JSON output).
-- **Images ignored**: set `imageArg` (and verify CLI supports file paths).
+- **找不到 CLI**：将 `command` 设为完整路径。
+- **模型名错误**：用 `modelAliases` 将 `provider/model` 映射到 CLI 的模型名。
+- **会话不连续**：确保设置 `sessionArg` 且 `sessionMode` 不是 `none`（Codex CLI 当前无法以 JSON 输出恢复）。
+- **图片被忽略**：设置 `imageArg`（并确认 CLI 支持文件路径）。

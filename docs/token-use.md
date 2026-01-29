@@ -1,91 +1,77 @@
 ---
-summary: "How Moltbot builds prompt context and reports token usage + costs"
+summary: "Moltbot 如何构建 prompt 上下文并报告 token 使用与成本"
 read_when:
-  - Explaining token usage, costs, or context windows
-  - Debugging context growth or compaction behavior
+  - 解释 token 使用、成本或上下文窗口
+  - 排查上下文增长或压缩行为
 ---
-# Token use & costs
+# Token 使用与成本
 
-Moltbot tracks **tokens**, not characters. Tokens are model-specific, but most
-OpenAI-style models average ~4 characters per token for English text.
+Moltbot 跟踪 **token** 而非字符。token 与模型有关，但大多数 OpenAI 风格模型的英文平均约 4 个字符/Token。
 
-## How the system prompt is built
+## 系统提示如何构建
 
-Moltbot assembles its own system prompt on every run. It includes:
+Moltbot 每次运行都会拼装系统提示，包含：
 
-- Tool list + short descriptions
-- Skills list (only metadata; instructions are loaded on demand with `read`)
-- Self-update instructions
-- Workspace + bootstrap files (`AGENTS.md`, `SOUL.md`, `TOOLS.md`, `IDENTITY.md`, `USER.md`, `HEARTBEAT.md`, `BOOTSTRAP.md` when new). Large files are truncated by `agents.defaults.bootstrapMaxChars` (default: 20000).
-- Time (UTC + user timezone)
-- Reply tags + heartbeat behavior
-- Runtime metadata (host/OS/model/thinking)
+- 工具列表与简短说明
+- Skills 列表（仅元数据；指令按需用 `read` 加载）
+- 自更新说明
+- 工作区 + 启动文件（`AGENTS.md`、`SOUL.md`、`TOOLS.md`、`IDENTITY.md`、`USER.md`、`HEARTBEAT.md`、`BOOTSTRAP.md` 在新会话时加载）。大文件会按 `agents.defaults.bootstrapMaxChars` 截断（默认：20000）。
+- 时间（UTC + 用户时区）
+- 回复标签 + 心跳行为
+- 运行时元信息（host/OS/model/thinking）
 
-See the full breakdown in [System Prompt](/concepts/system-prompt).
+完整拆分见 [System Prompt](/concepts/system-prompt)。
 
-## What counts in the context window
+## 上下文窗口包含哪些内容
 
-Everything the model receives counts toward the context limit:
+模型收到的所有内容都会计入上下文限制：
 
-- System prompt (all sections listed above)
-- Conversation history (user + assistant messages)
-- Tool calls and tool results
-- Attachments/transcripts (images, audio, files)
-- Compaction summaries and pruning artifacts
-- Provider wrappers or safety headers (not visible, but still counted)
+- 系统提示（以上所有部分）
+- 对话历史（用户 + assistant 消息）
+- 工具调用与工具结果
+- 附件/转录（图片、音频、文件）
+- 压缩摘要与裁剪产物
+- Provider 包装或安全头（不可见但仍计入）
 
-For a practical breakdown (per injected file, tools, skills, and system prompt size), use `/context list` or `/context detail`. See [Context](/concepts/context).
+查看注入文件、工具、skills 与系统提示大小的实际拆分，可用 `/context list` 或 `/context detail`。见 [Context](/concepts/context)。
 
-## How to see current token usage
+## 如何查看当前 token 使用
 
-Use these in chat:
+在聊天中使用：
 
-- `/status` → **emoji‑rich status card** with the session model, context usage,
-  last response input/output tokens, and **estimated cost** (API key only).
-- `/usage off|tokens|full` → appends a **per-response usage footer** to every reply.
-  - Persists per session (stored as `responseUsage`).
-  - OAuth auth **hides cost** (tokens only).
-- `/usage cost` → shows a local cost summary from Moltbot session logs.
+- `/status` → **富 emoji 状态卡**，包含会话模型、上下文使用、最近回复的输入/输出 tokens、以及 **估算成本**（仅 API key 模式）。
+- `/usage off|tokens|full` → 为每条回复附加 **逐条使用量 footer**。
+  - 会话内持久化（存储为 `responseUsage`）。
+  - OAuth 认证 **隐藏成本**（仅显示 tokens）。
+- `/usage cost` → 从 Moltbot 会话日志显示本地成本汇总。
 
-Other surfaces:
+其他界面：
 
-- **TUI/Web TUI:** `/status` + `/usage` are supported.
-- **CLI:** `moltbot status --usage` and `moltbot channels list` show
-  provider quota windows (not per-response costs).
+- **TUI/Web TUI：** 支持 `/status` + `/usage`。
+- **CLI：** `moltbot status --usage` 与 `moltbot channels list` 显示 provider 额度窗口（非逐条成本）。
 
-## Cost estimation (when shown)
+## 成本估算（何时显示）
 
-Costs are estimated from your model pricing config:
+成本来自模型定价配置：
 
 ```
 models.providers.<provider>.models[].cost
 ```
 
-These are **USD per 1M tokens** for `input`, `output`, `cacheRead`, and
-`cacheWrite`. If pricing is missing, Moltbot shows tokens only. OAuth tokens
-never show dollar cost.
+这些是 **每 100 万 tokens 的美元价格**，包含 `input`、`output`、`cacheRead`、`cacheWrite`。若缺失定价，Moltbot 仅显示 tokens。OAuth token 永不显示美元成本。
 
-## Cache TTL and pruning impact
+## 缓存 TTL 与裁剪影响
 
-Provider prompt caching only applies within the cache TTL window. Moltbot can
-optionally run **cache-ttl pruning**: it prunes the session once the cache TTL
-has expired, then resets the cache window so subsequent requests can re-use the
-freshly cached context instead of re-caching the full history. This keeps cache
-write costs lower when a session goes idle past the TTL.
+Provider 的 prompt caching 仅在缓存 TTL 窗口内有效。Moltbot 可选 **cache-ttl 裁剪**：当 cache TTL 过期后，它会裁剪会话并重置缓存窗口，使后续请求复用新缓存的上下文，而不是重新缓存完整历史。这能在会话空闲超过 TTL 时降低 cache 写入成本。
 
-Configure it in [Gateway configuration](/gateway/configuration) and see the
-behavior details in [Session pruning](/concepts/session-pruning).
+在 [Gateway configuration](/gateway/configuration) 中配置，并在 [Session pruning](/concepts/session-pruning) 查看行为细节。
 
-Heartbeat can keep the cache **warm** across idle gaps. If your model cache TTL
-is `1h`, setting the heartbeat interval just under that (e.g., `55m`) can avoid
-re-caching the full prompt, reducing cache write costs.
+心跳可在空闲间隙保持缓存 **温热**。若模型缓存 TTL 为 `1h`，将心跳间隔设为略小于它（如 `55m`）可避免重新缓存完整提示，从而降低 cache 写入成本。
 
-For Anthropic API pricing, cache reads are significantly cheaper than input
-tokens, while cache writes are billed at a higher multiplier. See Anthropic’s
-prompt caching pricing for the latest rates and TTL multipliers:
+对于 Anthropic 的 API 定价，cache read 比输入 tokens 便宜得多，而 cache write 的计费倍率更高。最新费率与 TTL 倍率见 Anthropic 的 prompt caching 定价文档：
 https://docs.anthropic.com/docs/build-with-claude/prompt-caching
 
-### Example: keep 1h cache warm with heartbeat
+### 示例：用心跳保持 1h 缓存温热
 
 ```yaml
 agents:
@@ -100,11 +86,11 @@ agents:
       every: "55m"
 ```
 
-## Tips for reducing token pressure
+## 降低 token 压力的技巧
 
-- Use `/compact` to summarize long sessions.
-- Trim large tool outputs in your workflows.
-- Keep skill descriptions short (skill list is injected into the prompt).
-- Prefer smaller models for verbose, exploratory work.
+- 用 `/compact` 总结长会话。
+- 在流程里裁剪较大的工具输出。
+- 保持技能描述简短（技能列表会注入到 prompt）。
+- 对冗长、探索性工作优先使用小模型。
 
-See [Skills](/tools/skills) for the exact skill list overhead formula.
+技能列表带来的精确开销公式见 [Skills](/tools/skills)。

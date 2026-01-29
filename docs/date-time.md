@@ -1,26 +1,26 @@
 ---
-summary: "Date and time handling across envelopes, prompts, tools, and connectors"
+summary: "在封装、提示词、工具与连接器中的日期与时间处理"
 read_when:
-  - You are changing how timestamps are shown to the model or users
-  - You are debugging time formatting in messages or system prompt output
+  - 修改时间戳如何展示给模型或用户
+  - 排查消息或系统提示中的时间格式
 ---
 
-# Date & Time
+# 日期与时间
 
-Moltbot defaults to **host-local time for transport timestamps** and **user timezone only in the system prompt**.
-Provider timestamps are preserved so tools keep their native semantics (current time is available via `session_status`).
+Moltbot 默认 **传输时间戳使用主机本地时间**，而 **用户时区仅用于系统提示**。
+Provider 时间戳会被保留，以保证工具保持原生语义（可通过 `session_status` 获取当前时间）。
 
-## Message envelopes (local by default)
+## 消息封装（默认本地）
 
-Inbound messages are wrapped with a timestamp (minute precision):
+入站消息会被加上时间戳封装（精确到分钟）：
 
 ```
 [Provider ... 2026-01-05 16:26 PST] message text
 ```
 
-This envelope timestamp is **host-local by default**, regardless of the provider timezone.
+该封装时间戳 **默认使用主机本地时区**，与 provider 时区无关。
 
-You can override this behavior:
+可覆盖：
 
 ```json5
 {
@@ -34,56 +34,53 @@ You can override this behavior:
 }
 ```
 
-- `envelopeTimezone: "utc"` uses UTC.
-- `envelopeTimezone: "local"` uses the host timezone.
-- `envelopeTimezone: "user"` uses `agents.defaults.userTimezone` (falls back to host timezone).
-- Use an explicit IANA timezone (e.g., `"America/Chicago"`) for a fixed zone.
-- `envelopeTimestamp: "off"` removes absolute timestamps from envelope headers.
-- `envelopeElapsed: "off"` removes elapsed time suffixes (the `+2m` style).
+- `envelopeTimezone: "utc"` 使用 UTC。
+- `envelopeTimezone: "local"` 使用主机时区。
+- `envelopeTimezone: "user"` 使用 `agents.defaults.userTimezone`（回退到主机时区）。
+- 使用明确的 IANA 时区（如 `"America/Chicago"`）可固定时区。
+- `envelopeTimestamp: "off"` 移除封装头中的绝对时间戳。
+- `envelopeElapsed: "off"` 移除耗时后缀（如 `+2m`）。
 
-### Examples
+### 示例
 
-**Local (default):**
+**本地（默认）：**
 
 ```
 [WhatsApp +1555 2026-01-18 00:19 PST] hello
 ```
 
-**User timezone:**
+**用户时区：**
 
 ```
 [WhatsApp +1555 2026-01-18 00:19 CST] hello
 ```
 
-**Elapsed time enabled:**
+**启用耗时：**
 
 ```
 [WhatsApp +1555 +30s 2026-01-18T05:19Z] follow-up
 ```
 
-## System prompt: Current Date & Time
+## 系统提示：当前日期与时间
 
-If the user timezone is known, the system prompt includes a dedicated
-**Current Date & Time** section with the **time zone only** (no clock/time format)
-to keep prompt caching stable:
+如果已知用户时区，系统提示会包含专门的
+**Current Date & Time** 段落，仅包含 **时区**（无具体时间格式），以保持 prompt 缓存稳定：
 
 ```
 Time zone: America/Chicago
 ```
 
-When the agent needs the current time, use the `session_status` tool; the status
-card includes a timestamp line.
+需要当前时间时，请用 `session_status` 工具；status 卡片包含时间戳行。
 
-## System event lines (local by default)
+## 系统事件行（默认本地）
 
-Queued system events inserted into agent context are prefixed with a timestamp using the
-same timezone selection as message envelopes (default: host-local).
+插入到 agent 上下文的队列系统事件，会用与消息封装相同的时区规则加时间戳前缀（默认主机本地）：
 
 ```
 System: [2026-01-12 12:19:17 PST] Model switched.
 ```
 
-### Configure user timezone + format
+### 配置用户时区与格式
 
 ```json5
 {
@@ -96,31 +93,29 @@ System: [2026-01-12 12:19:17 PST] Model switched.
 }
 ```
 
-- `userTimezone` sets the **user-local timezone** for prompt context.
-- `timeFormat` controls **12h/24h display** in the prompt. `auto` follows OS prefs.
+- `userTimezone` 设置 **用户本地时区** 供 prompt 使用。
+- `timeFormat` 控制 prompt 中 **12h/24h 显示**。`auto` 跟随 OS 偏好。
 
-## Time format detection (auto)
+## 时间格式检测（auto）
 
-When `timeFormat: "auto"`, Moltbot inspects the OS preference (macOS/Windows)
-and falls back to locale formatting. The detected value is **cached per process**
-to avoid repeated system calls.
+当 `timeFormat: "auto"` 时，Moltbot 会读取 OS 偏好（macOS/Windows），并回退到 locale 格式。检测值会 **按进程缓存** 以避免重复系统调用。
 
-## Tool payloads + connectors (raw provider time + normalized fields)
+## 工具负载与连接器（保留原始时间 + 规范字段）
 
-Channel tools return **provider-native timestamps** and add normalized fields for consistency:
+通道工具返回 **provider 原生时间戳** 并补充规范字段：
 
-- `timestampMs`: epoch milliseconds (UTC)
-- `timestampUtc`: ISO 8601 UTC string
+- `timestampMs`：epoch 毫秒（UTC）
+- `timestampUtc`：ISO 8601 UTC 字符串
 
-Raw provider fields are preserved so nothing is lost.
+原始字段会保留以避免信息丢失。
 
-- Slack: epoch-like strings from the API
-- Discord: UTC ISO timestamps
-- Telegram/WhatsApp: provider-specific numeric/ISO timestamps
+- Slack：API 的类 epoch 字符串
+- Discord：UTC ISO 时间戳
+- Telegram/WhatsApp：provider 特定的数字/ISO 时间戳
 
-If you need local time, convert it downstream using the known timezone.
+若需要本地时间，请在下游使用已知时区进行转换。
 
-## Related docs
+## 相关文档
 
 - [System Prompt](/concepts/system-prompt)
 - [Timezones](/concepts/timezone)

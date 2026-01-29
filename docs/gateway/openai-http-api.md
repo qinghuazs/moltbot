@@ -1,46 +1,46 @@
 ---
-summary: "Expose an OpenAI-compatible /v1/chat/completions HTTP endpoint from the Gateway"
+summary: "从 Gateway 暴露兼容 OpenAI 的 /v1/chat/completions HTTP 端点"
 read_when:
-  - Integrating tools that expect OpenAI Chat Completions
+  - 集成依赖 OpenAI Chat Completions 的工具
 ---
-# OpenAI Chat Completions (HTTP)
+# OpenAI Chat Completions（HTTP）
 
-Moltbot’s Gateway can serve a small OpenAI-compatible Chat Completions endpoint.
+Moltbot 的 Gateway 可提供小型 OpenAI 兼容的 Chat Completions 端点。
 
-This endpoint is **disabled by default**. Enable it in config first.
+该端点 **默认关闭**，需在配置中启用。
 
 - `POST /v1/chat/completions`
-- Same port as the Gateway (WS + HTTP multiplex): `http://<gateway-host>:<port>/v1/chat/completions`
+- 与 Gateway 同端口（WS + HTTP 复用）：`http://<gateway-host>:<port>/v1/chat/completions`
 
-Under the hood, requests are executed as a normal Gateway agent run (same codepath as `moltbot agent`), so routing/permissions/config match your Gateway.
+底层请求会作为普通 Gateway agent 运行（与 `moltbot agent` 同代码路径），因此路由/权限/配置都与 Gateway 一致。
 
-## Authentication
+## 认证
 
-Uses the Gateway auth configuration. Send a bearer token:
+使用 Gateway 认证配置。发送 bearer token：
 
 - `Authorization: Bearer <token>`
 
-Notes:
-- When `gateway.auth.mode="token"`, use `gateway.auth.token` (or `CLAWDBOT_GATEWAY_TOKEN`).
-- When `gateway.auth.mode="password"`, use `gateway.auth.password` (or `CLAWDBOT_GATEWAY_PASSWORD`).
+说明：
+- 当 `gateway.auth.mode="token"` 时，使用 `gateway.auth.token`（或 `CLAWDBOT_GATEWAY_TOKEN`）。
+- 当 `gateway.auth.mode="password"` 时，使用 `gateway.auth.password`（或 `CLAWDBOT_GATEWAY_PASSWORD`）。
 
-## Choosing an agent
+## 选择 agent
 
-No custom headers required: encode the agent id in the OpenAI `model` field:
+无需自定义 header：在 OpenAI `model` 字段中编码 agent id：
 
-- `model: "moltbot:<agentId>"` (example: `"moltbot:main"`, `"moltbot:beta"`)
-- `model: "agent:<agentId>"` (alias)
+- `model: "moltbot:<agentId>"`（示例：`"moltbot:main"`、`"moltbot:beta"`）
+- `model: "agent:<agentId>"`（别名）
 
-Or target a specific Moltbot agent by header:
+或通过 header 指定特定 Moltbot agent：
 
-- `x-moltbot-agent-id: <agentId>` (default: `main`)
+- `x-moltbot-agent-id: <agentId>`（默认：`main`）
 
-Advanced:
-- `x-moltbot-session-key: <sessionKey>` to fully control session routing.
+高级：
+- `x-moltbot-session-key: <sessionKey>` 可完全控制会话路由。
 
-## Enabling the endpoint
+## 启用端点
 
-Set `gateway.http.endpoints.chatCompletions.enabled` to `true`:
+将 `gateway.http.endpoints.chatCompletions.enabled` 设为 `true`：
 
 ```json5
 {
@@ -54,9 +54,9 @@ Set `gateway.http.endpoints.chatCompletions.enabled` to `true`:
 }
 ```
 
-## Disabling the endpoint
+## 禁用端点
 
-Set `gateway.http.endpoints.chatCompletions.enabled` to `false`:
+将 `gateway.http.endpoints.chatCompletions.enabled` 设为 `false`：
 
 ```json5
 {
@@ -70,23 +70,23 @@ Set `gateway.http.endpoints.chatCompletions.enabled` to `false`:
 }
 ```
 
-## Session behavior
+## 会话行为
 
-By default the endpoint is **stateless per request** (a new session key is generated each call).
+默认端点 **每次请求无状态**（每次调用都会生成新的 session key）。
 
-If the request includes an OpenAI `user` string, the Gateway derives a stable session key from it, so repeated calls can share an agent session.
+如果请求包含 OpenAI `user` 字符串，Gateway 会据此派生稳定 session key，让多次调用共享 agent 会话。
 
-## Streaming (SSE)
+## 流式（SSE）
 
-Set `stream: true` to receive Server-Sent Events (SSE):
+设置 `stream: true` 以接收 Server-Sent Events（SSE）：
 
 - `Content-Type: text/event-stream`
-- Each event line is `data: <json>`
-- Stream ends with `data: [DONE]`
+- 每条事件为 `data: <json>`
+- 结束时发送 `data: [DONE]`
 
-## Examples
+## 示例
 
-Non-streaming:
+非流式：
 ```bash
 curl -sS http://127.0.0.1:18789/v1/chat/completions \
   -H 'Authorization: Bearer YOUR_TOKEN' \
@@ -98,7 +98,7 @@ curl -sS http://127.0.0.1:18789/v1/chat/completions \
   }'
 ```
 
-Streaming:
+流式：
 ```bash
 curl -N http://127.0.0.1:18789/v1/chat/completions \
   -H 'Authorization: Bearer YOUR_TOKEN' \
