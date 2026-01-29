@@ -1,186 +1,183 @@
 ---
-summary: "CLI onboarding wizard: guided setup for gateway, workspace, channels, and skills"
+summary: "CLI 引导向导：Gateway 工作区 渠道 与技能的引导式配置"
 read_when:
-  - Running or configuring the onboarding wizard
-  - Setting up a new machine
+  - 运行或配置引导向导
+  - 设置新机器
 ---
 
-# Onboarding Wizard (CLI)
+# 引导向导（CLI）
 
-The onboarding wizard is the **recommended** way to set up Moltbot on macOS,
-Linux, or Windows (via WSL2; strongly recommended).
-It configures a local Gateway or a remote Gateway connection, plus channels, skills,
-and workspace defaults in one guided flow.
+引导向导是**推荐**的 Moltbot 设置方式，适用于 macOS、Linux 或 Windows（通过 WSL2，强烈推荐）。
+它会在一个引导流程里配置本地 Gateway 或远程 Gateway 连接，以及渠道、技能与工作区默认值。
 
-Primary entrypoint:
+主要入口：
 
 ```bash
 moltbot onboard
 ```
 
-Fastest first chat: open the Control UI (no channel setup needed). Run
-`moltbot dashboard` and chat in the browser. Docs: [Dashboard](/web/dashboard).
+最快的第一条聊天：打开 Control UI（无需配置渠道）。运行
+`moltbot dashboard` 并在浏览器聊天。文档：[Dashboard](/web/dashboard)。
 
-Follow‑up reconfiguration:
+后续重新配置：
 
 ```bash
 moltbot configure
 ```
 
-Recommended: set up a Brave Search API key so the agent can use `web_search`
-(`web_fetch` works without a key). Easiest path: `moltbot configure --section web`
-which stores `tools.web.search.apiKey`. Docs: [Web tools](/tools/web).
+推荐：设置 Brave Search API key 以便 agent 使用 `web_search`
+（`web_fetch` 不需要 key）。最快方式：`moltbot configure --section web`
+会写入 `tools.web.search.apiKey`。文档：[Web tools](/tools/web)。
 
-## QuickStart vs Advanced
+## QuickStart 与 Advanced
 
-The wizard starts with **QuickStart** (defaults) vs **Advanced** (full control).
+向导从 **QuickStart**（默认值）与 **Advanced**（完整控制）开始。
 
-**QuickStart** keeps the defaults:
-- Local gateway (loopback)
-- Workspace default (or existing workspace)
-- Gateway port **18789**
-- Gateway auth **Token** (auto‑generated, even on loopback)
-- Tailscale exposure **Off**
-- Telegram + WhatsApp DMs default to **allowlist** (you’ll be prompted for your phone number)
+**QuickStart** 保持默认：
+- 本地 gateway（loopback）
+- 默认工作区（或已有工作区）
+- Gateway 端口 **18789**
+- Gateway 认证 **Token**（即便 loopback 也会自动生成）
+- Tailscale 暴露 **关闭**
+- Telegram + WhatsApp 私信默认 **allowlist**（会提示填写手机号）
 
-**Advanced** exposes every step (mode, workspace, gateway, channels, daemon, skills).
+**Advanced** 暴露所有步骤（模式、工作区、gateway、渠道、daemon、技能）。
 
-## What the wizard does
+## 向导做什么
 
-**Local mode (default)** walks you through:
-  - Model/auth (OpenAI Code (Codex) subscription OAuth, Anthropic API key (recommended) or setup-token (paste), plus MiniMax/GLM/Moonshot/AI Gateway options)
-- Workspace location + bootstrap files
-- Gateway settings (port/bind/auth/tailscale)
-- Providers (Telegram, WhatsApp, Discord, Google Chat, Mattermost (plugin), Signal)
-- Daemon install (LaunchAgent / systemd user unit)
-- Health check
-- Skills (recommended)
+**本地模式（默认）**会引导：
+  - 模型和认证（OpenAI Code（Codex）订阅 OAuth、Anthropic API key（推荐）或 setup-token（粘贴），以及 MiniMax/GLM/Moonshot/AI Gateway 选项）
+- 工作区位置与引导文件
+- Gateway 设置（端口 绑定 认证 Tailscale）
+- 提供方（Telegram、WhatsApp、Discord、Google Chat、Mattermost 插件、Signal）
+- Daemon 安装（LaunchAgent / systemd user unit）
+- 健康检查
+- 技能（推荐）
 
-**Remote mode** only configures the local client to connect to a Gateway elsewhere.
-It does **not** install or change anything on the remote host.
+**远程模式**只配置本地客户端连接到其他地方的 Gateway。
+它**不会**在远程主机安装或修改任何内容。
 
-To add more isolated agents (separate workspace + sessions + auth), use:
+要添加更多隔离的 agent（独立工作区 会话 认证），使用：
 
 ```bash
 moltbot agents add <name>
 ```
 
-Tip: `--json` does **not** imply non-interactive mode. Use `--non-interactive` (and `--workspace`) for scripts.
+提示：`--json` **不**等同于非交互模式。脚本中请使用 `--non-interactive`（以及 `--workspace`）。
 
-## Flow details (local)
+## 流程细节（本地）
 
-1) **Existing config detection**
-   - If `~/.clawdbot/moltbot.json` exists, choose **Keep / Modify / Reset**.
-   - Re-running the wizard does **not** wipe anything unless you explicitly choose **Reset**
-     (or pass `--reset`).
-   - If the config is invalid or contains legacy keys, the wizard stops and asks
-     you to run `moltbot doctor` before continuing.
-   - Reset uses `trash` (never `rm`) and offers scopes:
-     - Config only
-     - Config + credentials + sessions
-     - Full reset (also removes workspace)
+1) **现有配置检测**
+   - 如果 `~/.clawdbot/moltbot.json` 存在，选择 **Keep / Modify / Reset**。
+   - 重新运行向导**不会**清空任何内容，除非你明确选择 **Reset**
+     （或传入 `--reset`）。
+   - 如果配置无效或包含旧版键，向导会停止并要求
+     先运行 `moltbot doctor`。
+   - Reset 使用 `trash`（绝不使用 `rm`），并提供作用域：
+     - 仅配置
+     - 配置 + 凭据 + 会话
+     - 完全重置（也删除工作区）
 
-2) **Model/Auth**
-   - **Anthropic API key (recommended)**: uses `ANTHROPIC_API_KEY` if present or prompts for a key, then saves it for daemon use.
-   - **Anthropic OAuth (Claude Code CLI)**: on macOS the wizard checks Keychain item "Claude Code-credentials" (choose "Always Allow" so launchd starts don't block); on Linux/Windows it reuses `~/.claude/.credentials.json` if present.
-   - **Anthropic token (paste setup-token)**: run `claude setup-token` on any machine, then paste the token (you can name it; blank = default).
-   - **OpenAI Code (Codex) subscription (Codex CLI)**: if `~/.codex/auth.json` exists, the wizard can reuse it.
-   - **OpenAI Code (Codex) subscription (OAuth)**: browser flow; paste the `code#state`.
-     - Sets `agents.defaults.model` to `openai-codex/gpt-5.2` when model is unset or `openai/*`.
-   - **OpenAI API key**: uses `OPENAI_API_KEY` if present or prompts for a key, then saves it to `~/.clawdbot/.env` so launchd can read it.
-   - **OpenCode Zen (multi-model proxy)**: prompts for `OPENCODE_API_KEY` (or `OPENCODE_ZEN_API_KEY`, get it at https://opencode.ai/auth).
-   - **API key**: stores the key for you.
-   - **Vercel AI Gateway (multi-model proxy)**: prompts for `AI_GATEWAY_API_KEY`.
-   - More detail: [Vercel AI Gateway](/providers/vercel-ai-gateway)
-   - **MiniMax M2.1**: config is auto-written.
-   - More detail: [MiniMax](/providers/minimax)
-   - **Synthetic (Anthropic-compatible)**: prompts for `SYNTHETIC_API_KEY`.
-   - More detail: [Synthetic](/providers/synthetic)
-   - **Moonshot (Kimi K2)**: config is auto-written.
-   - **Kimi Code**: config is auto-written.
-   - More detail: [Moonshot AI (Kimi + Kimi Code)](/providers/moonshot)
-   - **Skip**: no auth configured yet.
-   - Pick a default model from detected options (or enter provider/model manually).
-   - Wizard runs a model check and warns if the configured model is unknown or missing auth.
-  - OAuth credentials live in `~/.clawdbot/credentials/oauth.json`; auth profiles live in `~/.clawdbot/agents/<agentId>/agent/auth-profiles.json` (API keys + OAuth).
-   - More detail: [/concepts/oauth](/concepts/oauth)
+2) **模型 认证**
+   - **Anthropic API key（推荐）**：若已存在 `ANTHROPIC_API_KEY` 则复用，否则提示输入并保存供 daemon 使用。
+   - **Anthropic OAuth（Claude Code CLI）**：macOS 上向导会检查钥匙串项 "Claude Code-credentials"（请选择 "Always Allow"，避免 launchd 启动被阻塞）；Linux/Windows 会复用 `~/.claude/.credentials.json`（若存在）。
+   - **Anthropic token（粘贴 setup-token）**：在任意机器上运行 `claude setup-token`，然后粘贴 token（可命名；留空=默认）。
+   - **OpenAI Code（Codex）订阅（Codex CLI）**：若 `~/.codex/auth.json` 存在，向导可复用。
+   - **OpenAI Code（Codex）订阅（OAuth）**：浏览器流程；粘贴 `code#state`。
+     - 当模型未设置或为 `openai/*` 时，将 `agents.defaults.model` 设为 `openai-codex/gpt-5.2`。
+   - **OpenAI API key**：若存在 `OPENAI_API_KEY` 则复用，否则提示输入并保存到 `~/.clawdbot/.env` 以便 launchd 读取。
+   - **OpenCode Zen（多模型代理）**：提示 `OPENCODE_API_KEY`（或 `OPENCODE_ZEN_API_KEY`，获取地址：https://opencode.ai/auth）。
+   - **API key**：保存 key。
+   - **Vercel AI Gateway（多模型代理）**：提示 `AI_GATEWAY_API_KEY`。
+   - 详情：[Vercel AI Gateway](/providers/vercel-ai-gateway)
+   - **MiniMax M2.1**：自动写入配置。
+   - 详情：[MiniMax](/providers/minimax)
+   - **Synthetic（Anthropic 兼容）**：提示 `SYNTHETIC_API_KEY`。
+   - 详情：[Synthetic](/providers/synthetic)
+   - **Moonshot（Kimi K2）**：自动写入配置。
+   - **Kimi Code**：自动写入配置。
+   - 详情：[Moonshot AI (Kimi + Kimi Code)](/providers/moonshot)
+   - **跳过**：暂不配置认证。
+   - 从检测到的选项中选择默认模型（或手动输入 provider/model）。
+   - 向导会做一次模型检查，若模型未知或缺少认证会提示警告。
+  - OAuth 凭据位于 `~/.clawdbot/credentials/oauth.json`；认证配置位于 `~/.clawdbot/agents/<agentId>/agent/auth-profiles.json`（API keys + OAuth）。
+   - 详情：[/concepts/oauth](/concepts/oauth)
 
-3) **Workspace**
-   - Default `~/clawd` (configurable).
-   - Seeds the workspace files needed for the agent bootstrap ritual.
-   - Full workspace layout + backup guide: [Agent workspace](/concepts/agent-workspace)
+3) **工作区**
+   - 默认 `~/clawd`（可配置）。
+   - 写入 agent 引导所需的工作区文件。
+   - 完整布局和备份指南：[Agent workspace](/concepts/agent-workspace)
 
 4) **Gateway**
-   - Port, bind, auth mode, tailscale exposure.
-   - Auth recommendation: keep **Token** even for loopback so local WS clients must authenticate.
-   - Disable auth only if you fully trust every local process.
-   - Non‑loopback binds still require auth.
+   - 端口 绑定 认证方式 Tailscale 暴露。
+   - 认证建议：即便是 loopback 也保持 **Token**，确保本地 WS 客户端必须认证。
+   - 只有在完全信任本机所有进程时才关闭认证。
+   - 非 loopback 绑定仍需要认证。
 
-5) **Channels**
-  - WhatsApp: optional QR login.
-  - Telegram: bot token.
-  - Discord: bot token.
-  - Google Chat: service account JSON + webhook audience.
-  - Mattermost (plugin): bot token + base URL.
-   - Signal: optional `signal-cli` install + account config.
-   - iMessage: local `imsg` CLI path + DB access.
-  - DM security: default is pairing. First DM sends a code; approve via `moltbot pairing approve <channel> <code>` or use allowlists.
+5) **渠道**
+  - WhatsApp：可选二维码登录。
+  - Telegram：bot token。
+  - Discord：bot token。
+  - Google Chat：服务账号 JSON + webhook audience。
+  - Mattermost（插件）：bot token + base URL。
+   - Signal：可选安装 `signal-cli` + 账号配置。
+   - iMessage：本地 `imsg` CLI 路径 + DB 访问。
+  - 私信安全：默认是配对。第一条私信会发送代码；通过 `moltbot pairing approve <channel> <code>` 审批，或使用 allowlist。
 
-6) **Daemon install**
-   - macOS: LaunchAgent
-     - Requires a logged-in user session; for headless, use a custom LaunchDaemon (not shipped).
-   - Linux (and Windows via WSL2): systemd user unit
-     - Wizard attempts to enable lingering via `loginctl enable-linger <user>` so the Gateway stays up after logout.
-     - May prompt for sudo (writes `/var/lib/systemd/linger`); it tries without sudo first.
-   - **Runtime selection:** Node (recommended; required for WhatsApp/Telegram). Bun is **not recommended**.
+6) **Daemon 安装**
+   - macOS：LaunchAgent
+     - 需要登录的用户会话；无头场景请使用自定义 LaunchDaemon（未内置）。
+   - Linux（以及 Windows 的 WSL2）：systemd 用户单元
+     - 向导会尝试 `loginctl enable-linger <user>`，确保注销后 Gateway 仍运行。
+     - 可能提示 sudo（写入 `/var/lib/systemd/linger`）；会先尝试不使用 sudo。
+   - **运行时选择：** Node（推荐；WhatsApp/Telegram 必需）。**不推荐** Bun。
 
-7) **Health check**
-   - Starts the Gateway (if needed) and runs `moltbot health`.
-   - Tip: `moltbot status --deep` adds gateway health probes to status output (requires a reachable gateway).
+7) **健康检查**
+   - 启动 Gateway（如需要）并运行 `moltbot health`。
+   - 提示：`moltbot status --deep` 会在状态输出中增加 gateway 健康探测（需要可达的 gateway）。
 
-8) **Skills (recommended)**
-   - Reads the available skills and checks requirements.
-   - Lets you choose a node manager: **npm / pnpm** (bun not recommended).
-   - Installs optional dependencies (some use Homebrew on macOS).
+8) **技能（推荐）**
+   - 读取可用技能并检查依赖。
+   - 让你选择 node 管理器：**npm / pnpm**（不推荐 bun）。
+   - 安装可选依赖（部分在 macOS 上使用 Homebrew）。
 
-9) **Finish**
-   - Summary + next steps, including iOS/Android/macOS apps for extra features.
-  - If no GUI is detected, the wizard prints SSH port-forward instructions for the Control UI instead of opening a browser.
-  - If the Control UI assets are missing, the wizard attempts to build them; fallback is `pnpm ui:build` (auto-installs UI deps).
+9) **完成**
+   - 总结 + 下一步，包括 iOS/Android/macOS 应用等额外功能。
+  - 如果检测不到 GUI，向导会打印 Control UI 的 SSH 端口转发指令，而不是打开浏览器。
+  - 如果 Control UI 资源缺失，向导会尝试构建；回退方案是 `pnpm ui:build`（首次运行会自动安装 UI 依赖）。
 
-## Remote mode
+## 远程模式
 
-Remote mode configures a local client to connect to a Gateway elsewhere.
+远程模式配置本地客户端连接到其他地方的 Gateway。
 
-What you’ll set:
-- Remote Gateway URL (`ws://...`)
-- Token if the remote Gateway requires auth (recommended)
+你将设置：
+- 远程 Gateway URL（`ws://...`）
+- 若远程 Gateway 需要认证，则设置 token（推荐）
 
-Notes:
-- No remote installs or daemon changes are performed.
-- If the Gateway is loopback‑only, use SSH tunneling or a tailnet.
-- Discovery hints:
-  - macOS: Bonjour (`dns-sd`)
-  - Linux: Avahi (`avahi-browse`)
+说明：
+- 不会执行任何远程安装或 daemon 变更。
+- 如果 Gateway 只绑定 loopback，请使用 SSH 隧道或 tailnet。
+- 发现提示：
+  - macOS：Bonjour（`dns-sd`）
+  - Linux：Avahi（`avahi-browse`）
 
-## Add another agent
+## 添加另一个 agent
 
-Use `moltbot agents add <name>` to create a separate agent with its own workspace,
-sessions, and auth profiles. Running without `--workspace` launches the wizard.
+使用 `moltbot agents add <name>` 创建一个独立的 agent，拥有自己的工作区、会话与认证配置。无 `--workspace` 时会启动向导。
 
-What it sets:
+它会写入：
 - `agents.list[].name`
 - `agents.list[].workspace`
 - `agents.list[].agentDir`
 
-Notes:
-- Default workspaces follow `~/clawd-<agentId>`.
-- Add `bindings` to route inbound messages (the wizard can do this).
-- Non-interactive flags: `--model`, `--agent-dir`, `--bind`, `--non-interactive`.
+说明：
+- 默认工作区为 `~/clawd-<agentId>`。
+- 添加 `bindings` 来路由入站消息（向导可配置）。
+- 非交互参数：`--model`、`--agent-dir`、`--bind`、`--non-interactive`。
 
-## Non‑interactive mode
+## 非交互模式
 
-Use `--non-interactive` to automate or script onboarding:
+使用 `--non-interactive` 自动化或脚本化引导：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -194,9 +191,9 @@ moltbot onboard --non-interactive \
   --skip-skills
 ```
 
-Add `--json` for a machine‑readable summary.
+加上 `--json` 可输出机器可读摘要。
 
-Gemini example:
+Gemini 示例：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -207,7 +204,7 @@ moltbot onboard --non-interactive \
   --gateway-bind loopback
 ```
 
-Z.AI example:
+Z.AI 示例：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -218,7 +215,7 @@ moltbot onboard --non-interactive \
   --gateway-bind loopback
 ```
 
-Vercel AI Gateway example:
+Vercel AI Gateway 示例：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -229,7 +226,7 @@ moltbot onboard --non-interactive \
   --gateway-bind loopback
 ```
 
-Moonshot example:
+Moonshot 示例：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -240,7 +237,7 @@ moltbot onboard --non-interactive \
   --gateway-bind loopback
 ```
 
-Synthetic example:
+Synthetic 示例：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -251,7 +248,7 @@ moltbot onboard --non-interactive \
   --gateway-bind loopback
 ```
 
-OpenCode Zen example:
+OpenCode Zen 示例：
 
 ```bash
 moltbot onboard --non-interactive \
@@ -262,7 +259,7 @@ moltbot onboard --non-interactive \
   --gateway-bind loopback
 ```
 
-Add agent (non‑interactive) example:
+添加 agent（非交互）示例：
 
 ```bash
 moltbot agents add work \
@@ -273,31 +270,31 @@ moltbot agents add work \
   --json
 ```
 
-## Gateway wizard RPC
+## Gateway 向导 RPC
 
-The Gateway exposes the wizard flow over RPC (`wizard.start`, `wizard.next`, `wizard.cancel`, `wizard.status`).
-Clients (macOS app, Control UI) can render steps without re‑implementing onboarding logic.
+Gateway 通过 RPC 暴露向导流程（`wizard.start`、`wizard.next`、`wizard.cancel`、`wizard.status`）。
+客户端（macOS 应用、Control UI）可以渲染步骤而无需重新实现引导逻辑。
 
-## Signal setup (signal-cli)
+## Signal 设置（signal-cli）
 
-The wizard can install `signal-cli` from GitHub releases:
-- Downloads the appropriate release asset.
-- Stores it under `~/.clawdbot/tools/signal-cli/<version>/`.
-- Writes `channels.signal.cliPath` to your config.
+向导可以从 GitHub Releases 安装 `signal-cli`：
+- 下载对应的 release 资产。
+- 保存到 `~/.clawdbot/tools/signal-cli/<version>/`。
+- 写入 `channels.signal.cliPath` 到配置。
 
-Notes:
-- JVM builds require **Java 21**.
-- Native builds are used when available.
-- Windows uses WSL2; signal-cli install follows the Linux flow inside WSL.
+说明：
+- JVM 构建需要 **Java 21**。
+- 可用时优先使用原生构建。
+- Windows 使用 WSL2；signal-cli 安装在 WSL 内按 Linux 流程执行。
 
-## What the wizard writes
+## 向导写入内容
 
-Typical fields in `~/.clawdbot/moltbot.json`:
+`~/.clawdbot/moltbot.json` 中的典型字段：
 - `agents.defaults.workspace`
-- `agents.defaults.model` / `models.providers` (if Minimax chosen)
-- `gateway.*` (mode, bind, auth, tailscale)
-- `channels.telegram.botToken`, `channels.discord.token`, `channels.signal.*`, `channels.imessage.*`
-- Channel allowlists (Slack/Discord/Matrix/Microsoft Teams) when you opt in during the prompts (names resolve to IDs when possible).
+- `agents.defaults.model` / `models.providers`（选择 Minimax 时）
+- `gateway.*`（模式 绑定 认证 Tailscale）
+- `channels.telegram.botToken`、`channels.discord.token`、`channels.signal.*`、`channels.imessage.*`
+- 当你在提示中选择时，会写入渠道 allowlist（Slack/Discord/Matrix/Microsoft Teams），并在可能时把名称解析为 ID。
 - `skills.install.nodeManager`
 - `wizard.lastRunAt`
 - `wizard.lastRunVersion`
@@ -305,17 +302,16 @@ Typical fields in `~/.clawdbot/moltbot.json`:
 - `wizard.lastRunCommand`
 - `wizard.lastRunMode`
 
-`moltbot agents add` writes `agents.list[]` and optional `bindings`.
+`moltbot agents add` 会写入 `agents.list[]` 与可选 `bindings`。
 
-WhatsApp credentials go under `~/.clawdbot/credentials/whatsapp/<accountId>/`.
-Sessions are stored under `~/.clawdbot/agents/<agentId>/sessions/`.
+WhatsApp 凭据位于 `~/.clawdbot/credentials/whatsapp/<accountId>/`。
+会话存储在 `~/.clawdbot/agents/<agentId>/sessions/`。
 
-Some channels are delivered as plugins. When you pick one during onboarding, the wizard
-will prompt to install it (npm or a local path) before it can be configured.
+部分渠道以插件形式提供。当你在引导中选择时，向导会提示安装它（npm 或本地路径），然后才能配置。
 
-## Related docs
+## 相关文档
 
-- macOS app onboarding: [Onboarding](/start/onboarding)
-- Config reference: [Gateway configuration](/gateway/configuration)
-- Providers: [WhatsApp](/channels/whatsapp), [Telegram](/channels/telegram), [Discord](/channels/discord), [Google Chat](/channels/googlechat), [Signal](/channels/signal), [iMessage](/channels/imessage)
-- Skills: [Skills](/tools/skills), [Skills config](/tools/skills-config)
+- macOS 应用引导：[Onboarding](/start/onboarding)
+- 配置参考：[Gateway configuration](/gateway/configuration)
+- 提供方：[WhatsApp](/channels/whatsapp)、[Telegram](/channels/telegram)、[Discord](/channels/discord)、[Google Chat](/channels/googlechat)、[Signal](/channels/signal)、[iMessage](/channels/imessage)
+- 技能：[Skills](/tools/skills)、[Skills config](/tools/skills-config)

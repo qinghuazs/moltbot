@@ -1,52 +1,56 @@
 ---
-summary: "Zalo Personal plugin: QR login + messaging via zca-cli (plugin install + channel config + CLI + tool)"
+summary: "Zalo Personal 插件：通过 zca-cli 进行二维码登录与消息（安装 配置 CLI 工具）"
 read_when:
-  - You want Zalo Personal (unofficial) support in Moltbot
-  - You are configuring or developing the zalouser plugin
+  - 你想在 Moltbot 中使用 Zalo 个人账号（非官方）
+  - 你在配置或开发 zalouser 插件
 ---
 
-# Zalo Personal (plugin)
+# Zalo Personal（插件）
 
-Zalo Personal support for Moltbot via a plugin, using `zca-cli` to automate a normal Zalo user account.
+通过插件为 Moltbot 提供 Zalo Personal 支持，使用 `zca-cli` 自动化普通 Zalo 个人账号。
 
-> **Warning:** Unofficial automation may lead to account suspension/ban. Use at your own risk.
+> **警告：** 非官方自动化可能导致账号被限制或封禁，风险自担。
 
-## Naming
-Channel id is `zalouser` to make it explicit this automates a **personal Zalo user account** (unofficial). We keep `zalo` reserved for a potential future official Zalo API integration.
+## 命名
 
-## Where it runs
-This plugin runs **inside the Gateway process**.
+渠道 id 为 `zalouser`，明确表示这是**个人 Zalo 账号**的非官方自动化。`zalo` 保留给未来可能的官方 Zalo API 集成。
 
-If you use a remote Gateway, install/configure it on the **machine running the Gateway**, then restart the Gateway.
+## 运行位置
 
-## Install
+该插件运行在 **Gateway 进程内**。
 
-### Option A: install from npm
+如果使用远程 Gateway，请在**运行 Gateway 的机器**上安装与配置，然后重启 Gateway。
+
+## 安装
+
+### 方式 A：从 npm 安装
 
 ```bash
 moltbot plugins install @moltbot/zalouser
 ```
 
-Restart the Gateway afterwards.
+随后重启 Gateway。
 
-### Option B: install from a local folder (dev)
+### 方式 B：从本地目录安装（开发）
 
 ```bash
 moltbot plugins install ./extensions/zalouser
 cd ./extensions/zalouser && pnpm install
 ```
 
-Restart the Gateway afterwards.
+随后重启 Gateway。
 
-## Prerequisite: zca-cli
-The Gateway machine must have `zca` on `PATH`:
+## 前置条件：zca-cli
+
+Gateway 机器必须在 `PATH` 中有 `zca`：
 
 ```bash
 zca --version
 ```
 
-## Config
-Channel config lives under `channels.zalouser` (not `plugins.entries.*`):
+## 配置
+
+渠道配置在 `channels.zalouser` 下（不是 `plugins.entries.*`）：
 
 ```json5
 {
@@ -69,7 +73,8 @@ moltbot message send --channel zalouser --target <threadId> --message "Hello fro
 moltbot directory peers list --channel zalouser --query "name"
 ```
 
-## Agent tool
-Tool name: `zalouser`
+## Agent 工具
 
-Actions: `send`, `image`, `link`, `friends`, `groups`, `me`, `status`
+工具名：`zalouser`
+
+动作：`send`、`image`、`link`、`friends`、`groups`、`me`、`status`

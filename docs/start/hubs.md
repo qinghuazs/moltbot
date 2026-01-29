@@ -1,20 +1,20 @@
 ---
-summary: "Hubs that link to every Moltbot doc"
+summary: "指向所有 Moltbot 文档的导航枢纽"
 read_when:
-  - You want a complete map of the documentation
+  - 你想要完整的文档地图
 ---
-# Docs hubs
+# 文档枢纽
 
-Use these hubs to discover every page, including deep dives and reference docs that don’t appear in the left nav.
+使用这些枢纽页面发现每一页文档，包括左侧导航未展示的深度与参考内容。
 
-## Start here
+## 从这里开始
 
 - [Index](/)
 - [Getting Started](/start/getting-started)
 - [Onboarding](/start/onboarding)
 - [Wizard](/start/wizard)
 - [Setup](/start/setup)
-- [Dashboard (local Gateway)](http://127.0.0.1:18789/)
+- [Dashboard（本地 Gateway）](http://127.0.0.1:18789/)
 - [Help](/help)
 - [Configuration](/gateway/configuration)
 - [Configuration examples](/gateway/configuration-examples)
@@ -22,14 +22,14 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Showcase](/start/showcase)
 - [Lore](/start/lore)
 
-## Installation + updates
+## 安装与更新
 
 - [Docker](/install/docker)
 - [Nix](/install/nix)
 - [Updating / rollback](/install/updating)
 - [Bun workflow (experimental)](/install/bun)
 
-## Core concepts
+## 核心概念
 
 - [Architecture](/concepts/architecture)
 - [Network hub](/network)
@@ -58,7 +58,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Model failover](/concepts/model-failover)
 - [OAuth](/concepts/oauth)
 
-## Providers + ingress
+## 提供方与入口
 
 - [Chat channels hub](/channels)
 - [Model providers hub](/providers/models)
@@ -67,7 +67,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Telegram (grammY notes)](/channels/grammy)
 - [Slack](/channels/slack)
 - [Discord](/channels/discord)
-- [Mattermost](/channels/mattermost) (plugin)
+- [Mattermost](/channels/mattermost)（插件）
 - [Signal](/channels/signal)
 - [iMessage](/channels/imessage)
 - [Location parsing](/channels/location)
@@ -75,7 +75,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Webhooks](/automation/webhook)
 - [Gmail Pub/Sub](/automation/gmail-pubsub)
 
-## Gateway + operations
+## Gateway 与运维
 
 - [Gateway runbook](/gateway)
 - [Gateway pairing](/gateway/pairing)
@@ -94,7 +94,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Security](/gateway/security)
 - [Troubleshooting](/gateway/troubleshooting)
 
-## Tools + automation
+## 工具与自动化
 
 - [Tools surface](/tools)
 - [OpenProse](/prose)
@@ -112,7 +112,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Browser (Linux troubleshooting)](/tools/browser-linux-troubleshooting)
 - [Polls](/automation/poll)
 
-## Nodes, media, voice
+## 节点 媒体 语音
 
 - [Nodes overview](/nodes)
 - [Camera](/nodes/camera)
@@ -122,7 +122,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Voice wake](/nodes/voicewake)
 - [Talk mode](/nodes/talk)
 
-## Platforms
+## 平台
 
 - [Platforms overview](/platforms)
 - [macOS](/platforms/macos)
@@ -132,7 +132,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Linux](/platforms/linux)
 - [Web surfaces](/web)
 
-## macOS companion app (advanced)
+## macOS 伴侣应用（进阶）
 
 - [macOS dev setup](/platforms/mac/dev-setup)
 - [macOS menu bar](/platforms/mac/menu-bar)
@@ -153,7 +153,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [macOS skills](/platforms/mac/skills)
 - [macOS Peekaboo](/platforms/mac/peekaboo)
 
-## Workspace + templates
+## 工作区与模板
 
 - [Skills](/tools/skills)
 - [ClawdHub](/tools/clawdhub)
@@ -167,7 +167,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Templates: TOOLS](/reference/templates/TOOLS)
 - [Templates: USER](/reference/templates/USER)
 
-## Experiments (exploratory)
+## 实验（探索）
 
 - [Onboarding config protocol](/experiments/onboarding-config-protocol)
 - [Cron hardening notes](/experiments/plans/cron-add-hardening)
@@ -175,7 +175,7 @@ Use these hubs to discover every page, including deep dives and reference docs t
 - [Research: memory](/experiments/research/memory)
 - [Model config exploration](/experiments/proposals/model-config)
 
-## Testing + release
+## 测试与发布
 
 - [Testing](/reference/test)
 - [Release checklist](/reference/RELEASING)

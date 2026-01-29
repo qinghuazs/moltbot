@@ -1,42 +1,42 @@
 ---
-summary: "Gateway web surfaces: Control UI, bind modes, and security"
+summary: "Gateway Web 入口：Control UI 绑定方式与安全"
 read_when:
-  - You want to access the Gateway over Tailscale
-  - You want the browser Control UI and config editing
+  - 你想通过 Tailscale 访问 Gateway
+  - 你需要浏览器 Control UI 与配置编辑
 ---
-# Web (Gateway)
+# Web（Gateway）
 
-The Gateway serves a small **browser Control UI** (Vite + Lit) from the same port as the Gateway WebSocket:
+Gateway 从与 WebSocket 相同的端口提供一个小型 **浏览器 Control UI**（Vite + Lit）：
 
-- default: `http://<host>:18789/`
-- optional prefix: set `gateway.controlUi.basePath` (e.g. `/moltbot`)
+- 默认：`http://<host>:18789/`
+- 可选前缀：设置 `gateway.controlUi.basePath`（例如 `/moltbot`）
 
-Capabilities live in [Control UI](/web/control-ui).
-This page focuses on bind modes, security, and web-facing surfaces.
+功能详见 [Control UI](/web/control-ui)。
+本页重点讲绑定方式、安全与 Web 入口。
 
 ## Webhooks
 
-When `hooks.enabled=true`, the Gateway also exposes a small webhook endpoint on the same HTTP server.
-See [Gateway configuration](/gateway/configuration) → `hooks` for auth + payloads.
+当 `hooks.enabled=true` 时，Gateway 会在同一 HTTP 服务器上暴露一个 webhook 端点。
+见 [Gateway configuration](/gateway/configuration) → `hooks` 获取认证与 payload 说明。
 
-## Config (default-on)
+## 配置（默认开启）
 
-The Control UI is **enabled by default** when assets are present (`dist/control-ui`).
-You can control it via config:
+当静态资源存在（`dist/control-ui`）时，Control UI **默认启用**。
+可通过配置控制：
 
 ```json5
 {
   gateway: {
-    controlUi: { enabled: true, basePath: "/moltbot" } // basePath optional
+    controlUi: { enabled: true, basePath: "/moltbot" } // basePath 可选
   }
 }
 ```
 
-## Tailscale access
+## Tailscale 访问
 
-### Integrated Serve (recommended)
+### 集成 Serve（推荐）
 
-Keep the Gateway on loopback and let Tailscale Serve proxy it:
+保持 Gateway 绑定 loopback，然后让 Tailscale Serve 代理：
 
 ```json5
 {
@@ -47,16 +47,16 @@ Keep the Gateway on loopback and let Tailscale Serve proxy it:
 }
 ```
 
-Then start the gateway:
+然后启动 gateway：
 
 ```bash
 moltbot gateway
 ```
 
-Open:
-- `https://<magicdns>/` (or your configured `gateway.controlUi.basePath`)
+打开：
+- `https://<magicdns>/`（或你配置的 `gateway.controlUi.basePath`）
 
-### Tailnet bind + token
+### Tailnet 绑定 + token
 
 ```json5
 {
@@ -68,43 +68,40 @@ Open:
 }
 ```
 
-Then start the gateway (token required for non-loopback binds):
+然后启动 gateway（非 loopback 绑定需要 token）：
 
 ```bash
 moltbot gateway
 ```
 
-Open:
-- `http://<tailscale-ip>:18789/` (or your configured `gateway.controlUi.basePath`)
+打开：
+- `http://<tailscale-ip>:18789/`（或你配置的 `gateway.controlUi.basePath`）
 
-### Public internet (Funnel)
+### 公网（Funnel）
 
 ```json5
 {
   gateway: {
     bind: "loopback",
     tailscale: { mode: "funnel" },
-    auth: { mode: "password" } // or CLAWDBOT_GATEWAY_PASSWORD
+    auth: { mode: "password" } // 或 CLAWDBOT_GATEWAY_PASSWORD
   }
 }
 ```
 
-## Security notes
+## 安全说明
 
-- Gateway auth is required by default (token/password or Tailscale identity headers).
-- Non-loopback binds still **require** a shared token/password (`gateway.auth` or env).
-- The wizard generates a gateway token by default (even on loopback).
-- The UI sends `connect.params.auth.token` or `connect.params.auth.password`.
-- With Serve, Tailscale identity headers can satisfy auth when
-  `gateway.auth.allowTailscale` is `true` (no token/password required). Set
-  `gateway.auth.allowTailscale: false` to require explicit credentials. See
-  [Tailscale](/gateway/tailscale) and [Security](/gateway/security).
-- `gateway.tailscale.mode: "funnel"` requires `gateway.auth.mode: "password"` (shared password).
+- Gateway 认证默认开启（token/password 或 Tailscale 身份头）。
+- 非 loopback 绑定仍**必须**共享 token/password（`gateway.auth` 或环境变量）。
+- 向导默认生成 gateway token（即便 loopback）。
+- UI 会发送 `connect.params.auth.token` 或 `connect.params.auth.password`。
+- 在 Serve 模式下，当 `gateway.auth.allowTailscale` 为 `true` 时，Tailscale 身份头可满足认证（无需 token/password）。设置 `gateway.auth.allowTailscale: false` 可强制要求显式凭据。参见 [Tailscale](/gateway/tailscale) 与 [Security](/gateway/security)。
+- `gateway.tailscale.mode: "funnel"` 需要 `gateway.auth.mode: "password"`（共享密码）。
 
-## Building the UI
+## 构建 UI
 
-The Gateway serves static files from `dist/control-ui`. Build them with:
+Gateway 从 `dist/control-ui` 提供静态文件。构建命令：
 
 ```bash
-pnpm ui:build # auto-installs UI deps on first run
+pnpm ui:build # 首次运行会自动安装 UI 依赖
 ```

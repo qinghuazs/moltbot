@@ -1,19 +1,17 @@
 ---
-summary: "Plugin manifest + JSON schema requirements (strict config validation)"
+summary: "插件清单与 JSON schema 要求（严格配置校验）"
 read_when:
-  - You are building a Moltbot plugin
-  - You need to ship a plugin config schema or debug plugin validation errors
+  - 你在构建 Moltbot 插件
+  - 你需要发布插件配置 schema 或排查插件校验错误
 ---
-# Plugin manifest (moltbot.plugin.json)
+# 插件清单（moltbot.plugin.json）
 
-Every plugin **must** ship a `moltbot.plugin.json` file in the **plugin root**.
-Moltbot uses this manifest to validate configuration **without executing plugin
-code**. Missing or invalid manifests are treated as plugin errors and block
-config validation.
+每个插件**必须**在**插件根目录**提供 `moltbot.plugin.json` 文件。
+Moltbot 使用该清单在**不执行插件代码**的情况下验证配置。缺失或无效的清单会被视为插件错误并阻断配置校验。
 
-See the full plugin system guide: [Plugins](/plugin).
+完整插件系统指南见：[Plugins](/plugin)。
 
-## Required fields
+## 必填字段
 
 ```json
 {
@@ -26,42 +24,35 @@ See the full plugin system guide: [Plugins](/plugin).
 }
 ```
 
-Required keys:
-- `id` (string): canonical plugin id.
-- `configSchema` (object): JSON Schema for plugin config (inline).
+必填键：
+- `id`（string）：规范的插件 id。
+- `configSchema`（object）：插件配置的 JSON Schema（内联）。
 
-Optional keys:
-- `kind` (string): plugin kind (example: `"memory"`).
-- `channels` (array): channel ids registered by this plugin (example: `["matrix"]`).
-- `providers` (array): provider ids registered by this plugin.
-- `skills` (array): skill directories to load (relative to the plugin root).
-- `name` (string): display name for the plugin.
-- `description` (string): short plugin summary.
-- `uiHints` (object): config field labels/placeholders/sensitive flags for UI rendering.
-- `version` (string): plugin version (informational).
+可选键：
+- `kind`（string）：插件类型（例如：`"memory"`）。
+- `channels`（array）：该插件注册的渠道 id（例如：`["matrix"]`）。
+- `providers`（array）：该插件注册的 provider id。
+- `skills`（array）：需要加载的技能目录（相对插件根目录）。
+- `name`（string）：插件显示名称。
+- `description`（string）：插件简述。
+- `uiHints`（object）：用于 UI 渲染的字段标签/占位符/敏感标记。
+- `version`（string）：插件版本（信息用途）。
 
-## JSON Schema requirements
+## JSON Schema 要求
 
-- **Every plugin must ship a JSON Schema**, even if it accepts no config.
-- An empty schema is acceptable (for example, `{ "type": "object", "additionalProperties": false }`).
-- Schemas are validated at config read/write time, not at runtime.
+- **每个插件都必须提供 JSON Schema**，即便不需要配置。
+- 可以提供空 schema（例如 `{ "type": "object", "additionalProperties": false }`）。
+- Schema 在配置读写时校验，而不是运行时。
 
-## Validation behavior
+## 校验行为
 
-- Unknown `channels.*` keys are **errors**, unless the channel id is declared by
-  a plugin manifest.
-- `plugins.entries.<id>`, `plugins.allow`, `plugins.deny`, and `plugins.slots.*`
-  must reference **discoverable** plugin ids. Unknown ids are **errors**.
-- If a plugin is installed but has a broken or missing manifest or schema,
-  validation fails and Doctor reports the plugin error.
-- If plugin config exists but the plugin is **disabled**, the config is kept and
-  a **warning** is surfaced in Doctor + logs.
+- 未知的 `channels.*` 键视为**错误**，除非该 channel id 在某个插件清单中声明。
+- `plugins.entries.<id>`、`plugins.allow`、`plugins.deny` 与 `plugins.slots.*` 必须引用**可发现的**插件 id。未知 id 视为**错误**。
+- 插件已安装但清单或 schema 缺失或损坏时，校验失败，Doctor 会报告插件错误。
+- 如果存在插件配置但插件被**禁用**，配置会保留，并在 Doctor 与日志中给出**警告**。
 
-## Notes
+## 说明
 
-- The manifest is **required for all plugins**, including local filesystem loads.
-- Runtime still loads the plugin module separately; the manifest is only for
-  discovery + validation.
-- If your plugin depends on native modules, document the build steps and any
-  package-manager allowlist requirements (for example, pnpm `allow-build-scripts`
-  + `pnpm rebuild <package>`).
+- 清单对**所有插件**都必需，包括本地文件系统加载的插件。
+- 运行时仍会单独加载插件模块；清单仅用于发现与校验。
+- 如果插件依赖原生模块，请记录构建步骤以及包管理器 allowlist 要求（例如 pnpm 的 `allow-build-scripts` + `pnpm rebuild <package>`）。

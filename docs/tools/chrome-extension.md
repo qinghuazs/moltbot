@@ -1,63 +1,63 @@
 ---
-summary: "Chrome extension: let Moltbot drive your existing Chrome tab"
+summary: "Chrome 扩展：让 Moltbot 驱动你现有的 Chrome 标签页"
 read_when:
-  - You want the agent to drive an existing Chrome tab (toolbar button)
-  - You need remote Gateway + local browser automation via Tailscale
-  - You want to understand the security implications of browser takeover
+  - 你想让 agent 驱动现有的 Chrome 标签页（工具栏按钮）
+  - 你需要远程 Gateway + 本地浏览器自动化（Tailscale）
+  - 你想了解浏览器接管的安全影响
 ---
 
-# Chrome extension (browser relay)
+# Chrome 扩展（浏览器转发）
 
-The Moltbot Chrome extension lets the agent control your **existing Chrome tabs** (your normal Chrome window) instead of launching a separate clawd-managed Chrome profile.
+Moltbot 的 Chrome 扩展允许 agent 控制你的**现有 Chrome 标签页**（你平常的 Chrome 窗口），而不是启动一个单独的 clawd 管理的 Chrome profile。
 
-Attach/detach happens via a **single Chrome toolbar button**.
+通过**一个 Chrome 工具栏按钮**进行附加与解除。
 
-## What it is (concept)
+## 这是什么（概念）
 
-There are three parts:
-- **Browser control service** (Gateway or node): the API the agent/tool calls (via the Gateway)
-- **Local relay server** (loopback CDP): bridges between the control server and the extension (`http://127.0.0.1:18792` by default)
-- **Chrome MV3 extension**: attaches to the active tab using `chrome.debugger` and pipes CDP messages to the relay
+包含三部分：
+- **浏览器控制服务**（Gateway 或 node）：agent 或工具调用的 API（通过 Gateway）。
+- **本地 relay 服务**（loopback CDP）：在控制服务与扩展之间桥接（默认 `http://127.0.0.1:18792`）。
+- **Chrome MV3 扩展**：使用 `chrome.debugger` 附加到活动标签页，并把 CDP 消息转发到 relay。
 
-Moltbot then controls the attached tab through the normal `browser` tool surface (selecting the right profile).
+随后 Moltbot 通过常规 `browser` 工具接口控制该标签页（选择正确的 profile）。
 
-## Install / load (unpacked)
+## 安装 载入（未打包）
 
-1) Install the extension to a stable local path:
+1) 将扩展安装到稳定的本地路径：
 
 ```bash
 moltbot browser extension install
 ```
 
-2) Print the installed extension directory path:
+2) 打印已安装扩展的目录路径：
 
 ```bash
 moltbot browser extension path
 ```
 
 3) Chrome → `chrome://extensions`
-- Enable “Developer mode”
-- “Load unpacked” → select the directory printed above
+- 启用“Developer mode”
+- “Load unpacked” → 选择上一步打印的目录
 
-4) Pin the extension.
+4) 将扩展固定到工具栏。
 
-## Updates (no build step)
+## 更新（无需构建）
 
-The extension ships inside the Moltbot release (npm package) as static files. There is no separate “build” step.
+扩展作为 Moltbot 发行版（npm 包）中的静态文件发布，无需单独构建。
 
-After upgrading Moltbot:
-- Re-run `moltbot browser extension install` to refresh the installed files under your Moltbot state directory.
-- Chrome → `chrome://extensions` → click “Reload” on the extension.
+升级 Moltbot 后：
+- 重新运行 `moltbot browser extension install`，刷新 Moltbot 状态目录下的安装文件。
+- Chrome → `chrome://extensions` → 点击扩展的 “Reload”。
 
-## Use it (no extra config)
+## 使用方式（无需额外配置）
 
-Moltbot ships with a built-in browser profile named `chrome` that targets the extension relay on the default port.
+Moltbot 内置了名为 `chrome` 的浏览器 profile，默认指向扩展 relay 端口。
 
-Use it:
-- CLI: `moltbot browser --browser-profile chrome tabs`
-- Agent tool: `browser` with `profile="chrome"`
+用法：
+- CLI：`moltbot browser --browser-profile chrome tabs`
+- Agent 工具：`browser` 且 `profile="chrome"`
 
-If you want a different name or a different relay port, create your own profile:
+如果你想用不同名字或端口，创建自己的 profile：
 
 ```bash
 moltbot browser create-profile \
@@ -67,53 +67,51 @@ moltbot browser create-profile \
   --color "#00AA00"
 ```
 
-## Attach / detach (toolbar button)
+## 附加 解除（工具栏按钮）
 
-- Open the tab you want Moltbot to control.
-- Click the extension icon.
-  - Badge shows `ON` when attached.
-- Click again to detach.
+- 打开你想让 Moltbot 控制的标签页。
+- 点击扩展图标。
+  - 徽标显示 `ON` 表示已附加。
+- 再次点击即可解除。
 
-## Which tab does it control?
+## 它控制哪一个标签页
 
-- It does **not** automatically control “whatever tab you’re looking at”.
-- It controls **only the tab(s) you explicitly attached** by clicking the toolbar button.
-- To switch: open the other tab and click the extension icon there.
+- 它**不会**自动控制“你正在看的那个标签页”。
+- 它**只**控制你通过工具栏按钮明确附加的标签页。
+- 切换方式：打开另一个标签页并点击扩展图标。
 
-## Badge + common errors
+## 徽标与常见错误
 
-- `ON`: attached; Moltbot can drive that tab.
-- `…`: connecting to the local relay.
-- `!`: relay not reachable (most common: browser relay server isn’t running on this machine).
+- `ON`：已附加；Moltbot 可驱动该标签页。
+- `…`：正在连接本地 relay。
+- `!`：relay 不可达（最常见原因：此机器上的浏览器 relay 服务未运行）。
 
-If you see `!`:
-- Make sure the Gateway is running locally (default setup), or run a node host on this machine if the Gateway runs elsewhere.
-- Open the extension Options page; it shows whether the relay is reachable.
+如果看到 `!`：
+- 确认 Gateway 在本机运行（默认设置），或在该机器上运行 node host（如果 Gateway 在别处）。
+- 打开扩展的 Options 页面，可查看 relay 是否可达。
 
-## Remote Gateway (use a node host)
+## 远程 Gateway（使用 node host）
 
-### Local Gateway (same machine as Chrome) — usually **no extra steps**
+### 本地 Gateway（与 Chrome 同机）通常无需额外步骤
 
-If the Gateway runs on the same machine as Chrome, it starts the browser control service on loopback
-and auto-starts the relay server. The extension talks to the local relay; the CLI/tool calls go to the Gateway.
+如果 Gateway 与 Chrome 在同一台机器上，它会在 loopback 启动浏览器控制服务并自动启动 relay。扩展连接本地 relay；CLI 或工具调用走 Gateway。
 
-### Remote Gateway (Gateway runs elsewhere) — **run a node host**
+### 远程 Gateway（Gateway 在别处）需要运行 node host
 
-If your Gateway runs on another machine, start a node host on the machine that runs Chrome.
-The Gateway will proxy browser actions to that node; the extension + relay stay local to the browser machine.
+如果 Gateway 在另一台机器上，请在运行 Chrome 的机器上启动 node host。Gateway 会把浏览器动作代理到该 node；扩展与 relay 保持本地。
 
-If multiple nodes are connected, pin one with `gateway.nodes.browser.node` or set `gateway.nodes.browser.mode`.
+如果连接了多个 node，可通过 `gateway.nodes.browser.node` 固定一个，或设置 `gateway.nodes.browser.mode`。
 
-## Sandboxing (tool containers)
+## 沙箱（工具容器）
 
-If your agent session is sandboxed (`agents.defaults.sandbox.mode != "off"`), the `browser` tool can be restricted:
+如果你的 agent 会话启用了沙箱（`agents.defaults.sandbox.mode != "off"`），`browser` 工具可能受限：
 
-- By default, sandboxed sessions often target the **sandbox browser** (`target="sandbox"`), not your host Chrome.
-- Chrome extension relay takeover requires controlling the **host** browser control server.
+- 默认情况下，沙箱会话常常指向**沙箱浏览器**（`target="sandbox"`），而不是宿主机 Chrome。
+- Chrome 扩展接管需要控制**宿主机**浏览器控制服务。
 
-Options:
-- Easiest: use the extension from a **non-sandboxed** session/agent.
-- Or allow host browser control for sandboxed sessions:
+可选方案：
+- 最简单：在**非沙箱**会话或 agent 中使用扩展。
+- 或允许沙箱会话控制宿主机浏览器：
 
 ```json5
 {
@@ -129,40 +127,40 @@ Options:
 }
 ```
 
-Then ensure the tool isn’t denied by tool policy, and (if needed) call `browser` with `target="host"`.
+然后确保工具策略未阻止该工具，并在需要时使用 `browser` 且 `target="host"`。
 
-Debugging: `moltbot sandbox explain`
+排障：`moltbot sandbox explain`
 
-## Remote access tips
+## 远程访问建议
 
-- Keep the Gateway and node host on the same tailnet; avoid exposing relay ports to LAN or public Internet.
-- Pair nodes intentionally; disable browser proxy routing if you don’t want remote control (`gateway.nodes.browser.mode="off"`).
+- 让 Gateway 与 node host 处于同一 tailnet；避免把 relay 端口暴露到 LAN 或公网。
+- 有意绑定 node；如不希望远程控制，可禁用浏览器代理路由（`gateway.nodes.browser.mode="off"`）。
 
-## How “extension path” works
+## “extension path” 的工作方式
 
-`moltbot browser extension path` prints the **installed** on-disk directory containing the extension files.
+`moltbot browser extension path` 会打印**已安装**的磁盘目录，里面包含扩展文件。
 
-The CLI intentionally does **not** print a `node_modules` path. Always run `moltbot browser extension install` first to copy the extension to a stable location under your Moltbot state directory.
+CLI **不会**打印 `node_modules` 路径。请先运行 `moltbot browser extension install` 把扩展复制到 Moltbot 状态目录下的稳定位置。
 
-If you move or delete that install directory, Chrome will mark the extension as broken until you reload it from a valid path.
+如果你移动或删除该安装目录，Chrome 会标记扩展损坏，直到你从有效路径重新加载。
 
-## Security implications (read this)
+## 安全影响（请阅读）
 
-This is powerful and risky. Treat it like giving the model “hands on your browser”.
+这很强大也有风险。把它当成“让模型直接操作你的浏览器”。
 
-- The extension uses Chrome’s debugger API (`chrome.debugger`). When attached, the model can:
-  - click/type/navigate in that tab
-  - read page content
-  - access whatever the tab’s logged-in session can access
-- **This is not isolated** like the dedicated clawd-managed profile.
-  - If you attach to your daily-driver profile/tab, you’re granting access to that account state.
+- 扩展使用 Chrome 的 debugger API（`chrome.debugger`）。附加后模型可以：
+  - 点击 输入 导航该标签页
+  - 读取页面内容
+  - 访问该标签页已登录会话可访问的内容
+- **这不是隔离的**，不同于专用的 clawd 管理 profile。
+  - 如果你附加到日常使用的 profile 或标签页，你等于授权访问该账号状态。
 
-Recommendations:
-- Prefer a dedicated Chrome profile (separate from your personal browsing) for extension relay usage.
-- Keep the Gateway and any node hosts tailnet-only; rely on Gateway auth + node pairing.
-- Avoid exposing relay ports over LAN (`0.0.0.0`) and avoid Funnel (public).
+建议：
+- 使用一个独立的 Chrome profile（与个人浏览分离）进行扩展 relay。
+- 保持 Gateway 与任何 node host 仅在 tailnet 内，依赖 Gateway 认证与 node 配对。
+- 避免将 relay 端口暴露到 LAN（`0.0.0.0`），避免 Funnel（公网）。
 
-Related:
-- Browser tool overview: [Browser](/tools/browser)
-- Security audit: [Security](/gateway/security)
-- Tailscale setup: [Tailscale](/gateway/tailscale)
+相关：
+- 浏览器工具概览：[Browser](/tools/browser)
+- 安全审计：[Security](/gateway/security)
+- Tailscale 设置：[Tailscale](/gateway/tailscale)

@@ -1,32 +1,30 @@
 ---
-summary: "Direct `moltbot agent` CLI runs (with optional delivery)"
+summary: "直接运行 `moltbot agent`（可选回传投递）"
 read_when:
-  - Adding or modifying the agent CLI entrypoint
+  - 添加或修改 agent CLI 入口
 ---
-# `moltbot agent` (direct agent runs)
+# `moltbot agent`（直接运行 agent）
 
-`moltbot agent` runs a single agent turn without needing an inbound chat message.
-By default it goes **through the Gateway**; add `--local` to force the embedded
-runtime on the current machine.
+`moltbot agent` 在没有入站聊天消息的情况下运行一次 agent。默认会**通过 Gateway**；加上 `--local` 可强制使用当前机器上的内置运行时。
 
-## Behavior
+## 行为
 
-- Required: `--message <text>`
-- Session selection:
-  - `--to <dest>` derives the session key (group/channel targets preserve isolation; direct chats collapse to `main`), **or**
-  - `--session-id <id>` reuses an existing session by id, **or**
-  - `--agent <id>` targets a configured agent directly (uses that agent's `main` session key)
-- Runs the same embedded agent runtime as normal inbound replies.
-- Thinking/verbose flags persist into the session store.
-- Output:
-  - default: prints reply text (plus `MEDIA:<url>` lines)
-  - `--json`: prints structured payload + metadata
-- Optional delivery back to a channel with `--deliver` + `--channel` (target formats match `moltbot message --target`).
-- Use `--reply-channel`/`--reply-to`/`--reply-account` to override delivery without changing the session.
+- 必填：`--message <text>`
+- 会话选择：
+  - `--to <dest>` 派生会话键（群组或频道目标保持隔离；私聊折叠到 `main`），**或**
+  - `--session-id <id>` 复用已有会话 id，**或**
+  - `--agent <id>` 直接指定已配置的 agent（使用该 agent 的 `main` 会话键）
+- 运行同样的内置 agent 运行时，与正常入站回复一致。
+- thinking/verbose 标志会持久化到会话存储。
+- 输出：
+  - 默认：打印回复文本（附带 `MEDIA:<url>` 行）
+  - `--json`：打印结构化载荷与元数据
+- 可使用 `--deliver` + `--channel` 把回复回传到某个渠道（目标格式与 `moltbot message --target` 一致）。
+- 使用 `--reply-channel`/`--reply-to`/`--reply-account` 在不改变会话的情况下覆盖投递目标。
 
-If the Gateway is unreachable, the CLI **falls back** to the embedded local run.
+若 Gateway 不可达，CLI 会**回退**为本地内置运行。
 
-## Examples
+## 示例
 
 ```bash
 moltbot agent --to +15555550123 --message "status update"
@@ -37,15 +35,15 @@ moltbot agent --to +15555550123 --message "Summon reply" --deliver
 moltbot agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"
 ```
 
-## Flags
+## 参数
 
-- `--local`: run locally (requires model provider API keys in your shell)
-- `--deliver`: send the reply to the chosen channel
-- `--channel`: delivery channel (`whatsapp|telegram|discord|googlechat|slack|signal|imessage`, default: `whatsapp`)
-- `--reply-to`: delivery target override
-- `--reply-channel`: delivery channel override
-- `--reply-account`: delivery account id override
-- `--thinking <off|minimal|low|medium|high|xhigh>`: persist thinking level (GPT-5.2 + Codex models only)
-- `--verbose <on|full|off>`: persist verbose level
-- `--timeout <seconds>`: override agent timeout
-- `--json`: output structured JSON
+- `--local`：本地运行（需要在 shell 中设置模型提供方 API key）
+- `--deliver`：将回复发送到选定渠道
+- `--channel`：投递渠道（`whatsapp|telegram|discord|googlechat|slack|signal|imessage`，默认：`whatsapp`）
+- `--reply-to`：覆盖投递目标
+- `--reply-channel`：覆盖投递渠道
+- `--reply-account`：覆盖投递账号 id
+- `--thinking <off|minimal|low|medium|high|xhigh>`：持久化思考级别（仅 GPT-5.2 + Codex 模型）
+- `--verbose <on|full|off>`：持久化 verbose 级别
+- `--timeout <seconds>`：覆盖 agent 超时
+- `--json`：输出结构化 JSON

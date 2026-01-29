@@ -1,55 +1,54 @@
 ---
-summary: "Voice Call plugin: outbound + inbound calls via Twilio/Telnyx/Plivo (plugin install + config + CLI)"
+summary: "语音通话插件：通过 Twilio/Telnyx/Plivo 进行呼出与呼入（安装 配置 CLI）"
 read_when:
-  - You want to place an outbound voice call from Moltbot
-  - You are configuring or developing the voice-call plugin
+  - 你想用 Moltbot 发起语音外呼
+  - 你在配置或开发 voice-call 插件
 ---
 
-# Voice Call (plugin)
+# 语音通话（插件）
 
-Voice calls for Moltbot via a plugin. Supports outbound notifications and
-multi-turn conversations with inbound policies.
+通过插件为 Moltbot 提供语音通话。支持外呼通知与带入站策略的多轮对话。
 
-Current providers:
-- `twilio` (Programmable Voice + Media Streams)
-- `telnyx` (Call Control v2)
-- `plivo` (Voice API + XML transfer + GetInput speech)
-- `mock` (dev/no network)
+当前提供方：
+- `twilio`（Programmable Voice + Media Streams）
+- `telnyx`（Call Control v2）
+- `plivo`（Voice API + XML 转发 + GetInput 语音）
+- `mock`（开发/无网络）
 
-Quick mental model:
-- Install plugin
-- Restart Gateway
-- Configure under `plugins.entries.voice-call.config`
-- Use `moltbot voicecall ...` or the `voice_call` tool
+快速心智模型：
+- 安装插件
+- 重启 Gateway
+- 在 `plugins.entries.voice-call.config` 配置
+- 使用 `moltbot voicecall ...` 或 `voice_call` 工具
 
-## Where it runs (local vs remote)
+## 运行位置（本地与远程）
 
-The Voice Call plugin runs **inside the Gateway process**.
+语音通话插件运行在 **Gateway 进程内**。
 
-If you use a remote Gateway, install/configure the plugin on the **machine running the Gateway**, then restart the Gateway to load it.
+如果使用远程 Gateway，请在**运行 Gateway 的机器**上安装与配置插件，然后重启 Gateway 以加载它。
 
-## Install
+## 安装
 
-### Option A: install from npm (recommended)
+### 方式 A：从 npm 安装（推荐）
 
 ```bash
 moltbot plugins install @moltbot/voice-call
 ```
 
-Restart the Gateway afterwards.
+随后重启 Gateway。
 
-### Option B: install from a local folder (dev, no copying)
+### 方式 B：从本地目录安装（开发 无复制）
 
 ```bash
 moltbot plugins install ./extensions/voice-call
 cd ./extensions/voice-call && pnpm install
 ```
 
-Restart the Gateway afterwards.
+随后重启 Gateway。
 
-## Config
+## 配置
 
-Set config under `plugins.entries.voice-call.config`:
+在 `plugins.entries.voice-call.config` 下设置：
 
 ```json5
 {
@@ -98,20 +97,18 @@ Set config under `plugins.entries.voice-call.config`:
 }
 ```
 
-Notes:
-- Twilio/Telnyx require a **publicly reachable** webhook URL.
-- Plivo requires a **publicly reachable** webhook URL.
-- `mock` is a local dev provider (no network calls).
-- `skipSignatureVerification` is for local testing only.
-- If you use ngrok free tier, set `publicUrl` to the exact ngrok URL; signature verification is always enforced.
-- `tunnel.allowNgrokFreeTierLoopbackBypass: true` allows Twilio webhooks with invalid signatures **only** when `tunnel.provider="ngrok"` and `serve.bind` is loopback (ngrok local agent). Use for local dev only.
-- Ngrok free tier URLs can change or add interstitial behavior; if `publicUrl` drifts, Twilio signatures will fail. For production, prefer a stable domain or Tailscale funnel.
+说明：
+- Twilio/Telnyx 需要**公网可达**的 webhook URL。
+- Plivo 需要**公网可达**的 webhook URL。
+- `mock` 为本地开发提供方（无网络调用）。
+- `skipSignatureVerification` 仅用于本地测试。
+- 若使用 ngrok 免费版，将 `publicUrl` 设置为精确的 ngrok URL；签名校验始终启用。
+- `tunnel.allowNgrokFreeTierLoopbackBypass: true` 仅在 `tunnel.provider="ngrok"` 且 `serve.bind` 为 loopback（ngrok 本地代理）时允许**无效签名**的 Twilio webhook。仅用于本地开发。
+- ngrok 免费版 URL 可能变动或出现中间页；若 `publicUrl` 漂移，Twilio 签名会失败。生产环境请使用稳定域名或 Tailscale funnel。
 
-## TTS for calls
+## 通话 TTS
 
-Voice Call uses the core `messages.tts` configuration (OpenAI or ElevenLabs) for
-streaming speech on calls. You can override it under the plugin config with the
-**same shape** — it deep‑merges with `messages.tts`.
+语音通话使用核心 `messages.tts` 配置（OpenAI 或 ElevenLabs）进行通话流式语音。你可以在插件配置下使用**相同结构**覆盖，并与 `messages.tts` 深度合并。
 
 ```json5
 {
@@ -125,13 +122,13 @@ streaming speech on calls. You can override it under the plugin config with the
 }
 ```
 
-Notes:
-- **Edge TTS is ignored for voice calls** (telephony audio needs PCM; Edge output is unreliable).
-- Core TTS is used when Twilio media streaming is enabled; otherwise calls fall back to provider native voices.
+说明：
+- **语音通话忽略 Edge TTS**（电话音频需要 PCM；Edge 输出不稳定）。
+- 当启用 Twilio 媒体流时使用核心 TTS；否则通话回退到提供方原生语音。
 
-### More examples
+### 更多示例
 
-Use core TTS only (no override):
+仅使用核心 TTS（不覆盖）：
 
 ```json5
 {
@@ -144,7 +141,7 @@ Use core TTS only (no override):
 }
 ```
 
-Override to ElevenLabs just for calls (keep core default elsewhere):
+仅对通话覆盖为 ElevenLabs（其他场景保持核心默认）：
 
 ```json5
 {
@@ -167,7 +164,7 @@ Override to ElevenLabs just for calls (keep core default elsewhere):
 }
 ```
 
-Override only the OpenAI model for calls (deep‑merge example):
+仅对通话覆盖 OpenAI 模型（深度合并示例）：
 
 ```json5
 {
@@ -188,9 +185,9 @@ Override only the OpenAI model for calls (deep‑merge example):
 }
 ```
 
-## Inbound calls
+## 入站电话
 
-Inbound policy defaults to `disabled`. To enable inbound calls, set:
+入站策略默认 `disabled`。要启用入站电话，设置：
 
 ```json5
 {
@@ -200,7 +197,7 @@ Inbound policy defaults to `disabled`. To enable inbound calls, set:
 }
 ```
 
-Auto-responses use the agent system. Tune with:
+自动回复使用 agent 系统。可通过以下项调优：
 - `responseModel`
 - `responseSystemPrompt`
 - `responseTimeoutMs`
@@ -217,23 +214,23 @@ moltbot voicecall tail
 moltbot voicecall expose --mode funnel
 ```
 
-## Agent tool
+## Agent 工具
 
-Tool name: `voice_call`
+工具名：`voice_call`
 
-Actions:
-- `initiate_call` (message, to?, mode?)
-- `continue_call` (callId, message)
-- `speak_to_user` (callId, message)
-- `end_call` (callId)
-- `get_status` (callId)
+动作：
+- `initiate_call`（message, to?, mode?）
+- `continue_call`（callId, message）
+- `speak_to_user`（callId, message）
+- `end_call`（callId）
+- `get_status`（callId）
 
-This repo ships a matching skill doc at `skills/voice-call/SKILL.md`.
+仓库内提供匹配的技能文档：`skills/voice-call/SKILL.md`。
 
 ## Gateway RPC
 
-- `voicecall.initiate` (`to?`, `message`, `mode?`)
-- `voicecall.continue` (`callId`, `message`)
-- `voicecall.speak` (`callId`, `message`)
-- `voicecall.end` (`callId`)
-- `voicecall.status` (`callId`)
+- `voicecall.initiate`（`to?`、`message`、`mode?`）
+- `voicecall.continue`（`callId`、`message`）
+- `voicecall.speak`（`callId`、`message`）
+- `voicecall.end`（`callId`）
+- `voicecall.status`（`callId`）
