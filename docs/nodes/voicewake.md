@@ -1,61 +1,61 @@
 ---
-summary: "Global voice wake words (Gateway-owned) and how they sync across nodes"
+summary: "全局语音唤醒词（由 Gateway 统一管理）及其在节点间的同步方式"
 read_when:
-  - Changing voice wake words behavior or defaults
-  - Adding new node platforms that need wake word sync
+  - 修改语音唤醒词行为或默认值
+  - 增加需要唤醒词同步的新节点平台
 ---
-# Voice Wake (Global Wake Words)
+# 语音唤醒（全局唤醒词）
 
-Moltbot treats **wake words as a single global list** owned by the **Gateway**.
+Moltbot 将**唤醒词作为 Gateway 统一管理的全局列表**。
 
-- There are **no per-node custom wake words**.
-- **Any node/app UI may edit** the list; changes are persisted by the Gateway and broadcast to everyone.
-- Each device still keeps its own **Voice Wake enabled/disabled** toggle (local UX + permissions differ).
+- **没有按节点自定义唤醒词**。
+- **任何节点或应用 UI 都可编辑**该列表；变更由 Gateway 持久化并广播给所有人。
+- 每个设备仍保留自己的**语音唤醒启用/禁用**开关（本地 UX 与权限不同）。
 
-## Storage (Gateway host)
+## 存储位置（Gateway 主机）
 
-Wake words are stored on the gateway machine at:
+唤醒词存储在 gateway 机器：
 
 - `~/.clawdbot/settings/voicewake.json`
 
-Shape:
+格式：
 
 ```json
 { "triggers": ["clawd", "claude", "computer"], "updatedAtMs": 1730000000000 }
 ```
 
-## Protocol
+## 协议
 
-### Methods
+### 方法
 
 - `voicewake.get` → `{ triggers: string[] }`
-- `voicewake.set` with params `{ triggers: string[] }` → `{ triggers: string[] }`
+- `voicewake.set` 参数 `{ triggers: string[] }` → `{ triggers: string[] }`
 
-Notes:
-- Triggers are normalized (trimmed, empties dropped). Empty lists fall back to defaults.
-- Limits are enforced for safety (count/length caps).
+说明：
+- 触发词会做规范化（去空格、移除空值）。空列表会回退到默认值。
+- 出于安全考虑会强制数量与长度限制。
 
-### Events
+### 事件
 
 - `voicewake.changed` payload `{ triggers: string[] }`
 
-Who receives it:
-- All WebSocket clients (macOS app, WebChat, etc.)
-- All connected nodes (iOS/Android), and also on node connect as an initial “current state” push.
+接收者：
+- 所有 WebSocket 客户端（macOS 应用、WebChat 等）
+- 所有已连接节点（iOS/Android），并在节点连接时作为初始“当前状态”推送。
 
-## Client behavior
+## 客户端行为
 
-### macOS app
+### macOS 应用
 
-- Uses the global list to gate `VoiceWakeRuntime` triggers.
-- Editing “Trigger words” in Voice Wake settings calls `voicewake.set` and then relies on the broadcast to keep other clients in sync.
+- 使用全局列表进行 `VoiceWakeRuntime` 触发检测。
+- 在 Voice Wake 设置中编辑 “Trigger words” 会调用 `voicewake.set`，并依赖广播保持其他客户端同步。
 
-### iOS node
+### iOS 节点
 
-- Uses the global list for `VoiceWakeManager` trigger detection.
-- Editing Wake Words in Settings calls `voicewake.set` (over the Gateway WS) and also keeps local wake-word detection responsive.
+- 使用全局列表进行 `VoiceWakeManager` 触发检测。
+- 在设置中编辑 Wake Words 会调用 `voicewake.set`（通过 Gateway WS），并保持本地检测及时更新。
 
-### Android node
+### Android 节点
 
-- Exposes a Wake Words editor in Settings.
-- Calls `voicewake.set` over the Gateway WS so edits sync everywhere.
+- 在设置中提供 Wake Words 编辑器。
+- 通过 Gateway WS 调用 `voicewake.set`，使编辑结果全局同步。

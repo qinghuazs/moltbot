@@ -1,43 +1,47 @@
 ---
-summary: "Location command for nodes (location.get), permission modes, and background behavior"
+summary: "节点位置命令（location.get）、权限模式与后台行为"
 read_when:
-  - Adding location node support or permissions UI
-  - Designing background location + push flows
+  - 添加位置节点支持或权限 UI
+  - 设计后台定位与推送流程
 ---
 
-# Location command (nodes)
+# 位置命令（节点）
 
-## TL;DR
-- `location.get` is a node command (via `node.invoke`).
-- Off by default.
-- Settings use a selector: Off / While Using / Always.
-- Separate toggle: Precise Location.
+## 简要说明
+- `location.get` 是节点命令（通过 `node.invoke`）。
+- 默认关闭。
+- 设置使用选择器：Off / While Using / Always。
+- 单独开关：Precise Location。
 
-## Why a selector (not just a switch)
-OS permissions are multi-level. We can expose a selector in-app, but the OS still decides the actual grant.
-- iOS/macOS: user can choose **While Using** or **Always** in system prompts/Settings. App can request upgrade, but OS may require Settings.
-- Android: background location is a separate permission; on Android 10+ it often requires a Settings flow.
-- Precise location is a separate grant (iOS 14+ “Precise”, Android “fine” vs “coarse”).
+## 为什么是选择器（而不是开关）
 
-Selector in UI drives our requested mode; actual grant lives in OS settings.
+系统权限是多级的。应用可暴露选择器，但最终权限由操作系统决定。
+- iOS/macOS：用户可在系统提示/设置里选择 **While Using** 或 **Always**。应用可请求升级，但 OS 可能要求跳转设置。
+- Android：后台定位是单独权限；Android 10+ 常需要进入设置流程。
+- 精确定位是独立授权（iOS 14+ “Precise”，Android “fine” 与 “coarse”）。
 
-## Settings model
-Per node device:
+UI 的选择器决定我们请求的模式；实际授权由系统设置决定。
+
+## 设置模型
+
+按节点设备：
 - `location.enabledMode`: `off | whileUsing | always`
 - `location.preciseEnabled`: bool
 
-UI behavior:
-- Selecting `whileUsing` requests foreground permission.
-- Selecting `always` first ensures `whileUsing`, then requests background (or sends user to Settings if required).
-- If OS denies requested level, revert to the highest granted level and show status.
+UI 行为：
+- 选择 `whileUsing` 请求前台权限。
+- 选择 `always` 时先确保 `whileUsing`，再请求后台权限（必要时引导到设置）。
+- 若 OS 拒绝所需级别，回退到最高已授权级别并显示状态。
 
-## Permissions mapping (node.permissions)
-Optional. macOS node reports `location` via the permissions map; iOS/Android may omit it.
+## 权限映射（node.permissions）
 
-## Command: `location.get`
-Called via `node.invoke`.
+可选。macOS 节点在权限映射中上报 `location`；iOS/Android 可能省略。
 
-Params (suggested):
+## 命令：`location.get`
+
+通过 `node.invoke` 调用。
+
+参数（建议）：
 ```json
 {
   "timeoutMs": 10000,
@@ -46,7 +50,7 @@ Params (suggested):
 }
 ```
 
-Response payload:
+响应 payload：
 ```json
 {
   "lat": 48.20849,
@@ -61,35 +65,36 @@ Response payload:
 }
 ```
 
-Errors (stable codes):
-- `LOCATION_DISABLED`: selector is off.
-- `LOCATION_PERMISSION_REQUIRED`: permission missing for requested mode.
-- `LOCATION_BACKGROUND_UNAVAILABLE`: app is backgrounded but only While Using allowed.
-- `LOCATION_TIMEOUT`: no fix in time.
-- `LOCATION_UNAVAILABLE`: system failure / no providers.
+错误码（稳定）：
+- `LOCATION_DISABLED`：选择器关闭。
+- `LOCATION_PERMISSION_REQUIRED`：缺少所需模式权限。
+- `LOCATION_BACKGROUND_UNAVAILABLE`：应用在后台但仅允许 While Using。
+- `LOCATION_TIMEOUT`：超时未定位。
+- `LOCATION_UNAVAILABLE`：系统失败或无定位来源。
 
-## Background behavior (future)
-Goal: model can request location even when node is backgrounded, but only when:
-- User selected **Always**.
-- OS grants background location.
-- App is allowed to run in background for location (iOS background mode / Android foreground service or special allowance).
+## 后台行为（未来）
 
-Push-triggered flow (future):
-1) Gateway sends a push to the node (silent push or FCM data).
-2) Node wakes briefly and requests location from the device.
-3) Node forwards payload to Gateway.
+目标：模型可在节点后台时请求位置，但需满足：
+- 用户选择 **Always**。
+- OS 授予后台定位。
+- 应用允许后台定位（iOS 后台模式 / Android 前台服务或特殊许可）。
 
-Notes:
-- iOS: Always permission + background location mode required. Silent push may be throttled; expect intermittent failures.
-- Android: background location may require a foreground service; otherwise, expect denial.
+推送触发流程（未来）：
+1) Gateway 向节点发送推送（静默推送或 FCM data）。
+2) 节点短暂唤醒并向设备请求位置。
+3) 节点将 payload 转发给 Gateway。
 
-## Model/tooling integration
-- Tool surface: `nodes` tool adds `location_get` action (node required).
-- CLI: `moltbot nodes location get --node <id>`.
-- Agent guidelines: only call when user enabled location and understands the scope.
+说明：
+- iOS：需要 Always 权限 + 后台定位模式。静默推送可能被限流，预期偶发失败。
+- Android：后台定位可能需要前台服务，否则容易被拒绝。
 
-## UX copy (suggested)
-- Off: “Location sharing is disabled.”
-- While Using: “Only when Moltbot is open.”
-- Always: “Allow background location. Requires system permission.”
-- Precise: “Use precise GPS location. Toggle off to share approximate location.”
+## 模型/工具集成
+- 工具面：`nodes` 工具提供 `location_get` 动作（需要节点）。
+- CLI：`moltbot nodes location get --node <id>`。
+- Agent 指南：仅在用户启用定位并理解范围时调用。
+
+## UX 文案（建议）
+- Off：“位置共享已关闭。”
+- While Using：“仅在 Moltbot 打开时。”
+- Always：“允许后台定位。需要系统权限。”
+- Precise：“使用精确 GPS 定位。关闭后仅分享粗略位置。”

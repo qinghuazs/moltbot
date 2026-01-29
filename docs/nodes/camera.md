@@ -1,152 +1,151 @@
 ---
-summary: "Camera capture (iOS node + macOS app) for agent use: photos (jpg) and short video clips (mp4)"
+summary: "相机采集（iOS 节点 + macOS 应用）：照片（jpg）与短视频片段（mp4）"
 read_when:
-  - Adding or modifying camera capture on iOS nodes or macOS
-  - Extending agent-accessible MEDIA temp-file workflows
+  - 添加或修改 iOS 节点或 macOS 的相机采集
+  - 扩展 agent 可访问的 MEDIA 临时文件工作流
 ---
 
-# Camera capture (agent)
+# 相机采集（agent）
 
-Moltbot supports **camera capture** for agent workflows:
+Moltbot 支持 **相机采集** 用于 agent 工作流：
 
-- **iOS node** (paired via Gateway): capture a **photo** (`jpg`) or **short video clip** (`mp4`, with optional audio) via `node.invoke`.
-- **Android node** (paired via Gateway): capture a **photo** (`jpg`) or **short video clip** (`mp4`, with optional audio) via `node.invoke`.
-- **macOS app** (node via Gateway): capture a **photo** (`jpg`) or **short video clip** (`mp4`, with optional audio) via `node.invoke`.
+- **iOS 节点**（通过 Gateway 配对）：通过 `node.invoke` 捕获**照片**（`jpg`）或**短视频片段**（`mp4`，可选音频）。
+- **Android 节点**（通过 Gateway 配对）：通过 `node.invoke` 捕获**照片**（`jpg`）或**短视频片段**（`mp4`，可选音频）。
+- **macOS 应用**（通过 Gateway 作为节点）：通过 `node.invoke` 捕获**照片**（`jpg`）或**短视频片段**（`mp4`，可选音频）。
 
-All camera access is gated behind **user-controlled settings**.
+所有相机访问都受**用户设置**控制。
 
-## iOS node
+## iOS 节点
 
-### User setting (default on)
+### 用户设置（默认开启）
 
-- iOS Settings tab → **Camera** → **Allow Camera** (`camera.enabled`)
-  - Default: **on** (missing key is treated as enabled).
-  - When off: `camera.*` commands return `CAMERA_DISABLED`.
+- iOS 设置页 → **Camera** → **Allow Camera**（`camera.enabled`）
+  - 默认：**开**（缺省键视为启用）。
+  - 关闭时：`camera.*` 命令返回 `CAMERA_DISABLED`。
 
-### Commands (via Gateway `node.invoke`)
+### 命令（通过 Gateway `node.invoke`）
 
 - `camera.list`
-  - Response payload:
-    - `devices`: array of `{ id, name, position, deviceType }`
+  - 返回 payload：
+    - `devices`：`{ id, name, position, deviceType }` 数组
 
 - `camera.snap`
-  - Params:
-    - `facing`: `front|back` (default: `front`)
-    - `maxWidth`: number (optional; default `1600` on the iOS node)
-    - `quality`: `0..1` (optional; default `0.9`)
-    - `format`: currently `jpg`
-    - `delayMs`: number (optional; default `0`)
-    - `deviceId`: string (optional; from `camera.list`)
-  - Response payload:
+  - 参数：
+    - `facing`：`front|back`（默认 `front`）
+    - `maxWidth`：number（可选；iOS 节点默认 `1600`）
+    - `quality`：`0..1`（可选；默认 `0.9`）
+    - `format`：目前为 `jpg`
+    - `delayMs`：number（可选；默认 `0`）
+    - `deviceId`：string（可选；来自 `camera.list`）
+  - 返回 payload：
     - `format: "jpg"`
     - `base64: "<...>"`
-    - `width`, `height`
-  - Payload guard: photos are recompressed to keep the base64 payload under 5 MB.
+    - `width`、`height`
+  - 载荷保护：照片会被重新压缩，以保证 base64 载荷低于 5 MB。
 
 - `camera.clip`
-  - Params:
-    - `facing`: `front|back` (default: `front`)
-    - `durationMs`: number (default `3000`, clamped to a max of `60000`)
-    - `includeAudio`: boolean (default `true`)
-    - `format`: currently `mp4`
-    - `deviceId`: string (optional; from `camera.list`)
-  - Response payload:
+  - 参数：
+    - `facing`：`front|back`（默认 `front`）
+    - `durationMs`：number（默认 `3000`，上限 `60000`）
+    - `includeAudio`：boolean（默认 `true`）
+    - `format`：目前为 `mp4`
+    - `deviceId`：string（可选；来自 `camera.list`）
+  - 返回 payload：
     - `format: "mp4"`
     - `base64: "<...>"`
     - `durationMs`
     - `hasAudio`
 
-### Foreground requirement
+### 前台要求
 
-Like `canvas.*`, the iOS node only allows `camera.*` commands in the **foreground**. Background invocations return `NODE_BACKGROUND_UNAVAILABLE`.
+与 `canvas.*` 一样，iOS 节点只允许在**前台**执行 `camera.*`。后台调用返回 `NODE_BACKGROUND_UNAVAILABLE`。
 
-### CLI helper (temp files + MEDIA)
+### CLI helper（临时文件 + MEDIA）
 
-The easiest way to get attachments is via the CLI helper, which writes decoded media to a temp file and prints `MEDIA:<path>`.
+最简单的附件方式是 CLI helper，它会把解码媒体写入临时文件并打印 `MEDIA:<path>`。
 
-Examples:
+示例：
 
 ```bash
-moltbot nodes camera snap --node <id>               # default: both front + back (2 MEDIA lines)
+moltbot nodes camera snap --node <id>               # 默认：前后摄各一张（2 条 MEDIA）
 moltbot nodes camera snap --node <id> --facing front
 moltbot nodes camera clip --node <id> --duration 3000
 moltbot nodes camera clip --node <id> --no-audio
 ```
 
-Notes:
-- `nodes camera snap` defaults to **both** facings to give the agent both views.
-- Output files are temporary (in the OS temp directory) unless you build your own wrapper.
+说明：
+- `nodes camera snap` 默认使用**前后双摄**，给 agent 两个视角。
+- 输出文件是临时文件（系统临时目录），除非你自行封装。
 
-## Android node
+## Android 节点
 
-### User setting (default on)
+### 用户设置（默认开启）
 
-- Android Settings sheet → **Camera** → **Allow Camera** (`camera.enabled`)
-  - Default: **on** (missing key is treated as enabled).
-  - When off: `camera.*` commands return `CAMERA_DISABLED`.
+- Android 设置页 → **Camera** → **Allow Camera**（`camera.enabled`）
+  - 默认：**开**（缺省键视为启用）。
+  - 关闭时：`camera.*` 命令返回 `CAMERA_DISABLED`。
 
-### Permissions
+### 权限
 
-- Android requires runtime permissions:
-  - `CAMERA` for both `camera.snap` and `camera.clip`.
-  - `RECORD_AUDIO` for `camera.clip` when `includeAudio=true`.
+- Android 需要运行时权限：
+  - `CAMERA` 用于 `camera.snap` 与 `camera.clip`。
+  - `RECORD_AUDIO` 用于 `camera.clip` 且 `includeAudio=true`。
 
-If permissions are missing, the app will prompt when possible; if denied, `camera.*` requests fail with a
-`*_PERMISSION_REQUIRED` error.
+如果权限缺失，应用会在可能时提示；若被拒绝，`camera.*` 请求会以 `*_PERMISSION_REQUIRED` 失败。
 
-### Foreground requirement
+### 前台要求
 
-Like `canvas.*`, the Android node only allows `camera.*` commands in the **foreground**. Background invocations return `NODE_BACKGROUND_UNAVAILABLE`.
+与 `canvas.*` 一样，Android 节点只允许在**前台**执行 `camera.*`。后台调用返回 `NODE_BACKGROUND_UNAVAILABLE`。
 
-### Payload guard
+### 载荷保护
 
-Photos are recompressed to keep the base64 payload under 5 MB.
+照片会被重新压缩，以保证 base64 载荷低于 5 MB。
 
-## macOS app
+## macOS 应用
 
-### User setting (default off)
+### 用户设置（默认关闭）
 
-The macOS companion app exposes a checkbox:
+macOS 伴侣应用提供一个复选框：
 
-- **Settings → General → Allow Camera** (`moltbot.cameraEnabled`)
-  - Default: **off**
-  - When off: camera requests return “Camera disabled by user”.
+- **Settings → General → Allow Camera**（`moltbot.cameraEnabled`）
+  - 默认：**关**
+  - 关闭时：相机请求返回 “Camera disabled by user”。
 
-### CLI helper (node invoke)
+### CLI helper（node invoke）
 
-Use the main `moltbot` CLI to invoke camera commands on the macOS node.
+使用主 `moltbot` CLI 调用 macOS 节点的相机命令。
 
-Examples:
+示例：
 
 ```bash
-moltbot nodes camera list --node <id>            # list camera ids
-moltbot nodes camera snap --node <id>            # prints MEDIA:<path>
+moltbot nodes camera list --node <id>            # 列出相机 id
+moltbot nodes camera snap --node <id>            # 打印 MEDIA:<path>
 moltbot nodes camera snap --node <id> --max-width 1280
 moltbot nodes camera snap --node <id> --delay-ms 2000
 moltbot nodes camera snap --node <id> --device-id <id>
-moltbot nodes camera clip --node <id> --duration 10s          # prints MEDIA:<path>
-moltbot nodes camera clip --node <id> --duration-ms 3000      # prints MEDIA:<path> (legacy flag)
+moltbot nodes camera clip --node <id> --duration 10s          # 打印 MEDIA:<path>
+moltbot nodes camera clip --node <id> --duration-ms 3000      # 打印 MEDIA:<path>（旧参数）
 moltbot nodes camera clip --node <id> --device-id <id>
 moltbot nodes camera clip --node <id> --no-audio
 ```
 
-Notes:
-- `moltbot nodes camera snap` defaults to `maxWidth=1600` unless overridden.
-- On macOS, `camera.snap` waits `delayMs` (default 2000ms) after warm-up/exposure settle before capturing.
-- Photo payloads are recompressed to keep base64 under 5 MB.
+说明：
+- `moltbot nodes camera snap` 默认 `maxWidth=1600`，除非覆盖。
+- 在 macOS 上，`camera.snap` 会在曝光预热后等待 `delayMs`（默认 2000ms）再拍摄。
+- 照片载荷会重新压缩，以保证 base64 低于 5 MB。
 
-## Safety + practical limits
+## 安全与实际限制
 
-- Camera and microphone access trigger the usual OS permission prompts (and require usage strings in Info.plist).
-- Video clips are capped (currently `<= 60s`) to avoid oversized node payloads (base64 overhead + message limits).
+- 相机与麦克风访问会触发系统权限提示（并需要 Info.plist 中的使用说明）。
+- 视频片段长度受限（当前 `<= 60s`），避免节点载荷过大（base64 开销 + 消息限制）。
 
-## macOS screen video (OS-level)
+## macOS 屏幕视频（系统级）
 
-For *screen* video (not camera), use the macOS companion:
+对于*屏幕*视频（非相机），使用 macOS 伴侣：
 
 ```bash
-moltbot nodes screen record --node <id> --duration 10s --fps 15   # prints MEDIA:<path>
+moltbot nodes screen record --node <id> --duration 10s --fps 15   # 打印 MEDIA:<path>
 ```
 
-Notes:
-- Requires macOS **Screen Recording** permission (TCC).
+说明：
+- 需要 macOS **屏幕录制**权限（TCC）。
