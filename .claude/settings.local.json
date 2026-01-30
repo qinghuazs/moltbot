@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(comm:*)"
+      "Bash(comm:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ]
   }
 }
