@@ -1,53 +1,51 @@
 ---
-summary: "Agent-controlled Canvas panel embedded via WKWebView + custom URL scheme"
+summary: "通过 WKWebView 嵌入的 Agent 可控 Canvas 面板 + 自定义 URL scheme"
 read_when:
-  - Implementing the macOS Canvas panel
-  - Adding agent controls for visual workspace
-  - Debugging WKWebView canvas loads
+  - 实现 macOS Canvas 面板
+  - 添加可视化工作区的 agent 控制
+  - 调试 WKWebView Canvas 加载
 ---
-# Canvas (macOS app)
+# Canvas（macOS 应用）
 
-The macOS app embeds an agent‑controlled **Canvas panel** using `WKWebView`. It
-is a lightweight visual workspace for HTML/CSS/JS, A2UI, and small interactive
-UI surfaces.
+macOS 应用使用 `WKWebView` 嵌入一个由 agent 控制的 **Canvas 面板**。
+它是一个轻量的 HTML/CSS/JS、A2UI 与小型交互式 UI 的视觉工作区。
 
-## Where Canvas lives
+## Canvas 的位置
 
-Canvas state is stored under Application Support:
+Canvas 状态存储在 Application Support 下：
 
 - `~/Library/Application Support/Moltbot/canvas/<session>/...`
 
-The Canvas panel serves those files via a **custom URL scheme**:
+Canvas 面板通过**自定义 URL scheme**提供这些文件：
 
 - `moltbot-canvas://<session>/<path>`
 
-Examples:
+示例：
 - `moltbot-canvas://main/` → `<canvasRoot>/main/index.html`
 - `moltbot-canvas://main/assets/app.css` → `<canvasRoot>/main/assets/app.css`
 - `moltbot-canvas://main/widgets/todo/` → `<canvasRoot>/main/widgets/todo/index.html`
 
-If no `index.html` exists at the root, the app shows a **built‑in scaffold page**.
+如果根目录没有 `index.html`，应用会显示**内置脚手架页面**。
 
-## Panel behavior
+## 面板行为
 
-- Borderless, resizable panel anchored near the menu bar (or mouse cursor).
-- Remembers size/position per session.
-- Auto‑reloads when local canvas files change.
-- Only one Canvas panel is visible at a time (session is switched as needed).
+- 无边框、可缩放面板，靠近菜单栏（或鼠标位置）。
+- 按会话记忆大小与位置。
+- 本地 Canvas 文件变更会自动重载。
+- 同一时间仅显示一个 Canvas 面板（按需切换会话）。
 
-Canvas can be disabled from Settings → **Allow Canvas**. When disabled, canvas
-node commands return `CANVAS_DISABLED`.
+可在 Settings → **Allow Canvas** 中关闭 Canvas。关闭后，canvas 节点命令返回 `CANVAS_DISABLED`。
 
-## Agent API surface
+## Agent API 面
 
-Canvas is exposed via the **Gateway WebSocket**, so the agent can:
+Canvas 通过 **Gateway WebSocket** 暴露给 agent，因此 agent 可以：
 
-- show/hide the panel
-- navigate to a path or URL
-- evaluate JavaScript
-- capture a snapshot image
+- 显示/隐藏面板
+- 导航到路径或 URL
+- 执行 JavaScript
+- 捕获快照图像
 
-CLI examples:
+CLI 示例：
 
 ```bash
 moltbot nodes canvas present --node <id>
@@ -56,34 +54,33 @@ moltbot nodes canvas eval --node <id> --js "document.title"
 moltbot nodes canvas snapshot --node <id>
 ```
 
-Notes:
-- `canvas.navigate` accepts **local canvas paths**, `http(s)` URLs, and `file://` URLs.
-- If you pass `"/"`, the Canvas shows the local scaffold or `index.html`.
+说明：
+- `canvas.navigate` 接受**本地 Canvas 路径**、`http(s)` URL 和 `file://` URL。
+- 传入 `"/"` 会显示本地脚手架或 `index.html`。
 
-## A2UI in Canvas
+## Canvas 中的 A2UI
 
-A2UI is hosted by the Gateway canvas host and rendered inside the Canvas panel.
-When the Gateway advertises a Canvas host, the macOS app auto‑navigates to the
-A2UI host page on first open.
+A2UI 由 Gateway canvas host 提供，并在 Canvas 面板中渲染。
+当 Gateway 广播 Canvas host 时，macOS 应用在首次打开时会自动导航到 A2UI host 页面。
 
-Default A2UI host URL:
+默认 A2UI host URL：
 
 ```
 http://<gateway-host>:18793/__moltbot__/a2ui/
 ```
 
-### A2UI commands (v0.8)
+### A2UI 命令（v0.8）
 
-Canvas currently accepts **A2UI v0.8** server→client messages:
+Canvas 当前接受 **A2UI v0.8** server→client 消息：
 
 - `beginRendering`
 - `surfaceUpdate`
 - `dataModelUpdate`
 - `deleteSurface`
 
-`createSurface` (v0.9) is not supported.
+不支持 `createSurface`（v0.9）。
 
-CLI example:
+CLI 示例：
 
 ```bash
 cat > /tmp/a2ui-v0.8.jsonl <<'EOFA2'
@@ -94,28 +91,28 @@ EOFA2
 moltbot nodes canvas a2ui push --jsonl /tmp/a2ui-v0.8.jsonl --node <id>
 ```
 
-Quick smoke:
+快速烟雾：
 
 ```bash
 moltbot nodes canvas a2ui push --node <id> --text "Hello from A2UI"
 ```
 
-## Triggering agent runs from Canvas
+## 从 Canvas 触发 agent 运行
 
-Canvas can trigger new agent runs via deep links:
+Canvas 可通过 deep link 触发新的 agent 运行：
 
 - `moltbot://agent?...`
 
-Example (in JS):
+示例（JS）：
 
 ```js
 window.location.href = "moltbot://agent?message=Review%20this%20design";
 ```
 
-The app prompts for confirmation unless a valid key is provided.
+除非提供有效 key，否则应用会提示确认。
 
-## Security notes
+## 安全说明
 
-- Canvas scheme blocks directory traversal; files must live under the session root.
-- Local Canvas content uses a custom scheme (no loopback server required).
-- External `http(s)` URLs are allowed only when explicitly navigated.
+- Canvas scheme 会阻止目录遍历；文件必须在会话根目录内。
+- 本地 Canvas 内容使用自定义 scheme（无需 loopback 服务器）。
+- 外部 `http(s)` URL 仅在显式导航时允许。

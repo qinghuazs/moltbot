@@ -1,56 +1,52 @@
 ---
-summary: "Gateway runtime on macOS (external launchd service)"
+summary: "macOS 上的 Gateway 运行时（外部 launchd 服务）"
 read_when:
-  - Packaging Moltbot.app
-  - Debugging the macOS gateway launchd service
-  - Installing the gateway CLI for macOS
+  - 打包 Moltbot.app
+  - 调试 macOS gateway 的 launchd 服务
+  - 安装 macOS 的 gateway CLI
 ---
 
-# Gateway on macOS (external launchd)
+# macOS 上的 Gateway（外部 launchd）
 
-Moltbot.app no longer bundles Node/Bun or the Gateway runtime. The macOS app
-expects an **external** `moltbot` CLI install, does not spawn the Gateway as a
-child process, and manages a per‑user launchd service to keep the Gateway
-running (or attaches to an existing local Gateway if one is already running).
+Moltbot.app 不再内置 Node/Bun 或 Gateway 运行时。macOS 应用
+依赖**外部** `moltbot` CLI 安装，不会以子进程启动 Gateway，并通过每用户的 launchd 服务保持 Gateway 运行（若本地已有 Gateway，则直接附加）。
 
-## Install the CLI (required for local mode)
+## 安装 CLI（本地模式必需）
 
-You need Node 22+ on the Mac, then install `moltbot` globally:
+在 Mac 上需要 Node 22+，然后全局安装 `moltbot`：
 
 ```bash
 npm install -g moltbot@<version>
 ```
 
-The macOS app’s **Install CLI** button runs the same flow via npm/pnpm (bun not recommended for Gateway runtime).
+macOS 应用的 **Install CLI** 按钮通过 npm/pnpm 走相同流程（Gateway 运行时不推荐 bun）。
 
-## Launchd (Gateway as LaunchAgent)
+## Launchd（Gateway 作为 LaunchAgent）
 
-Label:
-- `bot.molt.gateway` (or `bot.molt.<profile>`; legacy `com.clawdbot.*` may remain)
+标签：
+- `bot.molt.gateway`（或 `bot.molt.<profile>`；旧版 `com.clawdbot.*` 可能仍存在）
 
-Plist location (per‑user):
+Plist 路径（按用户）：
 - `~/Library/LaunchAgents/bot.molt.gateway.plist`
-  (or `~/Library/LaunchAgents/bot.molt.<profile>.plist`)
+  （或 `~/Library/LaunchAgents/bot.molt.<profile>.plist`）
 
-Manager:
-- The macOS app owns LaunchAgent install/update in Local mode.
-- The CLI can also install it: `moltbot gateway install`.
+管理方式：
+- macOS 应用在本地模式下负责 LaunchAgent 的安装与更新。
+- CLI 也可安装：`moltbot gateway install`。
 
-Behavior:
-- “Moltbot Active” enables/disables the LaunchAgent.
-- App quit does **not** stop the gateway (launchd keeps it alive).
-- If a Gateway is already running on the configured port, the app attaches to
-  it instead of starting a new one.
+行为：
+- “Moltbot Active” 启用或禁用 LaunchAgent。
+- 关闭应用**不会**停止 gateway（由 launchd 保持）。
+- 如果配置端口已有 Gateway 运行，应用会附加它，而不是启动新的。
 
-Logging:
-- launchd stdout/err: `/tmp/moltbot/moltbot-gateway.log`
+日志：
+- launchd stdout/err：`/tmp/moltbot/moltbot-gateway.log`
 
-## Version compatibility
+## 版本兼容
 
-The macOS app checks the gateway version against its own version. If they’re
-incompatible, update the global CLI to match the app version.
+macOS 应用会检查 gateway 版本与自身是否兼容。如不兼容，请更新全局 CLI 以匹配应用版本。
 
-## Smoke check
+## 烟雾检查
 
 ```bash
 moltbot --version
@@ -60,7 +56,7 @@ CLAWDBOT_SKIP_CANVAS_HOST=1 \
 moltbot gateway --port 18999 --bind loopback
 ```
 
-Then:
+然后：
 
 ```bash
 moltbot gateway call health --url ws://127.0.0.1:18999 --timeout 3000

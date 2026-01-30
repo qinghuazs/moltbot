@@ -1,18 +1,18 @@
 ---
-summary: "CLI reference for `moltbot agents` (list/add/delete/set identity)"
+summary: "`moltbot agents` 的 CLI 参考（列出、添加、删除、设置身份）"
 read_when:
-  - You want multiple isolated agents (workspaces + routing + auth)
+  - 想使用多个隔离代理（工作区 + 路由 + 认证）
 ---
 
 # `moltbot agents`
 
-Manage isolated agents (workspaces + auth + routing).
+管理隔离代理（工作区 + 认证 + 路由）。
 
-Related:
-- Multi-agent routing: [Multi-Agent Routing](/concepts/multi-agent)
-- Agent workspace: [Agent workspace](/concepts/agent-workspace)
+相关：
+- 多代理路由：[Multi-Agent Routing](/concepts/multi-agent)
+- 代理工作区：[Agent workspace](/concepts/agent-workspace)
 
-## Examples
+## 示例
 
 ```bash
 moltbot agents list
@@ -22,35 +22,35 @@ moltbot agents set-identity --agent main --avatar avatars/clawd.png
 moltbot agents delete work
 ```
 
-## Identity files
+## 身份文件
 
-Each agent workspace can include an `IDENTITY.md` at the workspace root:
-- Example path: `~/clawd/IDENTITY.md`
-- `set-identity --from-identity` reads from the workspace root (or an explicit `--identity-file`)
+每个代理工作区根目录可以包含一个 `IDENTITY.md`：
+- 示例路径：`~/clawd/IDENTITY.md`
+- `set-identity --from-identity` 会从工作区根目录读取（或显式指定 `--identity-file`）
 
-Avatar paths resolve relative to the workspace root.
+头像路径相对于工作区根目录解析。
 
-## Set identity
+## 设置身份
 
-`set-identity` writes fields into `agents.list[].identity`:
+`set-identity` 会写入 `agents.list[].identity`：
 - `name`
 - `theme`
 - `emoji`
-- `avatar` (workspace-relative path, http(s) URL, or data URI)
+- `avatar`（工作区相对路径、http(s) URL 或 data URI）
 
-Load from `IDENTITY.md`:
+从 `IDENTITY.md` 加载：
 
 ```bash
 moltbot agents set-identity --workspace ~/clawd --from-identity
 ```
 
-Override fields explicitly:
+显式覆盖字段：
 
 ```bash
 moltbot agents set-identity --agent main --name "Clawd" --emoji "🦞" --avatar avatars/clawd.png
 ```
 
-Config sample:
+配置示例：
 
 ```json5
 {

@@ -1,50 +1,50 @@
 ---
 title: Fly.io
-description: Deploy Moltbot on Fly.io
+description: 在 Fly.io 上部署 Moltbot
 ---
 
-# Fly.io Deployment
+# Fly.io 部署
 
-**Goal:** Moltbot Gateway running on a [Fly.io](https://fly.io) machine with persistent storage, automatic HTTPS, and Discord/channel access.
+**目标：** 在 [Fly.io](https://fly.io) 机器上运行 Moltbot Gateway，具备持久化存储、自动 HTTPS，以及 Discord/渠道访问。
 
-## What you need
+## 你需要准备
 
-- [flyctl CLI](https://fly.io/docs/hands-on/install-flyctl/) installed
-- Fly.io account (free tier works)
-- Model auth: Anthropic API key (or other provider keys)
-- Channel credentials: Discord bot token, Telegram token, etc.
+- 已安装 [flyctl CLI](https://fly.io/docs/hands-on/install-flyctl/)
+- Fly.io 账号（免费层可用）
+- 模型认证：Anthropic API key（或其他提供方 key）
+- 渠道凭据：Discord bot token、Telegram token 等
 
-## Beginner quick path
+## 新手快速路径
 
-1. Clone repo → customize `fly.toml`
-2. Create app + volume → set secrets
-3. Deploy with `fly deploy`
-4. SSH in to create config or use Control UI
+1. 克隆仓库 → 修改 `fly.toml`
+2. 创建 app + volume → 设置 secrets
+3. 用 `fly deploy` 部署
+4. SSH 进入创建配置或使用 Control UI
 
-## 1) Create the Fly app
+## 1) 创建 Fly 应用
 
 ```bash
-# Clone the repo
+# 克隆仓库
 git clone https://github.com/moltbot/moltbot.git
 cd moltbot
 
-# Create a new Fly app (pick your own name)
+# 创建新 Fly app（自选名称）
 fly apps create my-moltbot
 
-# Create a persistent volume (1GB is usually enough)
+# 创建持久化卷（1GB 通常够用）
 fly volumes create moltbot_data --size 1 --region iad
 ```
 
-**Tip:** Choose a region close to you. Common options: `lhr` (London), `iad` (Virginia), `sjc` (San Jose).
+**提示：** 选择离你更近的区域。常用：`lhr`（伦敦）、`iad`（弗吉尼亚）、`sjc`（圣何塞）。
 
-## 2) Configure fly.toml
+## 2) 配置 fly.toml
 
-Edit `fly.toml` to match your app name and requirements.
+编辑 `fly.toml` 匹配你的应用名称与需求。
 
-**Security note:** The default config exposes a public URL. For a hardened deployment with no public IP, see [Private Deployment](#private-deployment-hardened) or use `fly.private.toml`.
+**安全提示：** 默认配置暴露公网 URL。如需无公网的加固部署，请见 [Private Deployment](#private-deployment-hardened) 或使用 `fly.private.toml`。
 
 ```toml
-app = "my-moltbot"  # Your app name
+app = "my-moltbot"  # 你的 app 名
 primary_region = "iad"
 
 [build]
@@ -76,67 +76,67 @@ primary_region = "iad"
   destination = "/data"
 ```
 
-**Key settings:**
+**关键设置：**
 
-| Setting | Why |
+| 设置 | 原因 |
 |---------|-----|
-| `--bind lan` | Binds to `0.0.0.0` so Fly's proxy can reach the gateway |
-| `--allow-unconfigured` | Starts without a config file (you'll create one after) |
-| `internal_port = 3000` | Must match `--port 3000` (or `CLAWDBOT_GATEWAY_PORT`) for Fly health checks |
-| `memory = "2048mb"` | 512MB is too small; 2GB recommended |
-| `CLAWDBOT_STATE_DIR = "/data"` | Persists state on the volume |
+| `--bind lan` | 绑定到 `0.0.0.0` 以让 Fly 代理访问 gateway |
+| `--allow-unconfigured` | 启动时无需配置文件（稍后创建） |
+| `internal_port = 3000` | 必须与 `--port 3000`（或 `CLAWDBOT_GATEWAY_PORT`）一致，以便 Fly 健康检查 |
+| `memory = "2048mb"` | 512MB 太小；推荐 2GB |
+| `CLAWDBOT_STATE_DIR = "/data"` | 在 volume 上持久化状态 |
 
-## 3) Set secrets
+## 3) 设置 secrets
 
 ```bash
-# Required: Gateway token (for non-loopback binding)
+# 必需：Gateway token（非 loopback 绑定需要）
 fly secrets set CLAWDBOT_GATEWAY_TOKEN=$(openssl rand -hex 32)
 
-# Model provider API keys
+# 模型提供方 API key
 fly secrets set ANTHROPIC_API_KEY=sk-ant-...
 
-# Optional: Other providers
+# 可选：其他提供方
 fly secrets set OPENAI_API_KEY=sk-...
 fly secrets set GOOGLE_API_KEY=...
 
-# Channel tokens
+# 渠道 token
 fly secrets set DISCORD_BOT_TOKEN=MTQ...
 ```
 
-**Notes:**
-- Non-loopback binds (`--bind lan`) require `CLAWDBOT_GATEWAY_TOKEN` for security.
-- Treat these tokens like passwords.
-- **Prefer env vars over config file** for all API keys and tokens. This keeps secrets out of `moltbot.json` where they could be accidentally exposed or logged.
+**说明：**
+- 非 loopback 绑定（`--bind lan`）需要 `CLAWDBOT_GATEWAY_TOKEN`。
+- 把这些 token 当作密码。
+- **优先用环境变量而非配置文件**保存所有 API key 与 token，避免意外写入或被日志暴露。
 
-## 4) Deploy
+## 4) 部署
 
 ```bash
 fly deploy
 ```
 
-First deploy builds the Docker image (~2-3 minutes). Subsequent deploys are faster.
+首次部署会构建 Docker 镜像（约 2-3 分钟），之后更快。
 
-After deployment, verify:
+部署后验证：
 ```bash
 fly status
 fly logs
 ```
 
-You should see:
+你应看到：
 ```
 [gateway] listening on ws://0.0.0.0:3000 (PID xxx)
 [discord] logged in to discord as xxx
 ```
 
-## 5) Create config file
+## 5) 创建配置文件
 
-SSH into the machine to create a proper config:
+SSH 进入机器创建配置：
 
 ```bash
 fly ssh console
 ```
 
-Create the config directory and file:
+创建配置目录与文件：
 ```bash
 mkdir -p /data
 cat > /data/moltbot.json << 'EOF'
@@ -191,236 +191,236 @@ cat > /data/moltbot.json << 'EOF'
 EOF
 ```
 
-**Note:** With `CLAWDBOT_STATE_DIR=/data`, the config path is `/data/moltbot.json`.
+**说明：** `CLAWDBOT_STATE_DIR=/data` 时，配置路径为 `/data/moltbot.json`。
 
-**Note:** The Discord token can come from either:
-- Environment variable: `DISCORD_BOT_TOKEN` (recommended for secrets)
-- Config file: `channels.discord.token`
+**说明：** Discord token 来源可为：
+- 环境变量：`DISCORD_BOT_TOKEN`（推荐）
+- 配置文件：`channels.discord.token`
 
-If using env var, no need to add token to config. The gateway reads `DISCORD_BOT_TOKEN` automatically.
+若使用 env，无需在配置中写 token。Gateway 会自动读取 `DISCORD_BOT_TOKEN`。
 
-Restart to apply:
+重启生效：
 ```bash
 exit
 fly machine restart <machine-id>
 ```
 
-## 6) Access the Gateway
+## 6) 访问 Gateway
 
 ### Control UI
 
-Open in browser:
+在浏览器打开：
 ```bash
 fly open
 ```
 
-Or visit `https://my-moltbot.fly.dev/`
+或访问 `https://my-moltbot.fly.dev/`
 
-Paste your gateway token (the one from `CLAWDBOT_GATEWAY_TOKEN`) to authenticate.
+粘贴 gateway token（来自 `CLAWDBOT_GATEWAY_TOKEN`）进行认证。
 
-### Logs
+### 日志
 
 ```bash
-fly logs              # Live logs
-fly logs --no-tail    # Recent logs
+fly logs              # 实时日志
+fly logs --no-tail    # 最近日志
 ```
 
-### SSH Console
+### SSH 控制台
 
 ```bash
 fly ssh console
 ```
 
-## Troubleshooting
+## 故障排查
 
-### "App is not listening on expected address"
+### “App is not listening on expected address”
 
-The gateway is binding to `127.0.0.1` instead of `0.0.0.0`.
+Gateway 绑定在 `127.0.0.1` 而不是 `0.0.0.0`。
 
-**Fix:** Add `--bind lan` to your process command in `fly.toml`.
+**修复：** 在 `fly.toml` 的 process 命令中添加 `--bind lan`。
 
-### Health checks failing / connection refused
+### 健康检查失败 / 连接被拒绝
 
-Fly can't reach the gateway on the configured port.
+Fly 无法访问配置端口上的 gateway。
 
-**Fix:** Ensure `internal_port` matches the gateway port (set `--port 3000` or `CLAWDBOT_GATEWAY_PORT=3000`).
+**修复：** 确保 `internal_port` 与 gateway 端口一致（设置 `--port 3000` 或 `CLAWDBOT_GATEWAY_PORT=3000`）。
 
-### OOM / Memory Issues
+### OOM 或内存问题
 
-Container keeps restarting or getting killed. Signs: `SIGABRT`, `v8::internal::Runtime_AllocateInYoungGeneration`, or silent restarts.
+容器反复重启或被杀。表现：`SIGABRT`、`v8::internal::Runtime_AllocateInYoungGeneration` 或静默重启。
 
-**Fix:** Increase memory in `fly.toml`:
+**修复：** 在 `fly.toml` 提高内存：
 ```toml
 [[vm]]
   memory = "2048mb"
 ```
 
-Or update an existing machine:
+或更新现有机器：
 ```bash
 fly machine update <machine-id> --vm-memory 2048 -y
 ```
 
-**Note:** 512MB is too small. 1GB may work but can OOM under load or with verbose logging. **2GB is recommended.**
+**说明：** 512MB 太小。1GB 可能勉强可用，但在负载或 verbose 日志下会 OOM。**推荐 2GB**。
 
-### Gateway Lock Issues
+### Gateway Lock 问题
 
-Gateway refuses to start with "already running" errors.
+Gateway 报 “already running” 无法启动。
 
-This happens when the container restarts but the PID lock file persists on the volume.
+这是容器重启但 PID 锁文件还在 volume 上。
 
-**Fix:** Delete the lock file:
+**修复：** 删除锁文件：
 ```bash
 fly ssh console --command "rm -f /data/gateway.*.lock"
 fly machine restart <machine-id>
 ```
 
-The lock file is at `/data/gateway.*.lock` (not in a subdirectory).
+锁文件位于 `/data/gateway.*.lock`（不在子目录）。
 
-### Config Not Being Read
+### 配置未读取
 
-If using `--allow-unconfigured`, the gateway creates a minimal config. Your custom config at `/data/moltbot.json` should be read on restart.
+使用 `--allow-unconfigured` 时，gateway 会生成最小配置。你的自定义配置 `/data/moltbot.json` 应在重启时读取。
 
-Verify the config exists:
+确认配置存在：
 ```bash
 fly ssh console --command "cat /data/moltbot.json"
 ```
 
-### Writing Config via SSH
+### 通过 SSH 写配置
 
-The `fly ssh console -C` command doesn't support shell redirection. To write a config file:
+`fly ssh console -C` 不支持重定向。要写配置文件：
 
 ```bash
-# Use echo + tee (pipe from local to remote)
+# 用 echo + tee（从本地管道到远端）
 echo '{"your":"config"}' | fly ssh console -C "tee /data/moltbot.json"
 
-# Or use sftp
+# 或使用 sftp
 fly sftp shell
 > put /local/path/config.json /data/moltbot.json
 ```
 
-**Note:** `fly sftp` may fail if the file already exists. Delete first:
+**说明：** 如果文件已存在，`fly sftp` 可能失败。先删除：
 ```bash
 fly ssh console --command "rm /data/moltbot.json"
 ```
 
-### State Not Persisting
+### 状态未持久化
 
-If you lose credentials or sessions after a restart, the state dir is writing to the container filesystem.
+如果重启后凭据或会话丢失，说明状态目录写入了容器文件系统。
 
-**Fix:** Ensure `CLAWDBOT_STATE_DIR=/data` is set in `fly.toml` and redeploy.
+**修复：** 确保 `CLAWDBOT_STATE_DIR=/data` 在 `fly.toml` 中设置并重新部署。
 
-## Updates
+## 更新
 
 ```bash
-# Pull latest changes
+# 拉取最新代码
 git pull
 
-# Redeploy
+# 重新部署
 fly deploy
 
-# Check health
+# 查看健康
 fly status
 fly logs
 ```
 
-### Updating Machine Command
+### 更新机器命令
 
-If you need to change the startup command without a full redeploy:
+如需在不重新部署的情况下修改启动命令：
 
 ```bash
-# Get machine ID
+# 获取机器 ID
 fly machines list
 
-# Update command
+# 更新命令
 fly machine update <machine-id> --command "node dist/index.js gateway --port 3000 --bind lan" -y
 
-# Or with memory increase
+# 或增加内存
 fly machine update <machine-id> --vm-memory 2048 --command "node dist/index.js gateway --port 3000 --bind lan" -y
 ```
 
-**Note:** After `fly deploy`, the machine command may reset to what's in `fly.toml`. If you made manual changes, re-apply them after deploy.
+**说明：** `fly deploy` 后机器命令可能重置为 `fly.toml` 中的内容。若手动改过，请在部署后重新应用。
 
-## Private Deployment (Hardened)
+## Private Deployment（加固）
 
-By default, Fly allocates public IPs, making your gateway accessible at `https://your-app.fly.dev`. This is convenient but means your deployment is discoverable by internet scanners (Shodan, Censys, etc.).
+默认 Fly 会分配公网 IP，使 gateway 可通过 `https://your-app.fly.dev` 访问。虽然方便，但意味着部署可被互联网扫描器（Shodan、Censys 等）发现。
 
-For a hardened deployment with **no public exposure**, use the private template.
+如需**无公网暴露**的加固部署，使用私有模板。
 
-### When to use private deployment
+### 何时使用私有部署
 
-- You only make **outbound** calls/messages (no inbound webhooks)
-- You use **ngrok or Tailscale** tunnels for any webhook callbacks
-- You access the gateway via **SSH, proxy, or WireGuard** instead of browser
-- You want the deployment **hidden from internet scanners**
+- 你只进行**出站**调用/消息（无入站 webhook）
+- 使用 **ngrok 或 Tailscale** 隧道承载 webhook 回调
+- 通过 **SSH、代理或 WireGuard** 访问 gateway
+- 希望部署**不被扫描器发现**
 
-### Setup
+### 设置
 
-Use `fly.private.toml` instead of the standard config:
+使用 `fly.private.toml` 替代标准配置：
 
 ```bash
-# Deploy with private config
+# 用私有配置部署
 fly deploy -c fly.private.toml
 ```
 
-Or convert an existing deployment:
+或将现有部署转换为私有：
 
 ```bash
-# List current IPs
+# 列出当前 IP
 fly ips list -a my-moltbot
 
-# Release public IPs
+# 释放公网 IP
 fly ips release <public-ipv4> -a my-moltbot
 fly ips release <public-ipv6> -a my-moltbot
 
-# Switch to private config so future deploys don't re-allocate public IPs
-# (remove [http_service] or deploy with the private template)
+# 切换到私有配置，避免后续部署重新分配公网 IP
+#（移除 [http_service] 或使用私有模板部署）
 fly deploy -c fly.private.toml
 
-# Allocate private-only IPv6
+# 申请仅私有 IPv6
 fly ips allocate-v6 --private -a my-moltbot
 ```
 
-After this, `fly ips list` should show only a `private` type IP:
+之后 `fly ips list` 应只显示 `private` 类型：
 ```
 VERSION  IP                   TYPE             REGION
 v6       fdaa:x:x:x:x::x      private          global
 ```
 
-### Accessing a private deployment
+### 访问私有部署
 
-Since there's no public URL, use one of these methods:
+由于没有公网 URL，可用以下方式之一：
 
-**Option 1: Local proxy (simplest)**
+**方式 1：本地代理（最简单）**
 ```bash
-# Forward local port 3000 to the app
+# 将本地端口 3000 转发到 app
 fly proxy 3000:3000 -a my-moltbot
 
-# Then open http://localhost:3000 in browser
+# 然后打开 http://localhost:3000
 ```
 
-**Option 2: WireGuard VPN**
+**方式 2：WireGuard VPN**
 ```bash
-# Create WireGuard config (one-time)
+# 创建 WireGuard 配置（一次性）
 fly wireguard create
 
-# Import to WireGuard client, then access via internal IPv6
-# Example: http://[fdaa:x:x:x:x::x]:3000
+# 导入到 WireGuard 客户端，然后通过内部 IPv6 访问
+# 示例：http://[fdaa:x:x:x:x::x]:3000
 ```
 
-**Option 3: SSH only**
+**方式 3：仅 SSH**
 ```bash
 fly ssh console -a my-moltbot
 ```
 
-### Webhooks with private deployment
+### 私有部署下的 Webhook
 
-If you need webhook callbacks (Twilio, Telnyx, etc.) without public exposure:
+如果需要 webhook 回调（Twilio、Telnyx 等）而不公开应用：
 
-1. **ngrok tunnel** - Run ngrok inside the container or as a sidecar
-2. **Tailscale Funnel** - Expose specific paths via Tailscale
-3. **Outbound-only** - Some providers (Twilio) work fine for outbound calls without webhooks
+1. **ngrok 隧道** - 在容器内运行 ngrok 或作为 sidecar
+2. **Tailscale Funnel** - 通过 Tailscale 暴露特定路径
+3. **仅出站** - 部分提供方（Twilio）可在无 webhook 下完成外呼
 
-Example voice-call config with ngrok:
+使用 ngrok 的 voice-call 配置示例：
 ```json
 {
   "plugins": {
@@ -437,29 +437,29 @@ Example voice-call config with ngrok:
 }
 ```
 
-The ngrok tunnel runs inside the container and provides a public webhook URL without exposing the Fly app itself.
+ngrok 隧道运行在容器内，可提供公网 webhook URL 而不暴露 Fly 应用本身。
 
-### Security benefits
+### 安全收益
 
-| Aspect | Public | Private |
+| 方面 | 公网 | 私有 |
 |--------|--------|---------|
-| Internet scanners | Discoverable | Hidden |
-| Direct attacks | Possible | Blocked |
-| Control UI access | Browser | Proxy/VPN |
-| Webhook delivery | Direct | Via tunnel |
+| 被互联网扫描发现 | 可被发现 | 隐藏 |
+| 直接攻击 | 可能 | 被阻断 |
+| Control UI 访问 | 浏览器 | 代理/VPN |
+| Webhook 投递 | 直接 | 通过隧道 |
 
-## Notes
+## 说明
 
-- Fly.io uses **x86 architecture** (not ARM)
-- The Dockerfile is compatible with both architectures
-- For WhatsApp/Telegram onboarding, use `fly ssh console`
-- Persistent data lives on the volume at `/data`
-- Signal requires Java + signal-cli; use a custom image and keep memory at 2GB+.
+- Fly.io 使用 **x86 架构**（非 ARM）
+- Dockerfile 兼容两种架构
+- WhatsApp/Telegram 引导请使用 `fly ssh console`
+- 持久化数据位于 `/data`
+- Signal 需要 Java + signal-cli；使用自定义镜像并保持内存 2GB+。
 
-## Cost
+## 成本
 
-With the recommended config (`shared-cpu-2x`, 2GB RAM):
-- ~$10-15/month depending on usage
-- Free tier includes some allowance
+使用推荐配置（`shared-cpu-2x`，2GB RAM）：
+- 约 $10-15/月（取决于用量）
+- 免费层提供部分额度
 
-See [Fly.io pricing](https://fly.io/docs/about/pricing/) for details.
+详情见 [Fly.io pricing](https://fly.io/docs/about/pricing/)。

@@ -1,17 +1,17 @@
 ---
-summary: "CLI reference for `moltbot onboard` (interactive onboarding wizard)"
+summary: "`moltbot onboard` 的 CLI 参考（交互式引导向导）"
 read_when:
-  - You want guided setup for gateway, workspace, auth, channels, and skills
+  - 需要引导式配置 gateway、工作区、认证、渠道与技能
 ---
 
 # `moltbot onboard`
 
-Interactive onboarding wizard (local or remote Gateway setup).
+交互式引导向导（本地或远程 Gateway 设置）。
 
-Related:
-- Wizard guide: [Onboarding](/start/onboarding)
+相关：
+- 向导指南：[Onboarding](/start/onboarding)
 
-## Examples
+## 示例
 
 ```bash
 moltbot onboard
@@ -20,7 +20,7 @@ moltbot onboard --flow manual
 moltbot onboard --mode remote --remote-url ws://gateway-host:18789
 ```
 
-Flow notes:
-- `quickstart`: minimal prompts, auto-generates a gateway token.
-- `manual`: full prompts for port/bind/auth (alias of `advanced`).
-- Fastest first chat: `moltbot dashboard` (Control UI, no channel setup).
+流程说明：
+- `quickstart`：最少提示，自动生成 gateway 令牌。
+- `manual`：端口、绑定、认证的完整提示（`advanced` 的别名）。
+- 最快第一条聊天：`moltbot dashboard`（控制台 UI，无需设置渠道）。

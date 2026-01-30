@@ -1,154 +1,154 @@
 ---
-summary: "Run Moltbot in a sandboxed macOS VM (local or hosted) when you need isolation or iMessage"
+summary: "在沙箱化 macOS 虚拟机中运行 Moltbot（本地或托管）以获得隔离或 iMessage"
 read_when:
-  - You want Moltbot isolated from your main macOS environment
-  - You want iMessage integration (BlueBubbles) in a sandbox
-  - You want a resettable macOS environment you can clone
-  - You want to compare local vs hosted macOS VM options
+  - 你想将 Moltbot 与主 macOS 环境隔离
+  - 你想在沙箱中使用 iMessage 集成（BlueBubbles）
+  - 你需要可重置 可克隆的 macOS 环境
+  - 你想比较本地与托管 macOS VM 方案
 ---
 
-# Moltbot on macOS VMs (Sandboxing)
+# 在 macOS 虚拟机上运行 Moltbot（沙箱）
 
-## Recommended default (most users)
+## 推荐默认方案（多数用户）
 
-- **Small Linux VPS** for an always-on Gateway and low cost. See [VPS hosting](/vps).
-- **Dedicated hardware** (Mac mini or Linux box) if you want full control and a **residential IP** for browser automation. Many sites block data center IPs, so local browsing often works better.
-- **Hybrid:** keep the Gateway on a cheap VPS, and connect your Mac as a **node** when you need browser/UI automation. See [Nodes](/nodes) and [Gateway remote](/gateway/remote).
+- **小型 Linux VPS** 作为常驻 Gateway，成本低。见 [VPS hosting](/vps)。
+- **专用硬件**（Mac mini 或 Linux 机器）用于完全控制并获得**住宅 IP** 进行浏览器自动化。许多网站会屏蔽数据中心 IP，本地浏览通常更稳定。
+- **混合方案：** Gateway 放在便宜 VPS 上，需要浏览器或 UI 自动化时把 Mac 作为**节点**连接。见 [Nodes](/nodes) 与 [Gateway remote](/gateway/remote)。
 
-Use a macOS VM when you specifically need macOS-only capabilities (iMessage/BlueBubbles) or want strict isolation from your daily Mac.
+当你确实需要 macOS 专有能力（iMessage/BlueBubbles），或希望与日常 Mac 严格隔离时，使用 macOS VM。
 
-## macOS VM options
+## macOS VM 选项
 
-### Local VM on your Apple Silicon Mac (Lume)
+### 在 Apple Silicon Mac 上本地 VM（Lume）
 
-Run Moltbot in a sandboxed macOS VM on your existing Apple Silicon Mac using [Lume](https://cua.ai/docs/lume).
+使用 [Lume](https://cua.ai/docs/lume) 在现有 Apple Silicon Mac 上运行沙箱化 macOS VM。
 
-This gives you:
-- Full macOS environment in isolation (your host stays clean)
-- iMessage support via BlueBubbles (impossible on Linux/Windows)
-- Instant reset by cloning VMs
-- No extra hardware or cloud costs
+你将获得：
+- 完整且隔离的 macOS 环境（宿主机保持干净）
+- 通过 BlueBubbles 支持 iMessage（Linux/Windows 无法实现）
+- 通过克隆 VM 实现快速重置
+- 无需额外硬件或云成本
 
-### Hosted Mac providers (cloud)
+### 托管 Mac 提供商（云端）
 
-If you want macOS in the cloud, hosted Mac providers work too:
-- [MacStadium](https://www.macstadium.com/) (hosted Macs)
-- Other hosted Mac vendors also work; follow their VM + SSH docs
+如果你希望在云端运行 macOS，可使用托管 Mac 服务：
+- [MacStadium](https://www.macstadium.com/)（托管 Mac）
+- 其他托管 Mac 提供商同样适用；按其 VM + SSH 文档操作
 
-Once you have SSH access to a macOS VM, continue at step 6 below.
+获得 macOS VM 的 SSH 访问后，从下面第 6 步继续。
 
 ---
 
-## Quick path (Lume, experienced users)
+## 快速路径（Lume，熟练用户）
 
-1. Install Lume
+1. 安装 Lume
 2. `lume create moltbot --os macos --ipsw latest`
-3. Complete Setup Assistant, enable Remote Login (SSH)
+3. 完成 Setup Assistant，启用 Remote Login（SSH）
 4. `lume run moltbot --no-display`
-5. SSH in, install Moltbot, configure channels
-6. Done
+5. SSH 进入，安装 Moltbot，配置渠道
+6. 完成
 
 ---
 
-## What you need (Lume)
+## 你需要什么（Lume）
 
-- Apple Silicon Mac (M1/M2/M3/M4)
-- macOS Sequoia or later on the host
-- ~60 GB free disk space per VM
-- ~20 minutes
+- Apple Silicon Mac（M1/M2/M3/M4）
+- 宿主机 macOS Sequoia 或更高
+- 每个 VM 约 60 GB 可用磁盘空间
+- 约 20 分钟
 
 ---
 
-## 1) Install Lume
+## 1) 安装 Lume
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/trycua/cua/main/libs/lume/scripts/install.sh)"
 ```
 
-If `~/.local/bin` isn't in your PATH:
+如果 `~/.local/bin` 不在 PATH 中：
 
 ```bash
 echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.zshrc && source ~/.zshrc
 ```
 
-Verify:
+验证：
 
 ```bash
 lume --version
 ```
 
-Docs: [Lume Installation](https://cua.ai/docs/lume/guide/getting-started/installation)
+文档：[Lume Installation](https://cua.ai/docs/lume/guide/getting-started/installation)
 
 ---
 
-## 2) Create the macOS VM
+## 2) 创建 macOS VM
 
 ```bash
 lume create moltbot --os macos --ipsw latest
 ```
 
-This downloads macOS and creates the VM. A VNC window opens automatically.
+这会下载 macOS 并创建 VM。VNC 窗口会自动打开。
 
-Note: The download can take a while depending on your connection.
-
----
-
-## 3) Complete Setup Assistant
-
-In the VNC window:
-1. Select language and region
-2. Skip Apple ID (or sign in if you want iMessage later)
-3. Create a user account (remember the username and password)
-4. Skip all optional features
-
-After setup completes, enable SSH:
-1. Open System Settings → General → Sharing
-2. Enable "Remote Login"
+说明：下载时间取决于你的网络。
 
 ---
 
-## 4) Get the VM's IP address
+## 3) 完成 Setup Assistant
+
+在 VNC 窗口中：
+1. 选择语言和地区
+2. 跳过 Apple ID（如需 iMessage 可登录）
+3. 创建用户账号（记住用户名和密码）
+4. 跳过所有可选功能
+
+完成后启用 SSH：
+1. 打开 System Settings → General → Sharing
+2. 启用 “Remote Login”
+
+---
+
+## 4) 获取 VM 的 IP 地址
 
 ```bash
 lume get moltbot
 ```
 
-Look for the IP address (usually `192.168.64.x`).
+查看 IP（通常为 `192.168.64.x`）。
 
 ---
 
-## 5) SSH into the VM
+## 5) SSH 进入 VM
 
 ```bash
 ssh youruser@192.168.64.X
 ```
 
-Replace `youruser` with the account you created, and the IP with your VM's IP.
+将 `youruser` 替换为你创建的用户，IP 替换为 VM 的 IP。
 
 ---
 
-## 6) Install Moltbot
+## 6) 安装 Moltbot
 
-Inside the VM:
+在 VM 内：
 
 ```bash
 npm install -g moltbot@latest
 moltbot onboard --install-daemon
 ```
 
-Follow the onboarding prompts to set up your model provider (Anthropic, OpenAI, etc.).
+按引导提示配置模型提供方（Anthropic、OpenAI 等）。
 
 ---
 
-## 7) Configure channels
+## 7) 配置渠道
 
-Edit the config file:
+编辑配置文件：
 
 ```bash
 nano ~/.clawdbot/moltbot.json
 ```
 
-Add your channels:
+添加渠道：
 
 ```json
 {
@@ -164,7 +164,7 @@ Add your channels:
 }
 ```
 
-Then login to WhatsApp (scan QR):
+然后登录 WhatsApp（扫码）：
 
 ```bash
 moltbot channels login
@@ -172,18 +172,18 @@ moltbot channels login
 
 ---
 
-## 8) Run the VM headlessly
+## 8) 无界面运行 VM
 
-Stop the VM and restart without display:
+停止 VM 并以无界面方式重启：
 
 ```bash
 lume stop moltbot
 lume run moltbot --no-display
 ```
 
-The VM runs in the background. Moltbot's daemon keeps the gateway running.
+VM 会在后台运行。Moltbot 的 daemon 会保持 gateway 运行。
 
-To check status:
+检查状态：
 
 ```bash
 ssh youruser@192.168.64.X "moltbot status"
@@ -191,18 +191,18 @@ ssh youruser@192.168.64.X "moltbot status"
 
 ---
 
-## Bonus: iMessage integration
+## 加分项：iMessage 集成
 
-This is the killer feature of running on macOS. Use [BlueBubbles](https://bluebubbles.app) to add iMessage to Moltbot.
+这是在 macOS 上运行的杀手级特性。使用 [BlueBubbles](https://bluebubbles.app) 将 iMessage 接入 Moltbot。
 
-Inside the VM:
+在 VM 内：
 
-1. Download BlueBubbles from bluebubbles.app
-2. Sign in with your Apple ID
-3. Enable the Web API and set a password
-4. Point BlueBubbles webhooks at your gateway (example: `https://your-gateway-host:3000/bluebubbles-webhook?password=<password>`)
+1. 从 bluebubbles.app 下载 BlueBubbles
+2. 使用 Apple ID 登录
+3. 启用 Web API 并设置密码
+4. 将 BlueBubbles webhooks 指向你的 gateway（示例：`https://your-gateway-host:3000/bluebubbles-webhook?password=<password>`）
 
-Add to your Moltbot config:
+在 Moltbot 配置中添加：
 
 ```json
 {
@@ -216,22 +216,22 @@ Add to your Moltbot config:
 }
 ```
 
-Restart the gateway. Now your agent can send and receive iMessages.
+重启 gateway。现在你的 agent 可以收发 iMessage。
 
-Full setup details: [BlueBubbles channel](/channels/bluebubbles)
+完整设置详情：[BlueBubbles channel](/channels/bluebubbles)
 
 ---
 
-## Save a golden image
+## 保存黄金镜像
 
-Before customizing further, snapshot your clean state:
+在继续定制前，先快照干净状态：
 
 ```bash
 lume stop moltbot
 lume clone moltbot moltbot-golden
 ```
 
-Reset anytime:
+随时重置：
 
 ```bash
 lume stop moltbot && lume delete moltbot
@@ -241,29 +241,29 @@ lume run moltbot --no-display
 
 ---
 
-## Running 24/7
+## 7x24 小时运行
 
-Keep the VM running by:
-- Keeping your Mac plugged in
-- Disabling sleep in System Settings → Energy Saver
-- Using `caffeinate` if needed
+保持 VM 运行：
+- 保持 Mac 通电
+- 在 System Settings → Energy Saver 中关闭睡眠
+- 必要时使用 `caffeinate`
 
-For true always-on, consider a dedicated Mac mini or a small VPS. See [VPS hosting](/vps).
+真正常驻的方案，请考虑专用 Mac mini 或小型 VPS。见 [VPS hosting](/vps)。
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-| Problem | Solution |
+| 问题 | 解决方案 |
 |---------|----------|
-| Can't SSH into VM | Check "Remote Login" is enabled in VM's System Settings |
-| VM IP not showing | Wait for VM to fully boot, run `lume get moltbot` again |
-| Lume command not found | Add `~/.local/bin` to your PATH |
-| WhatsApp QR not scanning | Ensure you're logged into the VM (not host) when running `moltbot channels login` |
+| 无法 SSH 进入 VM | 检查 VM 的 System Settings 中是否启用 “Remote Login” |
+| VM IP 不显示 | 等 VM 完全启动后再运行 `lume get moltbot` |
+| Lume 命令不存在 | 把 `~/.local/bin` 加入 PATH |
+| WhatsApp 二维码无法扫描 | 确保你在 VM 内运行 `moltbot channels login`（不是宿主机） |
 
 ---
 
-## Related docs
+## 相关文档
 
 - [VPS hosting](/vps)
 - [Nodes](/nodes)
@@ -271,5 +271,5 @@ For true always-on, consider a dedicated Mac mini or a small VPS. See [VPS hosti
 - [BlueBubbles channel](/channels/bluebubbles)
 - [Lume Quickstart](https://cua.ai/docs/lume/guide/getting-started/quickstart)
 - [Lume CLI Reference](https://cua.ai/docs/lume/reference/cli-reference)
-- [Unattended VM Setup](https://cua.ai/docs/lume/guide/fundamentals/unattended-setup) (advanced)
-- [Docker Sandboxing](/install/docker) (alternative isolation approach)
+- [Unattended VM Setup](https://cua.ai/docs/lume/guide/fundamentals/unattended-setup)（advanced）
+- [Docker Sandboxing](/install/docker)（替代隔离方案）

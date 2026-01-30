@@ -1,67 +1,54 @@
 ---
-summary: "Gateway lifecycle on macOS (launchd)"
+summary: "macOS 上的 Gateway 生命周期（launchd）"
 read_when:
-  - Integrating the mac app with the gateway lifecycle
+  - 将 mac 应用与 gateway 生命周期集成
 ---
-# Gateway lifecycle on macOS
+# macOS 上的 Gateway 生命周期
 
-The macOS app **manages the Gateway via launchd** by default and does not spawn
-the Gateway as a child process. It first tries to attach to an already‑running
-Gateway on the configured port; if none is reachable, it enables the launchd
-service via the external `moltbot` CLI (no embedded runtime). This gives you
-reliable auto‑start at login and restart on crashes.
+macOS 应用默认**通过 launchd 管理 Gateway**，不会以子进程启动 Gateway。它会先尝试附加到已在配置端口运行的 Gateway；若不可达，则通过外部 `moltbot` CLI 启用 launchd 服务（无内置运行时）。这可在登录时自动启动，并在崩溃后自动重启。
 
-Child‑process mode (Gateway spawned directly by the app) is **not in use** today.
-If you need tighter coupling to the UI, run the Gateway manually in a terminal.
+子进程模式（应用直接启动 Gateway）当前**未使用**。如果你需要与 UI 更紧密耦合，请在终端手动运行 Gateway。
 
-## Default behavior (launchd)
+## 默认行为（launchd）
 
-- The app installs a per‑user LaunchAgent labeled `bot.molt.gateway`
-  (or `bot.molt.<profile>` when using `--profile`/`CLAWDBOT_PROFILE`; legacy `com.clawdbot.*` is supported).
-- When Local mode is enabled, the app ensures the LaunchAgent is loaded and
-  starts the Gateway if needed.
-- Logs are written to the launchd gateway log path (visible in Debug Settings).
+- 应用安装每用户 LaunchAgent，标签为 `bot.molt.gateway`
+  （使用 `--profile`/`CLAWDBOT_PROFILE` 时为 `bot.molt.<profile>`；旧版 `com.clawdbot.*` 仍可用）。
+- 本地模式启用时，应用确保 LaunchAgent 已加载，并在需要时启动 Gateway。
+- 日志写入 launchd gateway 日志路径（可在 Debug Settings 查看）。
 
-Common commands:
+常用命令：
 
 ```bash
 launchctl kickstart -k gui/$UID/bot.molt.gateway
 launchctl bootout gui/$UID/bot.molt.gateway
 ```
 
-Replace the label with `bot.molt.<profile>` when running a named profile.
+使用命名 profile 时，将标签替换为 `bot.molt.<profile>`。
 
-## Unsigned dev builds
+## 未签名开发构建
 
-`scripts/restart-mac.sh --no-sign` is for fast local builds when you don’t have
-signing keys. To prevent launchd from pointing at an unsigned relay binary, it:
+`scripts/restart-mac.sh --no-sign` 用于没有签名密钥时的快速本地构建。为了避免 launchd 指向未签名的 relay 二进制，它会：
 
-- Writes `~/.clawdbot/disable-launchagent`.
+- 写入 `~/.clawdbot/disable-launchagent`。
 
-Signed runs of `scripts/restart-mac.sh` clear this override if the marker is
-present. To reset manually:
+签名版 `scripts/restart-mac.sh` 若检测到该标记会清除它。手动重置：
 
 ```bash
 rm ~/.clawdbot/disable-launchagent
 ```
 
-## Attach-only mode
+## 仅附加模式
 
-To force the macOS app to **never install or manage launchd**, launch it with
-`--attach-only` (or `--no-launchd`). This sets `~/.clawdbot/disable-launchagent`,
-so the app only attaches to an already running Gateway. You can toggle the same
-behavior in Debug Settings.
+要强制 macOS 应用**永不安装或管理 launchd**，使用 `--attach-only`（或 `--no-launchd`）启动应用。它会设置 `~/.clawdbot/disable-launchagent`，因此应用只会附加到已运行的 Gateway。Debug Settings 中也可切换同样行为。
 
-## Remote mode
+## 远程模式
 
-Remote mode never starts a local Gateway. The app uses an SSH tunnel to the
-remote host and connects over that tunnel.
+远程模式不会启动本地 Gateway。应用会打开到远程主机的 SSH 隧道并通过该隧道连接。
 
-## Why we prefer launchd
+## 为什么偏好 launchd
 
-- Auto‑start at login.
-- Built‑in restart/KeepAlive semantics.
-- Predictable logs and supervision.
+- 登录自动启动。
+- 内建重启/KeepAlive 机制。
+- 可预测的日志与监管。
 
-If a true child‑process mode is ever needed again, it should be documented as a
-separate, explicit dev‑only mode.
+如果未来需要真正的子进程模式，应作为单独且明确的仅开发模式记录。

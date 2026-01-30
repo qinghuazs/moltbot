@@ -1,15 +1,15 @@
 ---
-summary: "Moltbot CLI reference for `moltbot` commands, subcommands, and options"
+summary: "Moltbot CLI 参考，涵盖 `moltbot` 命令、子命令与选项"
 read_when:
-  - Adding or modifying CLI commands or options
-  - Documenting new command surfaces
+  - 添加或修改 CLI 命令或选项
+  - 记录新的命令入口
 ---
 
-# CLI reference
+# CLI 参考
 
-This page describes the current CLI behavior. If commands change, update this doc.
+此页面描述当前 CLI 行为。命令变更时请同步更新本文档。
 
-## Command pages
+## 命令页面
 
 - [`setup`](/cli/setup)
 - [`onboard`](/cli/onboard)
@@ -45,44 +45,44 @@ This page describes the current CLI behavior. If commands change, update this do
 - [`hooks`](/cli/hooks)
 - [`webhooks`](/cli/webhooks)
 - [`pairing`](/cli/pairing)
-- [`plugins`](/cli/plugins) (plugin commands)
+- [`plugins`](/cli/plugins)（插件命令）
 - [`channels`](/cli/channels)
 - [`security`](/cli/security)
 - [`skills`](/cli/skills)
-- [`voicecall`](/cli/voicecall) (plugin; if installed)
+- [`voicecall`](/cli/voicecall)（插件，安装后可用）
 
-## Global flags
+## 全局标志
 
-- `--dev`: isolate state under `~/.clawdbot-dev` and shift default ports.
-- `--profile <name>`: isolate state under `~/.clawdbot-<name>`.
-- `--no-color`: disable ANSI colors.
-- `--update`: shorthand for `moltbot update` (source installs only).
-- `-V`, `--version`, `-v`: print version and exit.
+- `--dev`：将状态隔离到 `~/.clawdbot-dev` 并切换默认端口。
+- `--profile <name>`：将状态隔离到 `~/.clawdbot-<name>`。
+- `--no-color`：禁用 ANSI 颜色。
+- `--update`：`moltbot update` 的快捷方式（仅源码安装）。
+- `-V`, `--version`, `-v`：打印版本并退出。
 
-## Output styling
+## 输出样式
 
-- ANSI colors and progress indicators only render in TTY sessions.
-- OSC-8 hyperlinks render as clickable links in supported terminals; otherwise we fall back to plain URLs.
-- `--json` (and `--plain` where supported) disables styling for clean output.
-- `--no-color` disables ANSI styling; `NO_COLOR=1` is also respected.
-- Long-running commands show a progress indicator (OSC 9;4 when supported).
+- ANSI 颜色与进度指示器只在 TTY 会话中渲染。
+- 支持 OSC-8 的终端会显示可点击链接，否则回退为普通 URL。
+- `--json`（以及支持的 `--plain`）会关闭样式以获得干净输出。
+- `--no-color` 关闭 ANSI 样式；同时支持 `NO_COLOR=1`。
+- 长时间运行的命令会显示进度指示器（支持时使用 OSC 9;4）。
 
-## Color palette
+## 颜色调色板
 
-Moltbot uses a lobster palette for CLI output.
+Moltbot CLI 使用龙虾色板。
 
-- `accent` (#FF5A2D): headings, labels, primary highlights.
-- `accentBright` (#FF7A3D): command names, emphasis.
-- `accentDim` (#D14A22): secondary highlight text.
-- `info` (#FF8A5B): informational values.
-- `success` (#2FBF71): success states.
-- `warn` (#FFB020): warnings, fallbacks, attention.
-- `error` (#E23D2D): errors, failures.
-- `muted` (#8B7F77): de-emphasis, metadata.
+- `accent` (#FF5A2D)：标题、标签、主高亮。
+- `accentBright` (#FF7A3D)：命令名、强调。
+- `accentDim` (#D14A22)：次级高亮文本。
+- `info` (#FF8A5B)：信息值。
+- `success` (#2FBF71)：成功状态。
+- `warn` (#FFB020)：警告、回退、提醒。
+- `error` (#E23D2D)：错误、失败。
+- `muted` (#8B7F77)：弱化、元数据。
 
-Palette source of truth: `src/terminal/palette.ts` (aka “lobster seam”).
+调色板真值来源：`src/terminal/palette.ts`（也称为“lobster seam”）。
 
-## Command tree
+## 命令树
 
 ```
 moltbot [--dev] [--profile <name>] <command>
@@ -236,72 +236,72 @@ moltbot [--dev] [--profile <name>] <command>
   tui
 ```
 
-Note: plugins can add additional top-level commands (for example `moltbot voicecall`).
+注意：插件可以添加额外的顶层命令（例如 `moltbot voicecall`）。
 
-## Security
+## 安全
 
-- `moltbot security audit` — audit config + local state for common security foot-guns.
-- `moltbot security audit --deep` — best-effort live Gateway probe.
-- `moltbot security audit --fix` — tighten safe defaults and chmod state/config.
+- `moltbot security audit` — 审计配置与本地状态中的常见安全隐患。
+- `moltbot security audit --deep` — 尽力进行实时 Gateway 探测。
+- `moltbot security audit --fix` — 收紧安全默认值并为状态与配置执行 chmod。
 
-## Plugins
+## 插件
 
-Manage extensions and their config:
+管理扩展及其配置：
 
-- `moltbot plugins list` — discover plugins (use `--json` for machine output).
-- `moltbot plugins info <id>` — show details for a plugin.
-- `moltbot plugins install <path|.tgz|npm-spec>` — install a plugin (or add a plugin path to `plugins.load.paths`).
-- `moltbot plugins enable <id>` / `disable <id>` — toggle `plugins.entries.<id>.enabled`.
-- `moltbot plugins doctor` — report plugin load errors.
+- `moltbot plugins list` — 发现插件（使用 `--json` 获得机器输出）。
+- `moltbot plugins info <id>` — 显示插件详情。
+- `moltbot plugins install <path|.tgz|npm-spec>` — 安装插件（或把插件路径写入 `plugins.load.paths`）。
+- `moltbot plugins enable <id>` / `disable <id>` — 切换 `plugins.entries.<id>.enabled`。
+- `moltbot plugins doctor` — 报告插件加载错误。
 
-Most plugin changes require a gateway restart. See [/plugin](/plugin).
+多数插件变更需要重启 gateway。见 [/plugin](/plugin)。
 
-## Memory
+## 记忆
 
-Vector search over `MEMORY.md` + `memory/*.md`:
+对 `MEMORY.md` 与 `memory/*.md` 做向量搜索：
 
-- `moltbot memory status` — show index stats.
-- `moltbot memory index` — reindex memory files.
-- `moltbot memory search "<query>"` — semantic search over memory.
+- `moltbot memory status` — 显示索引统计。
+- `moltbot memory index` — 重新索引记忆文件。
+- `moltbot memory search "<query>"` — 对记忆进行语义搜索。
 
-## Chat slash commands
+## 聊天斜杠命令
 
-Chat messages support `/...` commands (text and native). See [/tools/slash-commands](/tools/slash-commands).
+聊天消息支持 `/...` 命令（文本与原生命令）。见 [/tools/slash-commands](/tools/slash-commands)。
 
-Highlights:
-- `/status` for quick diagnostics.
-- `/config` for persisted config changes.
-- `/debug` for runtime-only config overrides (memory, not disk; requires `commands.debug: true`).
+要点：
+- `/status` 快速诊断。
+- `/config` 持久化配置变更。
+- `/debug` 仅运行时覆盖配置（内存不落盘；需要 `commands.debug: true`）。
 
-## Setup + onboarding
+## 设置与引导
 
 ### `setup`
-Initialize config + workspace.
+初始化配置与工作区。
 
-Options:
-- `--workspace <dir>`: agent workspace path (default `~/clawd`).
-- `--wizard`: run the onboarding wizard.
-- `--non-interactive`: run wizard without prompts.
-- `--mode <local|remote>`: wizard mode.
-- `--remote-url <url>`: remote Gateway URL.
-- `--remote-token <token>`: remote Gateway token.
+选项：
+- `--workspace <dir>`：代理工作区路径（默认 `~/clawd`）。
+- `--wizard`：运行引导向导。
+- `--non-interactive`：无提示运行向导。
+- `--mode <local|remote>`：向导模式。
+- `--remote-url <url>`：远程 Gateway URL。
+- `--remote-token <token>`：远程 Gateway 令牌。
 
-Wizard auto-runs when any wizard flags are present (`--non-interactive`, `--mode`, `--remote-url`, `--remote-token`).
+当存在任何向导标志（`--non-interactive`、`--mode`、`--remote-url`、`--remote-token`）时自动运行向导。
 
 ### `onboard`
-Interactive wizard to set up gateway, workspace, and skills.
+交互式向导，用于设置 gateway、工作区与技能。
 
-Options:
+选项：
 - `--workspace <dir>`
-- `--reset` (reset config + credentials + sessions + workspace before wizard)
+- `--reset`（在向导前重置配置、凭据、会话与工作区）
 - `--non-interactive`
 - `--mode <local|remote>`
-- `--flow <quickstart|advanced|manual>` (manual is an alias for advanced)
+- `--flow <quickstart|advanced|manual>`（manual 是 advanced 的别名）
 - `--auth-choice <setup-token|token|chutes|openai-codex|openai-api-key|openrouter-api-key|ai-gateway-api-key|moonshot-api-key|kimi-code-api-key|synthetic-api-key|venice-api-key|gemini-api-key|zai-api-key|apiKey|minimax-api|minimax-api-lightning|opencode-zen|skip>`
-- `--token-provider <id>` (non-interactive; used with `--auth-choice token`)
-- `--token <token>` (non-interactive; used with `--auth-choice token`)
-- `--token-profile-id <id>` (non-interactive; default: `<provider>:manual`)
-- `--token-expires-in <duration>` (non-interactive; e.g. `365d`, `12h`)
+- `--token-provider <id>`（非交互；配合 `--auth-choice token`）
+- `--token <token>`（非交互；配合 `--auth-choice token`）
+- `--token-profile-id <id>`（非交互；默认：`<provider>:manual`）
+- `--token-expires-in <duration>`（非交互；例如 `365d`、`12h`）
 - `--anthropic-api-key <key>`
 - `--openai-api-key <key>`
 - `--openrouter-api-key <key>`
@@ -322,77 +322,76 @@ Options:
 - `--tailscale <off|serve|funnel>`
 - `--tailscale-reset-on-exit`
 - `--install-daemon`
-- `--no-install-daemon` (alias: `--skip-daemon`)
+- `--no-install-daemon`（别名：`--skip-daemon`）
 - `--daemon-runtime <node|bun>`
 - `--skip-channels`
 - `--skip-skills`
 - `--skip-health`
 - `--skip-ui`
-- `--node-manager <npm|pnpm|bun>` (pnpm recommended; bun not recommended for Gateway runtime)
+- `--node-manager <npm|pnpm|bun>`（推荐 pnpm；bun 不建议用作 Gateway 运行时）
 - `--json`
 
 ### `configure`
-Interactive configuration wizard (models, channels, skills, gateway).
+交互式配置向导（模型、渠道、技能、gateway）。
 
 ### `config`
-Non-interactive config helpers (get/set/unset). Running `moltbot config` with no
-subcommand launches the wizard.
+非交互配置辅助（get/set/unset）。单独运行 `moltbot config`（不带子命令）会启动向导。
 
-Subcommands:
-- `config get <path>`: print a config value (dot/bracket path).
-- `config set <path> <value>`: set a value (JSON5 or raw string).
-- `config unset <path>`: remove a value.
+子命令：
+- `config get <path>`：打印配置值（点路径或括号路径）。
+- `config set <path> <value>`：设置配置值（JSON5 或原始字符串）。
+- `config unset <path>`：移除配置项。
 
 ### `doctor`
-Health checks + quick fixes (config + gateway + legacy services).
+健康检查与快速修复（配置 + gateway + 旧服务）。
 
-Options:
-- `--no-workspace-suggestions`: disable workspace memory hints.
-- `--yes`: accept defaults without prompting (headless).
-- `--non-interactive`: skip prompts; apply safe migrations only.
-- `--deep`: scan system services for extra gateway installs.
+选项：
+- `--no-workspace-suggestions`：禁用工作区记忆提示。
+- `--yes`：无提示接受默认值（无头模式）。
+- `--non-interactive`：跳过提示，仅应用安全迁移。
+- `--deep`：扫描系统服务中的额外 gateway 安装。
 
-## Channel helpers
+## 渠道助手
 
 ### `channels`
-Manage chat channel accounts (WhatsApp/Telegram/Discord/Google Chat/Slack/Mattermost (plugin)/Signal/iMessage/MS Teams).
+管理聊天渠道账号（WhatsApp/Telegram/Discord/Google Chat/Slack/Mattermost（插件）/Signal/iMessage/MS Teams）。
 
-Subcommands:
-- `channels list`: show configured channels and auth profiles.
-- `channels status`: check gateway reachability and channel health (`--probe` runs extra checks; use `moltbot health` or `moltbot status --deep` for gateway health probes).
-- Tip: `channels status` prints warnings with suggested fixes when it can detect common misconfigurations (then points you to `moltbot doctor`).
-- `channels logs`: show recent channel logs from the gateway log file.
-- `channels add`: wizard-style setup when no flags are passed; flags switch to non-interactive mode.
-- `channels remove`: disable by default; pass `--delete` to remove config entries without prompts.
-- `channels login`: interactive channel login (WhatsApp Web only).
-- `channels logout`: log out of a channel session (if supported).
+子命令：
+- `channels list`：显示配置的渠道与认证配置。
+- `channels status`：检查 gateway 可达性与渠道健康（`--probe` 执行更多检查；gateway 健康探测请用 `moltbot health` 或 `moltbot status --deep`）。
+- 提示：当可检测到常见配置错误时，`channels status` 会输出建议修复方案并指向 `moltbot doctor`。
+- `channels logs`：从 gateway 日志文件读取最近的渠道日志。
+- `channels add`：不带标志时为向导式；加标志切换为非交互模式。
+- `channels remove`：默认仅禁用；传 `--delete` 才会无提示移除配置。
+- `channels login`：交互式渠道登录（仅 WhatsApp Web）。
+- `channels logout`：登出渠道会话（若支持）。
 
-Common options:
-- `--channel <name>`: `whatsapp|telegram|discord|googlechat|slack|mattermost|signal|imessage|msteams`
-- `--account <id>`: channel account id (default `default`)
-- `--name <label>`: display name for the account
+常用选项：
+- `--channel <name>`：`whatsapp|telegram|discord|googlechat|slack|mattermost|signal|imessage|msteams`
+- `--account <id>`：渠道账号 id（默认 `default`）
+- `--name <label>`：账号显示名称
 
-`channels login` options:
-- `--channel <channel>` (default `whatsapp`; supports `whatsapp`/`web`)
+`channels login` 选项：
+- `--channel <channel>`（默认 `whatsapp`；支持 `whatsapp`/`web`）
 - `--account <id>`
 - `--verbose`
 
-`channels logout` options:
-- `--channel <channel>` (default `whatsapp`)
+`channels logout` 选项：
+- `--channel <channel>`（默认 `whatsapp`）
 - `--account <id>`
 
-`channels list` options:
-- `--no-usage`: skip model provider usage/quota snapshots (OAuth/API-backed only).
-- `--json`: output JSON (includes usage unless `--no-usage` is set).
+`channels list` 选项：
+- `--no-usage`：跳过模型提供商的用量与配额快照（仅 OAuth/API 认证）。
+- `--json`：输出 JSON（除非设置 `--no-usage`，否则包含用量）。
 
-`channels logs` options:
-- `--channel <name|all>` (default `all`)
-- `--lines <n>` (default `200`)
+`channels logs` 选项：
+- `--channel <name|all>`（默认 `all`）
+- `--lines <n>`（默认 `200`）
 - `--json`
 
-More detail: [/concepts/oauth](/concepts/oauth)
+更多细节：[/concepts/oauth](/concepts/oauth)
 
-Examples:
+示例：
 ```bash
 moltbot channels add --channel telegram --account alerts --name "Alerts Bot" --token $TELEGRAM_BOT_TOKEN
 moltbot channels add --channel discord --account work --name "Work Bot" --token $DISCORD_BOT_TOKEN
@@ -402,48 +401,48 @@ moltbot status --deep
 ```
 
 ### `skills`
-List and inspect available skills plus readiness info.
+列出并检查可用技能及其就绪状态。
 
-Subcommands:
-- `skills list`: list skills (default when no subcommand).
-- `skills info <name>`: show details for one skill.
-- `skills check`: summary of ready vs missing requirements.
+子命令：
+- `skills list`：列出技能（不带子命令时的默认行为）。
+- `skills info <name>`：显示某个技能的详细信息。
+- `skills check`：汇总就绪与缺失项。
 
-Options:
-- `--eligible`: show only ready skills.
-- `--json`: output JSON (no styling).
-- `-v`, `--verbose`: include missing requirements detail.
+选项：
+- `--eligible`：仅显示可用技能。
+- `--json`：输出 JSON（无样式）。
+- `-v`, `--verbose`：包含缺失要求的细节。
 
-Tip: use `npx clawdhub` to search, install, and sync skills.
+提示：使用 `npx clawdhub` 搜索、安装与同步技能。
 
 ### `pairing`
-Approve DM pairing requests across channels.
+审批跨渠道 DM 配对请求。
 
-Subcommands:
+子命令：
 - `pairing list <channel> [--json]`
 - `pairing approve <channel> <code> [--notify]`
 
 ### `webhooks gmail`
-Gmail Pub/Sub hook setup + runner. See [/automation/gmail-pubsub](/automation/gmail-pubsub).
+Gmail Pub/Sub Hook 配置与运行。见 [/automation/gmail-pubsub](/automation/gmail-pubsub)。
 
-Subcommands:
-- `webhooks gmail setup` (requires `--account <email>`; supports `--project`, `--topic`, `--subscription`, `--label`, `--hook-url`, `--hook-token`, `--push-token`, `--bind`, `--port`, `--path`, `--include-body`, `--max-bytes`, `--renew-minutes`, `--tailscale`, `--tailscale-path`, `--tailscale-target`, `--push-endpoint`, `--json`)
-- `webhooks gmail run` (runtime overrides for the same flags)
+子命令：
+- `webhooks gmail setup`（需要 `--account <email>`；支持 `--project`、`--topic`、`--subscription`、`--label`、`--hook-url`、`--hook-token`、`--push-token`、`--bind`、`--port`、`--path`、`--include-body`、`--max-bytes`、`--renew-minutes`、`--tailscale`、`--tailscale-path`、`--tailscale-target`、`--push-endpoint`、`--json`）
+- `webhooks gmail run`（相同标志的运行时覆盖）
 
 ### `dns setup`
-Wide-area discovery DNS helper (CoreDNS + Tailscale). See [/gateway/discovery](/gateway/discovery).
+广域发现 DNS 辅助（CoreDNS + Tailscale）。见 [/gateway/discovery](/gateway/discovery)。
 
-Options:
-- `--apply`: install/update CoreDNS config (requires sudo; macOS only).
+选项：
+- `--apply`：安装或更新 CoreDNS 配置（需要 sudo，仅 macOS）。
 
-## Messaging + agent
+## 消息与代理
 
 ### `message`
-Unified outbound messaging + channel actions.
+统一的外发消息与渠道操作。
 
-See: [/cli/message](/cli/message)
+参见：[/cli/message](/cli/message)
 
-Subcommands:
+子命令：
 - `message send|poll|react|reactions|read|edit|delete|pin|unpin|pins|permissions|search|timeout|kick|ban`
 - `message thread <create|list|reply>`
 - `message emoji <list|upload>`
@@ -454,20 +453,20 @@ Subcommands:
 - `message voice status`
 - `message event <list|create>`
 
-Examples:
+示例：
 - `moltbot message send --target +15555550123 --message "Hi"`
 - `moltbot message poll --channel discord --target channel:123 --poll-question "Snack?" --poll-option Pizza --poll-option Sushi`
 
 ### `agent`
-Run one agent turn via the Gateway (or `--local` embedded).
+通过 Gateway 运行一次代理轮次（或 `--local` 嵌入）。
 
-Required:
+必需：
 - `--message <text>`
 
-Options:
-- `--to <dest>` (for session key and optional delivery)
+选项：
+- `--to <dest>`（用于会话 key 与可选投递）
 - `--session-id <id>`
-- `--thinking <off|minimal|low|medium|high|xhigh>` (GPT-5.2 + Codex models only)
+- `--thinking <off|minimal|low|medium|high|xhigh>`（仅 GPT-5.2 与 Codex 模型）
 - `--verbose <on|full|off>`
 - `--channel <whatsapp|telegram|discord|slack|mattermost|signal|imessage|msteams>`
 - `--local`
@@ -476,104 +475,104 @@ Options:
 - `--timeout <seconds>`
 
 ### `agents`
-Manage isolated agents (workspaces + auth + routing).
+管理隔离代理（工作区 + 认证 + 路由）。
 
 #### `agents list`
-List configured agents.
+列出已配置代理。
 
-Options:
+选项：
 - `--json`
 - `--bindings`
 
 #### `agents add [name]`
-Add a new isolated agent. Runs the guided wizard unless flags (or `--non-interactive`) are passed; `--workspace` is required in non-interactive mode.
+新增隔离代理。若未传标志（或 `--non-interactive`），则运行引导向导；非交互模式需要 `--workspace`。
 
-Options:
+选项：
 - `--workspace <dir>`
 - `--model <id>`
 - `--agent-dir <dir>`
-- `--bind <channel[:accountId]>` (repeatable)
+- `--bind <channel[:accountId]>`（可重复）
 - `--non-interactive`
 - `--json`
 
-Binding specs use `channel[:accountId]`. When `accountId` is omitted for WhatsApp, the default account id is used.
+绑定规格为 `channel[:accountId]`。未填写 `accountId` 时，WhatsApp 使用默认账号 id。
 
 #### `agents delete <id>`
-Delete an agent and prune its workspace + state.
+删除代理并裁剪其工作区与状态。
 
-Options:
+选项：
 - `--force`
 - `--json`
 
 ### `acp`
-Run the ACP bridge that connects IDEs to the Gateway.
+运行 ACP 桥接以连接 IDE 与 Gateway。
 
-See [`acp`](/cli/acp) for full options and examples.
+详见 [`acp`](/cli/acp) 的完整选项与示例。
 
 ### `status`
-Show linked session health and recent recipients.
+显示已关联会话的健康状态与最近接收者。
 
-Options:
+选项：
 - `--json`
-- `--all` (full diagnosis; read-only, pasteable)
-- `--deep` (probe channels)
-- `--usage` (show model provider usage/quota)
+- `--all`（完整诊断；只读，可粘贴）
+- `--deep`（探测渠道）
+- `--usage`（显示模型提供商用量与配额）
 - `--timeout <ms>`
 - `--verbose`
-- `--debug` (alias for `--verbose`)
+- `--debug`（`--verbose` 的别名）
 
-Notes:
-- Overview includes Gateway + node host service status when available.
+说明：
+- 概览在可用时包含 Gateway 与节点主机服务状态。
 
-### Usage tracking
-Moltbot can surface provider usage/quota when OAuth/API creds are available.
+### 用量追踪
+Moltbot 可在具备 OAuth/API 凭据时展示提供商用量与配额。
 
-Surfaces:
-- `/status` (adds a short provider usage line when available)
-- `moltbot status --usage` (prints full provider breakdown)
-- macOS menu bar (Usage section under Context)
+入口：
+- `/status`（可用时追加一行用量摘要）
+- `moltbot status --usage`（打印完整提供商明细）
+- macOS 菜单栏（Context 下的 Usage 区域）
 
-Notes:
-- Data comes directly from provider usage endpoints (no estimates).
-- Providers: Anthropic, GitHub Copilot, OpenAI Codex OAuth, plus Gemini CLI/Antigravity when those provider plugins are enabled.
-- If no matching credentials exist, usage is hidden.
-- Details: see [Usage tracking](/concepts/usage-tracking).
+说明：
+- 数据直接来自提供商用量端点（非估算）。
+- 提供商：Anthropic、GitHub Copilot、OpenAI Codex OAuth，以及在启用时的 Gemini CLI 与 Antigravity。
+- 若无匹配凭据，用量信息会隐藏。
+- 详情：见 [Usage tracking](/concepts/usage-tracking)。
 
 ### `health`
-Fetch health from the running Gateway.
+从运行中的 Gateway 获取健康信息。
 
-Options:
+选项：
 - `--json`
 - `--timeout <ms>`
 - `--verbose`
 
 ### `sessions`
-List stored conversation sessions.
+列出存储的对话会话。
 
-Options:
+选项：
 - `--json`
 - `--verbose`
 - `--store <path>`
 - `--active <minutes>`
 
-## Reset / Uninstall
+## 重置与卸载
 
 ### `reset`
-Reset local config/state (keeps the CLI installed).
+重置本地配置与状态（CLI 仍保留）。
 
-Options:
+选项：
 - `--scope <config|config+creds+sessions|full>`
 - `--yes`
 - `--non-interactive`
 - `--dry-run`
 
-Notes:
-- `--non-interactive` requires `--scope` and `--yes`.
+说明：
+- `--non-interactive` 需要 `--scope` 与 `--yes`。
 
 ### `uninstall`
-Uninstall the gateway service + local data (CLI remains).
+卸载 gateway 服务与本地数据（CLI 保留）。
 
-Options:
+选项：
 - `--service`
 - `--state`
 - `--workspace`
@@ -583,15 +582,15 @@ Options:
 - `--non-interactive`
 - `--dry-run`
 
-Notes:
-- `--non-interactive` requires `--yes` and explicit scopes (or `--all`).
+说明：
+- `--non-interactive` 需要 `--yes` 且显式指定范围（或 `--all`）。
 
 ## Gateway
 
 ### `gateway`
-Run the WebSocket Gateway.
+运行 WebSocket Gateway。
 
-Options:
+选项：
 - `--port <port>`
 - `--bind <loopback|tailnet|lan|auto|custom>`
 - `--token <token>`
@@ -601,43 +600,43 @@ Options:
 - `--tailscale-reset-on-exit`
 - `--allow-unconfigured`
 - `--dev`
-- `--reset` (reset dev config + credentials + sessions + workspace)
-- `--force` (kill existing listener on port)
+- `--reset`（重置 dev 配置、凭据、会话与工作区）
+- `--force`（杀掉已占用端口的监听器）
 - `--verbose`
 - `--claude-cli-logs`
 - `--ws-log <auto|full|compact>`
-- `--compact` (alias for `--ws-log compact`)
+- `--compact`（`--ws-log compact` 的别名）
 - `--raw-stream`
 - `--raw-stream-path <path>`
 
 ### `gateway service`
-Manage the Gateway service (launchd/systemd/schtasks).
+管理 Gateway 服务（launchd/systemd/schtasks）。
 
-Subcommands:
-- `gateway status` (probes the Gateway RPC by default)
-- `gateway install` (service install)
+子命令：
+- `gateway status`（默认探测 Gateway RPC）
+- `gateway install`（安装服务）
 - `gateway uninstall`
 - `gateway start`
 - `gateway stop`
 - `gateway restart`
 
-Notes:
-- `gateway status` probes the Gateway RPC by default using the service’s resolved port/config (override with `--url/--token/--password`).
-- `gateway status` supports `--no-probe`, `--deep`, and `--json` for scripting.
-- `gateway status` also surfaces legacy or extra gateway services when it can detect them (`--deep` adds system-level scans). Profile-named Moltbot services are treated as first-class and aren't flagged as "extra".
-- `gateway status` prints which config path the CLI uses vs which config the service likely uses (service env), plus the resolved probe target URL.
-- `gateway install|uninstall|start|stop|restart` support `--json` for scripting (default output stays human-friendly).
-- `gateway install` defaults to Node runtime; bun is **not recommended** (WhatsApp/Telegram bugs).
-- `gateway install` options: `--port`, `--runtime`, `--token`, `--force`, `--json`.
+说明：
+- `gateway status` 默认用服务解析出的端口与配置探测 Gateway RPC（可用 `--url/--token/--password` 覆盖）。
+- `gateway status` 支持 `--no-probe`、`--deep` 与 `--json` 用于脚本。
+- `gateway status` 在可检测时会提示遗留或额外的 gateway 服务（`--deep` 会加入系统级扫描）。带 profile 的 Moltbot 服务是一级服务，不会被标记为“额外”。
+- `gateway status` 会打印 CLI 使用的配置路径与服务可能使用的配置路径（服务 env），并显示探测目标 URL。
+- `gateway install|uninstall|start|stop|restart` 支持 `--json` 以便脚本化（默认输出仍偏向人类）。
+- `gateway install` 默认使用 Node 运行时；不推荐 bun（WhatsApp/Telegram 有 bug）。
+- `gateway install` 选项：`--port`、`--runtime`、`--token`、`--force`、`--json`。
 
 ### `logs`
-Tail Gateway file logs via RPC.
+通过 RPC 跟随 Gateway 文件日志。
 
-Notes:
-- TTY sessions render a colorized, structured view; non-TTY falls back to plain text.
-- `--json` emits line-delimited JSON (one log event per line).
+说明：
+- TTY 会话会渲染带颜色的结构化视图；非 TTY 回退为纯文本。
+- `--json` 以逐行 JSON 输出（每行一个日志事件）。
 
-Examples:
+示例：
 ```bash
 moltbot logs --follow
 moltbot logs --limit 200
@@ -647,9 +646,9 @@ moltbot logs --no-color
 ```
 
 ### `gateway <subcommand>`
-Gateway CLI helpers (use `--url`, `--token`, `--password`, `--timeout`, `--expect-final` for RPC subcommands).
+Gateway CLI 辅助命令（RPC 子命令可用 `--url`、`--token`、`--password`、`--timeout`、`--expect-final`）。
 
-Subcommands:
+子命令：
 - `gateway call <method> [--params <json>]`
 - `gateway health`
 - `gateway status`
@@ -658,19 +657,18 @@ Subcommands:
 - `gateway install|uninstall|start|stop|restart`
 - `gateway run`
 
-Common RPCs:
-- `config.apply` (validate + write config + restart + wake)
-- `config.patch` (merge a partial update + restart + wake)
-- `update.run` (run update + restart + wake)
+常用 RPC：
+- `config.apply`（校验 + 写入配置 + 重启 + 唤醒）
+- `config.patch`（合并局部更新 + 重启 + 唤醒）
+- `update.run`（执行更新 + 重启 + 唤醒）
 
-Tip: when calling `config.set`/`config.apply`/`config.patch` directly, pass `baseHash` from
-`config.get` if a config already exists.
+提示：直接调用 `config.set`/`config.apply`/`config.patch` 时，如已有配置请传 `config.get` 返回的 `baseHash`。
 
-## Models
+## 模型
 
-See [/concepts/models](/concepts/models) for fallback behavior and scanning strategy.
+回退行为与扫描策略见 [/concepts/models](/concepts/models)。
 
-Preferred Anthropic auth (setup-token):
+推荐的 Anthropic 认证方式（setup-token）：
 
 ```bash
 claude setup-token
@@ -678,15 +676,15 @@ moltbot models auth setup-token --provider anthropic
 moltbot models status
 ```
 
-### `models` (root)
-`moltbot models` is an alias for `models status`.
+### `models`（根命令）
+`moltbot models` 是 `models status` 的别名。
 
-Root options:
-- `--status-json` (alias for `models status --json`)
-- `--status-plain` (alias for `models status --plain`)
+根选项：
+- `--status-json`（`models status --json` 的别名）
+- `--status-plain`（`models status --plain` 的别名）
 
 ### `models list`
-Options:
+选项：
 - `--all`
 - `--local`
 - `--provider <name>`
@@ -694,48 +692,48 @@ Options:
 - `--plain`
 
 ### `models status`
-Options:
+选项：
 - `--json`
 - `--plain`
-- `--check` (exit 1=expired/missing, 2=expiring)
-- `--probe` (live probe of configured auth profiles)
+- `--check`（退出码：1=过期或缺失，2=即将过期）
+- `--probe`（对已配置的认证配置执行实时探测）
 - `--probe-provider <name>`
-- `--probe-profile <id>` (repeat or comma-separated)
+- `--probe-profile <id>`（可重复或逗号分隔）
 - `--probe-timeout <ms>`
 - `--probe-concurrency <n>`
 - `--probe-max-tokens <n>`
 
-Always includes the auth overview and OAuth expiry status for profiles in the auth store.
-`--probe` runs live requests (may consume tokens and trigger rate limits).
+总是包含认证概览与认证存储中的 OAuth 过期状态。
+`--probe` 会发起实时请求（可能消耗 token 并触发限流）。
 
 ### `models set <model>`
-Set `agents.defaults.model.primary`.
+设置 `agents.defaults.model.primary`。
 
 ### `models set-image <model>`
-Set `agents.defaults.imageModel.primary`.
+设置 `agents.defaults.imageModel.primary`。
 
 ### `models aliases list|add|remove`
-Options:
-- `list`: `--json`, `--plain`
+选项：
+- `list`：`--json`、`--plain`
 - `add <alias> <model>`
 - `remove <alias>`
 
 ### `models fallbacks list|add|remove|clear`
-Options:
-- `list`: `--json`, `--plain`
+选项：
+- `list`：`--json`、`--plain`
 - `add <model>`
 - `remove <model>`
 - `clear`
 
 ### `models image-fallbacks list|add|remove|clear`
-Options:
-- `list`: `--json`, `--plain`
+选项：
+- `list`：`--json`、`--plain`
 - `add <model>`
 - `remove <model>`
 - `clear`
 
 ### `models scan`
-Options:
+选项：
 - `--min-params <b>`
 - `--max-age-days <days>`
 - `--provider <name>`
@@ -750,66 +748,67 @@ Options:
 - `--json`
 
 ### `models auth add|setup-token|paste-token`
-Options:
-- `add`: interactive auth helper
-- `setup-token`: `--provider <name>` (default `anthropic`), `--yes`
-- `paste-token`: `--provider <name>`, `--profile-id <id>`, `--expires-in <duration>`
+选项：
+- `add`：交互式认证辅助
+- `setup-token`：`--provider <name>`（默认 `anthropic`）、`--yes`
+- `paste-token`：`--provider <name>`、`--profile-id <id>`、`--expires-in <duration>`
 
 ### `models auth order get|set|clear`
-Options:
-- `get`: `--provider <name>`, `--agent <id>`, `--json`
-- `set`: `--provider <name>`, `--agent <id>`, `<profileIds...>`
-- `clear`: `--provider <name>`, `--agent <id>`
+选项：
+- `get`：`--provider <name>`、`--agent <id>`、`--json`
+- `set`：`--provider <name>`、`--agent <id>`、`<profileIds...>`
+- `clear`：`--provider <name>`、`--agent <id>`
 
-## System
+## 系统
 
 ### `system event`
-Enqueue a system event and optionally trigger a heartbeat (Gateway RPC).
+入队系统事件并可选触发心跳（Gateway RPC）。
 
-Required:
+必需：
 - `--text <text>`
 
-Options:
+选项：
 - `--mode <now|next-heartbeat>`
 - `--json`
-- `--url`, `--token`, `--timeout`, `--expect-final`
+- `--url`、`--token`、`--timeout`、`--expect-final`
 
 ### `system heartbeat last|enable|disable`
-Heartbeat controls (Gateway RPC).
+心跳控制（Gateway RPC）。
 
-Options:
+选项：
 - `--json`
-- `--url`, `--token`, `--timeout`, `--expect-final`
+- `--url`、`--token`、`--timeout`、`--expect-final`
 
 ### `system presence`
-List system presence entries (Gateway RPC).
+列出系统存在项（Gateway RPC）。
 
-Options:
+选项：
 - `--json`
-- `--url`, `--token`, `--timeout`, `--expect-final`
+- `--url`、`--token`、`--timeout`、`--expect-final`
 
-## Cron
-Manage scheduled jobs (Gateway RPC). See [/automation/cron-jobs](/automation/cron-jobs).
+## 定时任务
 
-Subcommands:
+通过 Gateway RPC 管理定时任务。见 [/automation/cron-jobs](/automation/cron-jobs)。
+
+子命令：
 - `cron status [--json]`
-- `cron list [--all] [--json]` (table output by default; use `--json` for raw)
-- `cron add` (alias: `create`; requires `--name` and exactly one of `--at` | `--every` | `--cron`, and exactly one payload of `--system-event` | `--message`)
-- `cron edit <id>` (patch fields)
-- `cron rm <id>` (aliases: `remove`, `delete`)
+- `cron list [--all] [--json]`（默认表格输出；`--json` 输出原始数据）
+- `cron add`（别名：`create`；需要 `--name` 且在 `--at` | `--every` | `--cron` 中且只允许一个，同时在 `--system-event` | `--message` 中且只允许一个）
+- `cron edit <id>`（补丁字段）
+- `cron rm <id>`（别名：`remove`、`delete`）
 - `cron enable <id>`
 - `cron disable <id>`
 - `cron runs --id <id> [--limit <n>]`
 - `cron run <id> [--force]`
 
-All `cron` commands accept `--url`, `--token`, `--timeout`, `--expect-final`.
+所有 `cron` 命令都接受 `--url`、`--token`、`--timeout`、`--expect-final`。
 
-## Node host
+## 节点主机
 
-`node` runs a **headless node host** or manages it as a background service. See
-[`moltbot node`](/cli/node).
+`node` 运行 **无界面节点主机** 或以后台服务方式管理。见
+[`moltbot node`](/cli/node)。
 
-Subcommands:
+子命令：
 - `node run --host <gateway-host> --port 18789`
 - `node status`
 - `node install [--host <gateway-host>] [--port <port>] [--tls] [--tls-fingerprint <sha256>] [--node-id <id>] [--display-name <name>] [--runtime <node|bun>] [--force]`
@@ -817,14 +816,14 @@ Subcommands:
 - `node stop`
 - `node restart`
 
-## Nodes
+## 节点
 
-`nodes` talks to the Gateway and targets paired nodes. See [/nodes](/nodes).
+`nodes` 通过 Gateway 操作已配对节点。见 [/nodes](/nodes)。
 
-Common options:
-- `--url`, `--token`, `--timeout`, `--json`
+常用选项：
+- `--url`、`--token`、`--timeout`、`--json`
 
-Subcommands:
+子命令：
 - `nodes status [--connected] [--last-connected <duration>]`
 - `nodes describe --node <id|name|ip>`
 - `nodes list [--connected] [--last-connected <duration>]`
@@ -833,15 +832,15 @@ Subcommands:
 - `nodes reject <requestId>`
 - `nodes rename --node <id|name|ip> --name <displayName>`
 - `nodes invoke --node <id|name|ip> --command <command> [--params <json>] [--invoke-timeout <ms>] [--idempotency-key <key>]`
-- `nodes run --node <id|name|ip> [--cwd <path>] [--env KEY=VAL] [--command-timeout <ms>] [--needs-screen-recording] [--invoke-timeout <ms>] <command...>` (mac node or headless node host)
-- `nodes notify --node <id|name|ip> [--title <text>] [--body <text>] [--sound <name>] [--priority <passive|active|timeSensitive>] [--delivery <system|overlay|auto>] [--invoke-timeout <ms>]` (mac only)
+- `nodes run --node <id|name|ip> [--cwd <path>] [--env KEY=VAL] [--command-timeout <ms>] [--needs-screen-recording] [--invoke-timeout <ms>] <command...>`（mac 节点或无界面节点主机）
+- `nodes notify --node <id|name|ip> [--title <text>] [--body <text>] [--sound <name>] [--priority <passive|active|timeSensitive>] [--delivery <system|overlay|auto>] [--invoke-timeout <ms>]`（仅 mac）
 
-Camera:
+相机：
 - `nodes camera list --node <id|name|ip>`
 - `nodes camera snap --node <id|name|ip> [--facing front|back|both] [--device-id <id>] [--max-width <px>] [--quality <0-1>] [--delay-ms <ms>] [--invoke-timeout <ms>]`
 - `nodes camera clip --node <id|name|ip> [--facing front|back] [--device-id <id>] [--duration <ms|10s|1m>] [--no-audio] [--invoke-timeout <ms>]`
 
-Canvas + screen:
+画布与屏幕：
 - `nodes canvas snapshot --node <id|name|ip> [--format png|jpg|jpeg] [--max-width <px>] [--quality <0-1>] [--invoke-timeout <ms>]`
 - `nodes canvas present --node <id|name|ip> [--target <urlOrPath>] [--x <px>] [--y <px>] [--width <px>] [--height <px>] [--invoke-timeout <ms>]`
 - `nodes canvas hide --node <id|name|ip> [--invoke-timeout <ms>]`
@@ -851,18 +850,18 @@ Canvas + screen:
 - `nodes canvas a2ui reset --node <id|name|ip> [--invoke-timeout <ms>]`
 - `nodes screen record --node <id|name|ip> [--screen <index>] [--duration <ms|10s>] [--fps <n>] [--no-audio] [--out <path>] [--invoke-timeout <ms>]`
 
-Location:
+位置：
 - `nodes location get --node <id|name|ip> [--max-age <ms>] [--accuracy <coarse|balanced|precise>] [--location-timeout <ms>] [--invoke-timeout <ms>]`
 
-## Browser
+## 浏览器
 
-Browser control CLI (dedicated Chrome/Brave/Edge/Chromium). See [`moltbot browser`](/cli/browser) and the [Browser tool](/tools/browser).
+浏览器控制 CLI（专用 Chrome/Brave/Edge/Chromium）。见 [`moltbot browser`](/cli/browser) 与 [Browser 工具](/tools/browser)。
 
-Common options:
-- `--url`, `--token`, `--timeout`, `--json`
+常用选项：
+- `--url`、`--token`、`--timeout`、`--json`
 - `--browser-profile <name>`
 
-Manage:
+管理：
 - `browser status`
 - `browser start`
 - `browser stop`
@@ -875,11 +874,11 @@ Manage:
 - `browser create-profile --name <name> [--color <hex>] [--cdp-url <url>]`
 - `browser delete-profile --name <name>`
 
-Inspect:
+检查：
 - `browser screenshot [targetId] [--full-page] [--ref <ref>] [--element <selector>] [--type png|jpeg]`
 - `browser snapshot [--format aria|ai] [--target-id <id>] [--limit <n>] [--interactive] [--compact] [--depth <n>] [--selector <sel>] [--out <path>]`
 
-Actions:
+动作：
 - `browser navigate <url> [--target-id <id>]`
 - `browser resize <width> <height> [--target-id <id>]`
 - `browser click <ref> [--double] [--button <left|right|middle>] [--modifiers <csv>] [--target-id <id>]`
@@ -896,17 +895,17 @@ Actions:
 - `browser console [--level <error|warn|info>] [--target-id <id>]`
 - `browser pdf [--target-id <id>]`
 
-## Docs search
+## 文档搜索
 
 ### `docs [query...]`
-Search the live docs index.
+搜索在线文档索引。
 
 ## TUI
 
 ### `tui`
-Open the terminal UI connected to the Gateway.
+打开连接到 Gateway 的终端 UI。
 
-Options:
+选项：
 - `--url <url>`
 - `--token <token>`
 - `--password <password>`
@@ -914,5 +913,5 @@ Options:
 - `--deliver`
 - `--thinking <level>`
 - `--message <text>`
-- `--timeout-ms <ms>` (defaults to `agents.defaults.timeoutSeconds`)
+- `--timeout-ms <ms>`（默认 `agents.defaults.timeoutSeconds`）
 - `--history-limit <n>`

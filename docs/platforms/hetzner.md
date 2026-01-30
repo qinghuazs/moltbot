@@ -1,82 +1,82 @@
 ---
-summary: "Run Moltbot Gateway 24/7 on a cheap Hetzner VPS (Docker) with durable state and baked-in binaries"
+summary: "在便宜的 Hetzner VPS 上 24/7 运行 Moltbot Gateway（Docker），并持久化状态与二进制"
 read_when:
-  - You want Moltbot running 24/7 on a cloud VPS (not your laptop)
-  - You want a production-grade, always-on Gateway on your own VPS
-  - You want full control over persistence, binaries, and restart behavior
-  - You are running Moltbot in Docker on Hetzner or a similar provider
+  - 你想在云 VPS 上 24/7 运行 Moltbot（不是你的笔记本）
+  - 你想在自有 VPS 上运行生产级常驻 Gateway
+  - 你希望完全控制持久化、二进制与重启行为
+  - 你在 Hetzner 或类似提供商上用 Docker 运行 Moltbot
 ---
 
-# Moltbot on Hetzner (Docker, Production VPS Guide)
+# 在 Hetzner 上运行 Moltbot（Docker 生产 VPS 指南）
 
-## Goal
-Run a persistent Moltbot Gateway on a Hetzner VPS using Docker, with durable state, baked-in binaries, and safe restart behavior.
+## 目标
 
-If you want “Moltbot 24/7 for ~$5”, this is the simplest reliable setup.
-Hetzner pricing changes; pick the smallest Debian/Ubuntu VPS and scale up if you hit OOMs.
+在 Hetzner VPS 上通过 Docker 运行常驻 Moltbot Gateway，并具备持久化状态、内置二进制与安全重启行为。
 
-## What are we doing (simple terms)?
+如果你想“约 $5 每月 24/7 Moltbot”，这是最简单可靠的方案。
+Hetzner 价格可能变化；选择最小的 Debian/Ubuntu VPS，遇到 OOM 再升级。
 
-- Rent a small Linux server (Hetzner VPS)
-- Install Docker (isolated app runtime)
-- Start the Moltbot Gateway in Docker
-- Persist `~/.clawdbot` + `~/clawd` on the host (survives restarts/rebuilds)
-- Access the Control UI from your laptop via an SSH tunnel
+## 我们在做什么（简单说）
 
-The Gateway can be accessed via:
-- SSH port forwarding from your laptop
-- Direct port exposure if you manage firewalling and tokens yourself
+- 租一台小型 Linux 服务器（Hetzner VPS）
+- 安装 Docker（隔离应用运行时）
+- 在 Docker 中启动 Moltbot Gateway
+- 在宿主机持久化 `~/.clawdbot` + `~/clawd`（重启/重建不丢）
+- 通过 SSH 隧道从笔记本访问 Control UI
 
-This guide assumes Ubuntu or Debian on Hetzner.  
-If you are on another Linux VPS, map packages accordingly.
-For the generic Docker flow, see [Docker](/install/docker).
+Gateway 可通过以下方式访问：
+- 从笔记本进行 SSH 端口转发
+- 如果你自行管理防火墙和 token，也可直接暴露端口
+
+本指南基于 Hetzner 上的 Ubuntu 或 Debian。  
+如果你是其他 Linux VPS，请自行映射包名。  
+通用 Docker 流程见 [Docker](/install/docker)。
 
 ---
 
-## Quick path (experienced operators)
+## 快速路径（熟练运维）
 
-1) Provision Hetzner VPS  
-2) Install Docker  
-3) Clone Moltbot repository  
-4) Create persistent host directories  
-5) Configure `.env` and `docker-compose.yml`  
-6) Bake required binaries into the image  
+1) 创建 Hetzner VPS  
+2) 安装 Docker  
+3) 克隆 Moltbot 仓库  
+4) 创建持久化宿主机目录  
+5) 配置 `.env` 与 `docker-compose.yml`  
+6) 将所需二进制烘焙进镜像  
 7) `docker compose up -d`  
-8) Verify persistence and Gateway access
+8) 验证持久化与 Gateway 访问
 
 ---
 
-## What you need
+## 你需要准备
 
-- Hetzner VPS with root access  
-- SSH access from your laptop  
-- Basic comfort with SSH + copy/paste  
-- ~20 minutes  
-- Docker and Docker Compose  
-- Model auth credentials  
-- Optional provider credentials  
-  - WhatsApp QR  
+- Hetzner VPS（root 权限）  
+- 从你的笔记本进行 SSH 访问  
+- 熟悉 SSH 与复制粘贴  
+- 约 20 分钟  
+- Docker 与 Docker Compose  
+- 模型认证凭据  
+- 可选提供方凭据  
+  - WhatsApp 二维码  
   - Telegram bot token  
   - Gmail OAuth  
 
 ---
 
-## 1) Provision the VPS
+## 1) 创建 VPS
 
-Create an Ubuntu or Debian VPS in Hetzner.
+在 Hetzner 创建 Ubuntu 或 Debian VPS。
 
-Connect as root:
+以 root 连接：
 
 ```bash
 ssh root@YOUR_VPS_IP
 ```
 
-This guide assumes the VPS is stateful.
-Do not treat it as disposable infrastructure.
+本指南假设该 VPS **有状态**。不要把它当作一次性基础设施。
 
 ---
 
-## 2) Install Docker (on the VPS)
+## 2) 安装 Docker（在 VPS 上）
 
 ```bash
 apt-get update
@@ -84,7 +84,7 @@ apt-get install -y git curl ca-certificates
 curl -fsSL https://get.docker.com | sh
 ```
 
-Verify:
+验证：
 
 ```bash
 docker --version
@@ -93,36 +93,35 @@ docker compose version
 
 ---
 
-## 3) Clone the Moltbot repository
+## 3) 克隆 Moltbot 仓库
 
 ```bash
 git clone https://github.com/moltbot/moltbot.git
 cd moltbot
 ```
 
-This guide assumes you will build a custom image to guarantee binary persistence.
+本指南假设你会构建自定义镜像，以确保二进制持久化。
 
 ---
 
-## 4) Create persistent host directories
+## 4) 创建持久化宿主机目录
 
-Docker containers are ephemeral.
-All long-lived state must live on the host.
+Docker 容器是短暂的。所有长期状态必须保存在宿主机。
 
 ```bash
 mkdir -p /root/.clawdbot
 mkdir -p /root/clawd
 
-# Set ownership to the container user (uid 1000):
+# 设置为容器用户（uid 1000）：
 chown -R 1000:1000 /root/.clawdbot
 chown -R 1000:1000 /root/clawd
 ```
 
 ---
 
-## 5) Configure environment variables
+## 5) 配置环境变量
 
-Create `.env` in the repository root.
+在仓库根目录创建 `.env`。
 
 ```bash
 CLAWDBOT_IMAGE=moltbot:latest
@@ -137,19 +136,19 @@ GOG_KEYRING_PASSWORD=change-me-now
 XDG_CONFIG_HOME=/home/node/.clawdbot
 ```
 
-Generate strong secrets:
+生成强随机密钥：
 
 ```bash
 openssl rand -hex 32
 ```
 
-**Do not commit this file.**
+**不要提交该文件。**
 
 ---
 
-## 6) Docker Compose configuration
+## 6) Docker Compose 配置
 
-Create or update `docker-compose.yml`.
+创建或更新 `docker-compose.yml`。
 
 ```yaml
 services:
@@ -173,12 +172,12 @@ services:
       - ${CLAWDBOT_CONFIG_DIR}:/home/node/.clawdbot
       - ${CLAWDBOT_WORKSPACE_DIR}:/home/node/clawd
     ports:
-      # Recommended: keep the Gateway loopback-only on the VPS; access via SSH tunnel.
-      # To expose it publicly, remove the `127.0.0.1:` prefix and firewall accordingly.
+      # 推荐：在 VPS 上保持 Gateway 仅 loopback，通过 SSH 隧道访问。
+      # 若要公开访问，移除 `127.0.0.1:` 前缀并配置防火墙。
       - "127.0.0.1:${CLAWDBOT_GATEWAY_PORT}:18789"
 
-      # Optional: only if you run iOS/Android nodes against this VPS and need Canvas host.
-      # If you expose this publicly, read /gateway/security and firewall accordingly.
+      # 可选：仅当 iOS/Android 节点需要 Canvas host 时打开。
+      # 如果公开暴露，请阅读 /gateway/security 并配置防火墙。
       # - "18793:18793"
     command:
       [
@@ -194,27 +193,27 @@ services:
 
 ---
 
-## 7) Bake required binaries into the image (critical)
+## 7) 将所需二进制烘焙进镜像（关键）
 
-Installing binaries inside a running container is a trap.
-Anything installed at runtime will be lost on restart.
+在运行中的容器内安装二进制是个坑。
+运行时安装的内容会在重启后丢失。
 
-All external binaries required by skills must be installed at image build time.
+所有技能所需的外部二进制必须在镜像构建时安装。
 
-The examples below show three common binaries only:
-- `gog` for Gmail access
-- `goplaces` for Google Places
-- `wacli` for WhatsApp
+下方仅示例三种常见二进制：
+- `gog` 用于 Gmail
+- `goplaces` 用于 Google Places
+- `wacli` 用于 WhatsApp
 
-These are examples, not a complete list.
-You may install as many binaries as needed using the same pattern.
+这些只是示例，并非完整清单。
+你可用同样模式安装更多二进制。
 
-If you add new skills later that depend on additional binaries, you must:
-1. Update the Dockerfile
-2. Rebuild the image
-3. Restart the containers
+若后续新增技能依赖额外二进制，必须：
+1. 更新 Dockerfile
+2. 重建镜像
+3. 重启容器
 
-**Example Dockerfile**
+**示例 Dockerfile**
 
 ```dockerfile
 FROM node:22-bookworm
@@ -255,14 +254,14 @@ CMD ["node","dist/index.js"]
 
 ---
 
-## 8) Build and launch
+## 8) 构建并启动
 
 ```bash
 docker compose build
 docker compose up -d moltbot-gateway
 ```
 
-Verify binaries:
+验证二进制：
 
 ```bash
 docker compose exec moltbot-gateway which gog
@@ -270,7 +269,7 @@ docker compose exec moltbot-gateway which goplaces
 docker compose exec moltbot-gateway which wacli
 ```
 
-Expected output:
+期望输出：
 
 ```
 /usr/local/bin/gog
@@ -280,46 +279,46 @@ Expected output:
 
 ---
 
-## 9) Verify Gateway
+## 9) 验证 Gateway
 
 ```bash
 docker compose logs -f moltbot-gateway
 ```
 
-Success:
+成功示例：
 
 ```
 [gateway] listening on ws://0.0.0.0:18789
 ```
 
-From your laptop:
+在你的笔记本上：
 
 ```bash
 ssh -N -L 18789:127.0.0.1:18789 root@YOUR_VPS_IP
 ```
 
-Open:
+打开：
 
 `http://127.0.0.1:18789/`
 
-Paste your gateway token.
+粘贴 gateway token。
 
 ---
 
-## What persists where (source of truth)
+## 持久化位置（事实来源）
 
-Moltbot runs in Docker, but Docker is not the source of truth.
-All long-lived state must survive restarts, rebuilds, and reboots.
+Moltbot 在 Docker 中运行，但 Docker 不是事实来源。
+所有长期状态必须在重启、重建与重启后仍能保留。
 
-| Component | Location | Persistence mechanism | Notes |
+| 组件 | 位置 | 持久化机制 | 说明 |
 |---|---|---|---|
-| Gateway config | `/home/node/.clawdbot/` | Host volume mount | Includes `moltbot.json`, tokens |
-| Model auth profiles | `/home/node/.clawdbot/` | Host volume mount | OAuth tokens, API keys |
-| Skill configs | `/home/node/.clawdbot/skills/` | Host volume mount | Skill-level state |
-| Agent workspace | `/home/node/clawd/` | Host volume mount | Code and agent artifacts |
-| WhatsApp session | `/home/node/.clawdbot/` | Host volume mount | Preserves QR login |
-| Gmail keyring | `/home/node/.clawdbot/` | Host volume + password | Requires `GOG_KEYRING_PASSWORD` |
-| External binaries | `/usr/local/bin/` | Docker image | Must be baked at build time |
-| Node runtime | Container filesystem | Docker image | Rebuilt every image build |
-| OS packages | Container filesystem | Docker image | Do not install at runtime |
-| Docker container | Ephemeral | Restartable | Safe to destroy |
+| Gateway 配置 | `/home/node/.clawdbot/` | 宿主机 volume 挂载 | 包含 `moltbot.json`、token |
+| 模型认证配置 | `/home/node/.clawdbot/` | 宿主机 volume 挂载 | OAuth token、API key |
+| 技能配置 | `/home/node/.clawdbot/skills/` | 宿主机 volume 挂载 | 技能级状态 |
+| Agent 工作区 | `/home/node/clawd/` | 宿主机 volume 挂载 | 代码与 agent 产物 |
+| WhatsApp 会话 | `/home/node/.clawdbot/` | 宿主机 volume 挂载 | 保留二维码登录 |
+| Gmail keyring | `/home/node/.clawdbot/` | 宿主机 volume + 密码 | 需要 `GOG_KEYRING_PASSWORD` |
+| 外部二进制 | `/usr/local/bin/` | Docker 镜像 | 必须在构建时烘焙 |
+| Node 运行时 | 容器文件系统 | Docker 镜像 | 每次构建重建 |
+| OS 包 | 容器文件系统 | Docker 镜像 | 不要运行时安装 |
+| Docker 容器 | 临时 | 可重启 | 可安全删除 |

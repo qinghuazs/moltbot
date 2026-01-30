@@ -1,28 +1,27 @@
 ---
-summary: "CLI reference for `moltbot configure` (interactive configuration prompts)"
+summary: "`moltbot configure` 的 CLI 参考（交互式配置提示）"
 read_when:
-  - You want to tweak credentials, devices, or agent defaults interactively
+  - 想以交互方式调整凭据、设备或代理默认值
 ---
 
 # `moltbot configure`
 
-Interactive prompt to set up credentials, devices, and agent defaults.
+通过交互提示设置凭据、设备与代理默认值。
 
-Note: The **Model** section now includes a multi-select for the
-`agents.defaults.models` allowlist (what shows up in `/model` and the model picker).
+说明：**Model** 区域现在包含 `agents.defaults.models` 允许列表的多选（显示在 `/model` 与模型选择器中）。
 
-Tip: `moltbot config` without a subcommand opens the same wizard. Use
-`moltbot config get|set|unset` for non-interactive edits.
+提示：不带子命令的 `moltbot config` 会打开相同向导。非交互修改请用
+`moltbot config get|set|unset`。
 
-Related:
-- Gateway configuration reference: [Configuration](/gateway/configuration)
-- Config CLI: [Config](/cli/config)
+相关：
+- Gateway 配置参考：[Configuration](/gateway/configuration)
+- Config CLI：[Config](/cli/config)
 
-Notes:
-- Choosing where the Gateway runs always updates `gateway.mode`. You can select "Continue" without other sections if that is all you need.
-- Channel-oriented services (Slack/Discord/Matrix/Microsoft Teams) prompt for channel/room allowlists during setup. You can enter names or IDs; the wizard resolves names to IDs when possible.
+备注：
+- 选择 Gateway 运行位置会始终更新 `gateway.mode`。如果只需要这一项，可直接选择“Continue”。
+- 面向渠道的服务（Slack/Discord/Matrix/Microsoft Teams）在设置时会提示渠道或房间允许列表。可以输入名称或 ID，向导会在可能时解析名称为 ID。
 
-## Examples
+## 示例
 
 ```bash
 moltbot configure

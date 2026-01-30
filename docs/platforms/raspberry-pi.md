@@ -1,119 +1,119 @@
 ---
-summary: "Moltbot on Raspberry Pi (budget self-hosted setup)"
+summary: "在树莓派上运行 Moltbot（低成本自托管方案）"
 read_when:
-  - Setting up Moltbot on a Raspberry Pi
-  - Running Moltbot on ARM devices
-  - Building a cheap always-on personal AI
+  - 在树莓派上搭建 Moltbot
+  - 在 ARM 设备上运行 Moltbot
+  - 构建低成本常驻个人 AI
 ---
 
-# Moltbot on Raspberry Pi
+# 在树莓派上运行 Moltbot
 
-## Goal
+## 目标
 
-Run a persistent, always-on Moltbot Gateway on a Raspberry Pi for **~$35-80** one-time cost (no monthly fees).
+用树莓派运行常驻 Moltbot Gateway，**一次性成本约 $35-80**（无月费）。
 
-Perfect for:
-- 24/7 personal AI assistant
-- Home automation hub
-- Low-power, always-available Telegram/WhatsApp bot
+适合：
+- 24/7 个人 AI 助理
+- 家庭自动化中枢
+- 低功耗、随时可用的 Telegram/WhatsApp 机器人
 
-## Hardware Requirements
+## 硬件要求
 
-| Pi Model | RAM | Works? | Notes |
+| Pi 型号 | RAM | 可用吗 | 说明 |
 |----------|-----|--------|-------|
-| **Pi 5** | 4GB/8GB | ✅ Best | Fastest, recommended |
-| **Pi 4** | 4GB | ✅ Good | Sweet spot for most users |
-| **Pi 4** | 2GB | ✅ OK | Works, add swap |
-| **Pi 4** | 1GB | ⚠️ Tight | Possible with swap, minimal config |
-| **Pi 3B+** | 1GB | ⚠️ Slow | Works but sluggish |
-| **Pi Zero 2 W** | 512MB | ❌ | Not recommended |
+| **Pi 5** | 4GB/8GB | ✅ 最佳 | 最快，推荐 |
+| **Pi 4** | 4GB | ✅ 良好 | 多数用户的甜点 |
+| **Pi 4** | 2GB | ✅ 还行 | 可用，建议加 swap |
+| **Pi 4** | 1GB | ⚠️ 紧张 | 可用但需 swap，尽量精简 |
+| **Pi 3B+** | 1GB | ⚠️ 慢 | 能用但较卡 |
+| **Pi Zero 2 W** | 512MB | ❌ | 不推荐 |
 
-**Minimum specs:** 1GB RAM, 1 core, 500MB disk  
-**Recommended:** 2GB+ RAM, 64-bit OS, 16GB+ SD card (or USB SSD)
+**最低规格：** 1GB RAM，1 核，500MB 磁盘  
+**推荐：** 2GB+ RAM，64 位系统，16GB+ SD 卡（或 USB SSD）
 
-## What You'll Need
+## 你需要准备
 
-- Raspberry Pi 4 or 5 (2GB+ recommended)
-- MicroSD card (16GB+) or USB SSD (better performance)
-- Power supply (official Pi PSU recommended)
-- Network connection (Ethernet or WiFi)
-- ~30 minutes
+- 树莓派 4 或 5（推荐 2GB+）
+- MicroSD 卡（16GB+）或 USB SSD（性能更好）
+- 电源（推荐官方电源）
+- 网络连接（有线或 WiFi）
+- 约 30 分钟
 
-## 1) Flash the OS
+## 1) 刷写系统
 
-Use **Raspberry Pi OS Lite (64-bit)** — no desktop needed for a headless server.
+使用 **Raspberry Pi OS Lite（64 位）**，无头服务器无需桌面。
 
-1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
-2. Choose OS: **Raspberry Pi OS Lite (64-bit)**
-3. Click the gear icon (⚙️) to pre-configure:
-   - Set hostname: `gateway-host`
-   - Enable SSH
-   - Set username/password
-   - Configure WiFi (if not using Ethernet)
-4. Flash to your SD card / USB drive
-5. Insert and boot the Pi
+1. 下载 [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+2. 选择系统：**Raspberry Pi OS Lite (64-bit)**
+3. 点击齿轮图标（⚙️）预配置：
+   - 设置主机名：`gateway-host`
+   - 启用 SSH
+   - 设置用户名/密码
+   - 配置 WiFi（若不用有线）
+4. 刷写到 SD 卡或 USB 硬盘
+5. 插入并启动树莓派
 
-## 2) Connect via SSH
+## 2) 通过 SSH 连接
 
 ```bash
 ssh user@gateway-host
-# or use the IP address
+# 或使用 IP 地址
 ssh user@192.168.x.x
 ```
 
-## 3) System Setup
+## 3) 系统准备
 
 ```bash
-# Update system
+# 更新系统
 sudo apt update && sudo apt upgrade -y
 
-# Install essential packages
+# 安装必要包
 sudo apt install -y git curl build-essential
 
-# Set timezone (important for cron/reminders)
-sudo timedatectl set-timezone America/Chicago  # Change to your timezone
+# 设置时区（对 cron/提醒很重要）
+sudo timedatectl set-timezone America/Chicago  # 换成你的时区
 ```
 
-## 4) Install Node.js 22 (ARM64)
+## 4) 安装 Node.js 22（ARM64）
 
 ```bash
-# Install Node.js via NodeSource
+# 通过 NodeSource 安装 Node.js
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# Verify
-node --version  # Should show v22.x.x
+# 验证
+node --version  # 应显示 v22.x.x
 npm --version
 ```
 
-## 5) Add Swap (Important for 2GB or less)
+## 5) 添加 Swap（2GB 或更小很重要）
 
-Swap prevents out-of-memory crashes:
+Swap 可防止内存不足崩溃：
 
 ```bash
-# Create 2GB swap file
+# 创建 2GB swap 文件
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 
-# Make permanent
+# 持久化
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
-# Optimize for low RAM (reduce swappiness)
+# 低内存优化（降低 swappiness）
 echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 ```
 
-## 6) Install Moltbot
+## 6) 安装 Moltbot
 
-### Option A: Standard Install (Recommended)
+### 方式 A：标准安装（推荐）
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash
 ```
 
-### Option B: Hackable Install (For tinkering)
+### 方式 B：可黑客安装（便于折腾）
 
 ```bash
 git clone https://github.com/moltbot/moltbot.git
@@ -123,127 +123,127 @@ npm run build
 npm link
 ```
 
-The hackable install gives you direct access to logs and code — useful for debugging ARM-specific issues.
+可黑客安装能直接访问日志与源码，适合排查 ARM 相关问题。
 
-## 7) Run Onboarding
+## 7) 运行引导
 
 ```bash
 moltbot onboard --install-daemon
 ```
 
-Follow the wizard:
-1. **Gateway mode:** Local
-2. **Auth:** API keys recommended (OAuth can be finicky on headless Pi)
-3. **Channels:** Telegram is easiest to start with
-4. **Daemon:** Yes (systemd)
+跟随向导：
+1. **Gateway 模式：** Local
+2. **认证：** 推荐 API key（无头 Pi 上 OAuth 可能不稳定）
+3. **渠道：** Telegram 最容易开始
+4. **Daemon：** 是（systemd）
 
-## 8) Verify Installation
+## 8) 验证安装
 
 ```bash
-# Check status
+# 查看状态
 moltbot status
 
-# Check service
+# 检查服务
 sudo systemctl status moltbot
 
-# View logs
+# 查看日志
 journalctl -u moltbot -f
 ```
 
-## 9) Access the Dashboard
+## 9) 访问仪表盘
 
-Since the Pi is headless, use an SSH tunnel:
+树莓派是无头设备，可使用 SSH 隧道：
 
 ```bash
-# From your laptop/desktop
+# 在你的笔记本/台式机上
 ssh -L 18789:localhost:18789 user@gateway-host
 
-# Then open in browser
+# 然后在浏览器打开
 open http://localhost:18789
 ```
 
-Or use Tailscale for always-on access:
+或使用 Tailscale 常驻访问：
 
 ```bash
-# On the Pi
+# 在 Pi 上
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 
-# Update config
+# 更新配置
 moltbot config set gateway.bind tailnet
 sudo systemctl restart moltbot
 ```
 
 ---
 
-## Performance Optimizations
+## 性能优化
 
-### Use a USB SSD (Huge Improvement)
+### 使用 USB SSD（性能大幅提升）
 
-SD cards are slow and wear out. A USB SSD dramatically improves performance:
+SD 卡慢且易损耗。USB SSD 会显著改善性能：
 
 ```bash
-# Check if booting from USB
+# 检查是否从 USB 启动
 lsblk
 ```
 
-See [Pi USB boot guide](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#usb-mass-storage-boot) for setup.
+设置见 [Pi USB 启动指南](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#usb-mass-storage-boot)。
 
-### Reduce Memory Usage
+### 降低内存占用
 
 ```bash
-# Disable GPU memory allocation (headless)
+# 禁用 GPU 内存分配（无头）
 echo 'gpu_mem=16' | sudo tee -a /boot/config.txt
 
-# Disable Bluetooth if not needed
+# 不需要蓝牙时禁用
 sudo systemctl disable bluetooth
 ```
 
-### Monitor Resources
+### 监控资源
 
 ```bash
-# Check memory
+# 查看内存
 free -h
 
-# Check CPU temperature
+# 查看 CPU 温度
 vcgencmd measure_temp
 
-# Live monitoring
+# 实时监控
 htop
 ```
 
 ---
 
-## ARM-Specific Notes
+## ARM 专项说明
 
-### Binary Compatibility
+### 二进制兼容性
 
-Most Moltbot features work on ARM64, but some external binaries may need ARM builds:
+大多数 Moltbot 功能在 ARM64 上可用，但一些外部二进制可能需要 ARM 构建：
 
-| Tool | ARM64 Status | Notes |
+| 工具 | ARM64 状态 | 说明 |
 |------|--------------|-------|
-| Node.js | ✅ | Works great |
-| WhatsApp (Baileys) | ✅ | Pure JS, no issues |
-| Telegram | ✅ | Pure JS, no issues |
-| gog (Gmail CLI) | ⚠️ | Check for ARM release |
-| Chromium (browser) | ✅ | `sudo apt install chromium-browser` |
+| Node.js | ✅ | 正常可用 |
+| WhatsApp（Baileys） | ✅ | 纯 JS，无问题 |
+| Telegram | ✅ | 纯 JS，无问题 |
+| gog（Gmail CLI） | ⚠️ | 检查是否有 ARM 版本 |
+| Chromium（浏览器） | ✅ | `sudo apt install chromium-browser` |
 
-If a skill fails, check if its binary has an ARM build. Many Go/Rust tools do; some don't.
+如果某个技能失败，请检查其二进制是否有 ARM 构建。很多 Go/Rust 工具有，但也有不少没有。
 
-### 32-bit vs 64-bit
+### 32 位 vs 64 位
 
-**Always use 64-bit OS.** Node.js and many modern tools require it. Check with:
+**务必使用 64 位系统。** Node.js 与许多现代工具都需要它。可用以下命令确认：
 
 ```bash
 uname -m
-# Should show: aarch64 (64-bit) not armv7l (32-bit)
+# 应显示：aarch64（64 位），而不是 armv7l（32 位）
 ```
 
 ---
 
-## Recommended Model Setup
+## 推荐模型配置
 
-Since the Pi is just the Gateway (models run in the cloud), use API-based models:
+Pi 只运行 Gateway（模型在云端），建议使用 API 模型：
 
 ```json
 {
@@ -258,97 +258,97 @@ Since the Pi is just the Gateway (models run in the cloud), use API-based models
 }
 ```
 
-**Don't try to run local LLMs on a Pi** — even small models are too slow. Let Claude/GPT do the heavy lifting.
+**不要**在 Pi 上跑本地 LLM，连小模型也太慢。把重活交给 Claude/GPT。
 
 ---
 
-## Auto-Start on Boot
+## 开机自启
 
-The onboarding wizard sets this up, but to verify:
+引导向导会自动设置；验证方式：
 
 ```bash
-# Check service is enabled
+# 检查服务是否启用
 sudo systemctl is-enabled moltbot
 
-# Enable if not
+# 未启用则开启
 sudo systemctl enable moltbot
 
-# Start on boot
+# 启动
 sudo systemctl start moltbot
 ```
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-### Out of Memory (OOM)
+### 内存不足（OOM）
 
 ```bash
-# Check memory
+# 查看内存
 free -h
 
-# Add more swap (see Step 5)
-# Or reduce services running on the Pi
+# 增加 swap（见步骤 5）
+# 或减少树莓派上运行的服务
 ```
 
-### Slow Performance
+### 性能缓慢
 
-- Use USB SSD instead of SD card
-- Disable unused services: `sudo systemctl disable cups bluetooth avahi-daemon`
-- Check CPU throttling: `vcgencmd get_throttled` (should return `0x0`)
+- 用 USB SSD 替代 SD 卡
+- 禁用不需要的服务：`sudo systemctl disable cups bluetooth avahi-daemon`
+- 检查 CPU 降频：`vcgencmd get_throttled`（应返回 `0x0`）
 
-### Service Won't Start
+### 服务无法启动
 
 ```bash
-# Check logs
+# 查看日志
 journalctl -u moltbot --no-pager -n 100
 
-# Common fix: rebuild
-cd ~/moltbot  # if using hackable install
+# 常见修复：重新构建
+cd ~/moltbot  # 使用可黑客安装时
 npm run build
 sudo systemctl restart moltbot
 ```
 
-### ARM Binary Issues
+### ARM 二进制问题
 
-If a skill fails with "exec format error":
-1. Check if the binary has an ARM64 build
-2. Try building from source
-3. Or use a Docker container with ARM support
+若技能报 “exec format error”：
+1. 检查是否有 ARM64 构建
+2. 尝试从源码编译
+3. 或使用支持 ARM 的 Docker 容器
 
-### WiFi Drops
+### WiFi 断连
 
-For headless Pis on WiFi:
+无头 Pi 的 WiFi 断连可尝试：
 
 ```bash
-# Disable WiFi power management
+# 禁用 WiFi 省电
 sudo iwconfig wlan0 power off
 
-# Make permanent
+# 持久化
 echo 'wireless-power off' | sudo tee -a /etc/network/interfaces
 ```
 
 ---
 
-## Cost Comparison
+## 成本对比
 
-| Setup | One-Time Cost | Monthly Cost | Notes |
+| 方案 | 一次性成本 | 月费 | 说明 |
 |-------|---------------|--------------|-------|
-| **Pi 4 (2GB)** | ~$45 | $0 | + power (~$5/yr) |
-| **Pi 4 (4GB)** | ~$55 | $0 | Recommended |
-| **Pi 5 (4GB)** | ~$60 | $0 | Best performance |
-| **Pi 5 (8GB)** | ~$80 | $0 | Overkill but future-proof |
-| DigitalOcean | $0 | $6/mo | $72/year |
-| Hetzner | $0 | €3.79/mo | ~$50/year |
+| **Pi 4 (2GB)** | ~$45 | $0 | + 电费（约 $5/年） |
+| **Pi 4 (4GB)** | ~$55 | $0 | 推荐 |
+| **Pi 5 (4GB)** | ~$60 | $0 | 最佳性能 |
+| **Pi 5 (8GB)** | ~$80 | $0 | 过度配置但更耐用 |
+| DigitalOcean | $0 | $6/月 | $72/年 |
+| Hetzner | $0 | €3.79/月 | ~$50/年 |
 
-**Break-even:** A Pi pays for itself in ~6-12 months vs cloud VPS.
+**回本周期：** 相比云 VPS，树莓派约 6-12 个月回本。
 
 ---
 
-## See Also
+## 另见
 
-- [Linux guide](/platforms/linux) — general Linux setup
-- [DigitalOcean guide](/platforms/digitalocean) — cloud alternative
-- [Hetzner guide](/platforms/hetzner) — Docker setup
-- [Tailscale](/gateway/tailscale) — remote access
-- [Nodes](/nodes) — pair your laptop/phone with the Pi gateway
+- [Linux guide](/platforms/linux) — 通用 Linux 设置
+- [DigitalOcean guide](/platforms/digitalocean) — 云端替代方案
+- [Hetzner guide](/platforms/hetzner) — Docker 方案
+- [Tailscale](/gateway/tailscale) — 远程访问
+- [Nodes](/nodes) — 将你的笔记本/手机配对到 Pi gateway

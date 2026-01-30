@@ -1,28 +1,27 @@
 ---
-summary: "CLI reference for `moltbot setup` (initialize config + workspace)"
+summary: "`moltbot setup` 的 CLI 参考（初始化配置与工作区）"
 read_when:
-  - You’re doing first-run setup without the full onboarding wizard
-  - You want to set the default workspace path
+  - 首次运行且不想走完整引导向导
+  - 想设置默认工作区路径
 ---
 
 # `moltbot setup`
 
-Initialize `~/.clawdbot/moltbot.json` and the agent workspace.
+初始化 `~/.clawdbot/moltbot.json` 与代理工作区。
 
-Related:
-- Getting started: [Getting started](/start/getting-started)
-- Wizard: [Onboarding](/start/onboarding)
+相关：
+- 快速开始：[Getting started](/start/getting-started)
+- 向导：[Onboarding](/start/onboarding)
 
-## Examples
+## 示例
 
 ```bash
 moltbot setup
 moltbot setup --workspace ~/clawd
 ```
 
-To run the wizard via setup:
+通过 setup 启动向导：
 
 ```bash
 moltbot setup --wizard
 ```
-

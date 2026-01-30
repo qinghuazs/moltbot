@@ -1,141 +1,142 @@
 ---
-summary: "Android app (node): connection runbook + Canvas/Chat/Camera"
+summary: "Android 应用（节点）：连接手册与 Canvas/聊天/相机"
 read_when:
-  - Pairing or reconnecting the Android node
-  - Debugging Android gateway discovery or auth
-  - Verifying chat history parity across clients
+  - 配对或重连 Android 节点
+  - 调试 Android 的 gateway 发现或认证
+  - 验证各客户端的聊天历史一致性
 ---
 
-# Android App (Node)
+# Android 应用（节点）
 
-## Support snapshot
-- Role: companion node app (Android does not host the Gateway).
-- Gateway required: yes (run it on macOS, Linux, or Windows via WSL2).
-- Install: [Getting Started](/start/getting-started) + [Pairing](/gateway/pairing).
-- Gateway: [Runbook](/gateway) + [Configuration](/gateway/configuration).
-  - Protocols: [Gateway protocol](/gateway/protocol) (nodes + control plane).
+## 支持概览
+- 角色：伴随节点应用（Android 不承载 Gateway）。
+- Gateway 必需：是（运行在 macOS、Linux 或 Windows via WSL2）。
+- 安装：[Getting Started](/start/getting-started) + [Pairing](/gateway/pairing)。
+- Gateway：[Runbook](/gateway) + [Configuration](/gateway/configuration)。
+  - 协议：[Gateway protocol](/gateway/protocol)（节点与控制平面）。
 
-## System control
-System control (launchd/systemd) lives on the Gateway host. See [Gateway](/gateway).
+## 系统控制
 
-## Connection Runbook
+系统控制（launchd/systemd）在 Gateway 主机上。见 [Gateway](/gateway)。
 
-Android node app ⇄ (mDNS/NSD + WebSocket) ⇄ **Gateway**
+## 连接手册
 
-Android connects directly to the Gateway WebSocket (default `ws://<host>:18789`) and uses Gateway-owned pairing.
+Android 节点应用 ⇄（mDNS/NSD + WebSocket）⇄ **Gateway**
 
-### Prerequisites
+Android 直接连接 Gateway WebSocket（默认 `ws://<host>:18789`）并使用 Gateway 管理的配对。
 
-- You can run the Gateway on the “master” machine.
-- Android device/emulator can reach the gateway WebSocket:
-  - Same LAN with mDNS/NSD, **or**
-  - Same Tailscale tailnet using Wide-Area Bonjour / unicast DNS-SD (see below), **or**
-  - Manual gateway host/port (fallback)
-- You can run the CLI (`moltbot`) on the gateway machine (or via SSH).
+### 先决条件
 
-### 1) Start the Gateway
+- 你可以在“主机”上运行 Gateway。
+- Android 设备或模拟器可访问 gateway WebSocket：
+  - 同一局域网并支持 mDNS/NSD，**或**
+  - 同一 Tailscale tailnet，使用 Wide-Area Bonjour / unicast DNS-SD（见下文），**或**
+  - 手动指定 gateway host/port（兜底）
+- 你可以在 gateway 主机上运行 CLI（`moltbot`）（或通过 SSH）。
+
+### 1) 启动 Gateway
 
 ```bash
 moltbot gateway --port 18789 --verbose
 ```
 
-Confirm in logs you see something like:
+确认日志中看到类似：
 - `listening on ws://0.0.0.0:18789`
 
-For tailnet-only setups (recommended for Vienna ⇄ London), bind the gateway to the tailnet IP:
+对于仅 tailnet 的部署（例如 Vienna ⇄ London），将 gateway 绑定到 tailnet IP：
 
-- Set `gateway.bind: "tailnet"` in `~/.clawdbot/moltbot.json` on the gateway host.
-- Restart the Gateway / macOS menubar app.
+- 在 gateway 主机 `~/.clawdbot/moltbot.json` 中设置 `gateway.bind: "tailnet"`。
+- 重启 Gateway 或 macOS 菜单栏应用。
 
-### 2) Verify discovery (optional)
+### 2) 验证发现（可选）
 
-From the gateway machine:
+在 gateway 主机：
 
 ```bash
 dns-sd -B _moltbot-gw._tcp local.
 ```
 
-More debugging notes: [Bonjour](/gateway/bonjour).
+更多调试说明见 [Bonjour](/gateway/bonjour)。
 
-#### Tailnet (Vienna ⇄ London) discovery via unicast DNS-SD
+#### Tailnet（Vienna ⇄ London）通过 unicast DNS-SD 发现
 
-Android NSD/mDNS discovery won’t cross networks. If your Android node and the gateway are on different networks but connected via Tailscale, use Wide-Area Bonjour / unicast DNS-SD instead:
+Android 的 NSD/mDNS 发现不会跨网络。如果 Android 节点与 gateway 在不同网络但通过 Tailscale 连接，请使用 Wide-Area Bonjour / unicast DNS-SD：
 
-1) Set up a DNS-SD zone (example `moltbot.internal.`) on the gateway host and publish `_moltbot-gw._tcp` records.
-2) Configure Tailscale split DNS for `moltbot.internal` pointing at that DNS server.
+1) 在 gateway 主机上设置 DNS-SD 区域（示例 `moltbot.internal.`）并发布 `_moltbot-gw._tcp` 记录。
+2) 配置 Tailscale split DNS，将 `moltbot.internal` 指向该 DNS 服务器。
 
-Details and example CoreDNS config: [Bonjour](/gateway/bonjour).
+详情与 CoreDNS 示例见 [Bonjour](/gateway/bonjour)。
 
-### 3) Connect from Android
+### 3) 从 Android 连接
 
-In the Android app:
+在 Android 应用中：
 
-- The app keeps its gateway connection alive via a **foreground service** (persistent notification).
-- Open **Settings**.
-- Under **Discovered Gateways**, select your gateway and hit **Connect**.
-- If mDNS is blocked, use **Advanced → Manual Gateway** (host + port) and **Connect (Manual)**.
+- 应用使用**前台服务**保持 gateway 连接（常驻通知）。
+- 打开 **Settings**。
+- 在 **Discovered Gateways** 下选择你的 gateway 并点击 **Connect**。
+- 如果 mDNS 被阻断，使用 **Advanced → Manual Gateway**（host + port）并点击 **Connect (Manual)**。
 
-After the first successful pairing, Android auto-reconnects on launch:
-- Manual endpoint (if enabled), otherwise
-- The last discovered gateway (best-effort).
+首次配对成功后，Android 会在启动时自动重连：
+- 若启用 manual endpoint，优先使用 manual；否则
+- 使用上次发现的 gateway（尽力而为）。
 
-### 4) Approve pairing (CLI)
+### 4) 批准配对（CLI）
 
-On the gateway machine:
+在 gateway 主机：
 
 ```bash
 moltbot nodes pending
 moltbot nodes approve <requestId>
 ```
 
-Pairing details: [Gateway pairing](/gateway/pairing).
+配对详情：[Gateway pairing](/gateway/pairing)。
 
-### 5) Verify the node is connected
+### 5) 验证节点已连接
 
-- Via nodes status:
+- 通过 nodes status：
   ```bash
   moltbot nodes status
   ```
-- Via Gateway:
+- 通过 Gateway：
   ```bash
   moltbot gateway call node.list --params "{}"
   ```
 
-### 6) Chat + history
+### 6) 聊天与历史
 
-The Android node’s Chat sheet uses the gateway’s **primary session key** (`main`), so history and replies are shared with WebChat and other clients:
+Android 节点的聊天视图使用 gateway 的**主会话键**（`main`），因此历史与回复在 WebChat 和其他客户端共享：
 
-- History: `chat.history`
-- Send: `chat.send`
-- Push updates (best-effort): `chat.subscribe` → `event:"chat"`
+- History：`chat.history`
+- Send：`chat.send`
+- 推送更新（尽力而为）：`chat.subscribe` → `event:"chat"`
 
-### 7) Canvas + camera
+### 7) Canvas 与相机
 
-#### Gateway Canvas Host (recommended for web content)
+#### Gateway Canvas Host（推荐用于网页内容）
 
-If you want the node to show real HTML/CSS/JS that the agent can edit on disk, point the node at the Gateway canvas host.
+如果你希望节点展示真实的 HTML/CSS/JS 且 agent 可在磁盘上编辑，请将节点指向 Gateway canvas host。
 
-Note: nodes use the standalone canvas host on `canvasHost.port` (default `18793`).
+注意：节点使用 `canvasHost.port` 的独立 canvas host（默认 `18793`）。
 
-1) Create `~/clawd/canvas/index.html` on the gateway host.
+1) 在 gateway 主机创建 `~/clawd/canvas/index.html`。
 
-2) Navigate the node to it (LAN):
+2) 导航节点到该地址（LAN）：
 
 ```bash
 moltbot nodes invoke --node "<Android Node>" --command canvas.navigate --params '{"url":"http://<gateway-hostname>.local:18793/__moltbot__/canvas/"}'
 ```
 
-Tailnet (optional): if both devices are on Tailscale, use a MagicDNS name or tailnet IP instead of `.local`, e.g. `http://<gateway-magicdns>:18793/__moltbot__/canvas/`.
+Tailnet（可选）：若两台设备都在 Tailscale 中，使用 MagicDNS 名称或 tailnet IP 替代 `.local`，例如 `http://<gateway-magicdns>:18793/__moltbot__/canvas/`。
 
-This server injects a live-reload client into HTML and reloads on file changes.
-The A2UI host lives at `http://<gateway-host>:18793/__moltbot__/a2ui/`.
+该服务器会向 HTML 注入 live-reload 客户端，并在文件变更时重载。
+A2UI host 地址为 `http://<gateway-host>:18793/__moltbot__/a2ui/`。
 
-Canvas commands (foreground only):
-- `canvas.eval`, `canvas.snapshot`, `canvas.navigate` (use `{"url":""}` or `{"url":"/"}` to return to the default scaffold). `canvas.snapshot` returns `{ format, base64 }` (default `format="jpeg"`).
-- A2UI: `canvas.a2ui.push`, `canvas.a2ui.reset` (`canvas.a2ui.pushJSONL` legacy alias)
+Canvas 命令（仅前台）：
+- `canvas.eval`、`canvas.snapshot`、`canvas.navigate`（使用 `{"url":""}` 或 `{"url":"/"}` 返回默认脚手架）。`canvas.snapshot` 返回 `{ format, base64 }`（默认 `format="jpeg"`）。
+- A2UI：`canvas.a2ui.push`、`canvas.a2ui.reset`（`canvas.a2ui.pushJSONL` 为旧别名）
 
-Camera commands (foreground only; permission-gated):
-- `camera.snap` (jpg)
-- `camera.clip` (mp4)
+相机命令（仅前台；需权限）：
+- `camera.snap`（jpg）
+- `camera.clip`（mp4）
 
-See [Camera node](/nodes/camera) for parameters and CLI helpers.
+参数与 CLI helper 见 [Camera node](/nodes/camera)。

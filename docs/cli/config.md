@@ -1,15 +1,15 @@
 ---
-summary: "CLI reference for `moltbot config` (get/set/unset config values)"
+summary: "`moltbot config` 的 CLI 参考（读取和设置配置值）"
 read_when:
-  - You want to read or edit config non-interactively
+  - 想以非交互方式读取或修改配置
 ---
 
 # `moltbot config`
 
-Config helpers: get/set/unset values by path. Run without a subcommand to open
-the configure wizard (same as `moltbot configure`).
+配置辅助：按路径 get/set/unset。未带子命令时会打开配置向导
+（同 `moltbot configure`）。
 
-## Examples
+## 示例
 
 ```bash
 moltbot config get browser.executablePath
@@ -19,26 +19,25 @@ moltbot config set agents.list[0].tools.exec.node "node-id-or-name"
 moltbot config unset tools.web.search.apiKey
 ```
 
-## Paths
+## 路径
 
-Paths use dot or bracket notation:
+路径支持点与括号写法：
 
 ```bash
 moltbot config get agents.defaults.workspace
 moltbot config get agents.list[0].id
 ```
 
-Use the agent list index to target a specific agent:
+使用代理列表索引定位特定代理：
 
 ```bash
 moltbot config get agents.list
 moltbot config set agents.list[1].tools.exec.node "node-id-or-name"
 ```
 
-## Values
+## 值
 
-Values are parsed as JSON5 when possible; otherwise they are treated as strings.
-Use `--json` to require JSON5 parsing.
+尽可能按 JSON5 解析；否则视为字符串。使用 `--json` 强制 JSON5 解析。
 
 ```bash
 moltbot config set agents.defaults.heartbeat.every "0m"
@@ -46,4 +45,4 @@ moltbot config set gateway.port 19001 --json
 moltbot config set channels.whatsapp.groups '["*"]' --json
 ```
 
-Restart the gateway after edits.
+修改后请重启 gateway。

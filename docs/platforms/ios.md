@@ -1,79 +1,79 @@
 ---
-summary: "iOS node app: connect to the Gateway, pairing, canvas, and troubleshooting"
+summary: "iOS 节点应用：连接 Gateway、配对、Canvas 与故障排查"
 read_when:
-  - Pairing or reconnecting the iOS node
-  - Running the iOS app from source
-  - Debugging gateway discovery or canvas commands
+  - 配对或重连 iOS 节点
+  - 从源码运行 iOS 应用
+  - 调试 gateway 发现或 canvas 命令
 ---
-# iOS App (Node)
+# iOS 应用（节点）
 
-Availability: internal preview. The iOS app is not publicly distributed yet.
+可用性：内部预览。iOS 应用尚未公开发布。
 
-## What it does
+## 功能
 
-- Connects to a Gateway over WebSocket (LAN or tailnet).
-- Exposes node capabilities: Canvas, Screen snapshot, Camera capture, Location, Talk mode, Voice wake.
-- Receives `node.invoke` commands and reports node status events.
+- 通过 WebSocket 连接 Gateway（LAN 或 tailnet）。
+- 暴露节点能力：Canvas、屏幕快照、相机拍摄、位置、Talk 模式、语音唤醒。
+- 接收 `node.invoke` 命令并上报节点状态事件。
 
-## Requirements
+## 要求
 
-- Gateway running on another device (macOS, Linux, or Windows via WSL2).
-- Network path:
-  - Same LAN via Bonjour, **or**
-  - Tailnet via unicast DNS-SD (`moltbot.internal.`), **or**
-  - Manual host/port (fallback).
+- Gateway 运行在另一台设备（macOS、Linux 或 Windows via WSL2）。
+- 网络路径：
+  - 同一局域网（Bonjour），**或**
+  - Tailnet（unicast DNS-SD，`moltbot.internal.`），**或**
+  - 手动 host/port（兜底）。
 
-## Quick start (pair + connect)
+## 快速开始（配对与连接）
 
-1) Start the Gateway:
+1) 启动 Gateway：
 
 ```bash
 moltbot gateway --port 18789
 ```
 
-2) In the iOS app, open Settings and pick a discovered gateway (or enable Manual Host and enter host/port).
+2) 在 iOS 应用中打开 Settings，选择发现到的 gateway（或启用 Manual Host 并输入 host/port）。
 
-3) Approve the pairing request on the gateway host:
+3) 在 gateway 主机上批准配对请求：
 
 ```bash
 moltbot nodes pending
 moltbot nodes approve <requestId>
 ```
 
-4) Verify connection:
+4) 验证连接：
 
 ```bash
 moltbot nodes status
 moltbot gateway call node.list --params "{}"
 ```
 
-## Discovery paths
+## 发现路径
 
-### Bonjour (LAN)
+### Bonjour（LAN）
 
-The Gateway advertises `_moltbot._tcp` on `local.`. The iOS app lists these automatically.
+Gateway 在 `local.` 上广播 `_moltbot._tcp`。iOS 应用会自动列出。
 
-### Tailnet (cross-network)
+### Tailnet（跨网络）
 
-If mDNS is blocked, use a unicast DNS-SD zone (recommended domain: `moltbot.internal.`) and Tailscale split DNS.
-See [Bonjour](/gateway/bonjour) for the CoreDNS example.
+如果 mDNS 被阻断，使用 unicast DNS-SD 区域（推荐域名：`moltbot.internal.`）并配合 Tailscale split DNS。
+CoreDNS 示例见 [Bonjour](/gateway/bonjour)。
 
-### Manual host/port
+### 手动 host/port
 
-In Settings, enable **Manual Host** and enter the gateway host + port (default `18789`).
+在 Settings 中启用 **Manual Host** 并输入 gateway host + port（默认 `18789`）。
 
-## Canvas + A2UI
+## Canvas 与 A2UI
 
-The iOS node renders a WKWebView canvas. Use `node.invoke` to drive it:
+iOS 节点渲染 WKWebView canvas。使用 `node.invoke` 驱动：
 
 ```bash
 moltbot nodes invoke --node "iOS Node" --command canvas.navigate --params '{"url":"http://<gateway-host>:18793/__moltbot__/canvas/"}'
 ```
 
-Notes:
-- The Gateway canvas host serves `/__moltbot__/canvas/` and `/__moltbot__/a2ui/`.
-- The iOS node auto-navigates to A2UI on connect when a canvas host URL is advertised.
-- Return to the built-in scaffold with `canvas.navigate` and `{"url":""}`.
+说明：
+- Gateway canvas host 提供 `/__moltbot__/canvas/` 与 `/__moltbot__/a2ui/`。
+- 当发现 canvas host URL 时，iOS 节点会在连接时自动导航到 A2UI。
+- 使用 `canvas.navigate` 并传 `{"url":""}` 可返回内置脚手架。
 
 ### Canvas eval / snapshot
 
@@ -85,19 +85,19 @@ moltbot nodes invoke --node "iOS Node" --command canvas.eval --params '{"javaScr
 moltbot nodes invoke --node "iOS Node" --command canvas.snapshot --params '{"maxWidth":900,"format":"jpeg"}'
 ```
 
-## Voice wake + talk mode
+## 语音唤醒与 Talk 模式
 
-- Voice wake and talk mode are available in Settings.
-- iOS may suspend background audio; treat voice features as best-effort when the app is not active.
+- 语音唤醒与 Talk 模式在 Settings 中可用。
+- iOS 可能挂起后台音频；当应用不在前台时，语音功能仅尽力而为。
 
-## Common errors
+## 常见错误
 
-- `NODE_BACKGROUND_UNAVAILABLE`: bring the iOS app to the foreground (canvas/camera/screen commands require it).
-- `A2UI_HOST_NOT_CONFIGURED`: the Gateway did not advertise a canvas host URL; check `canvasHost` in [Gateway configuration](/gateway/configuration).
-- Pairing prompt never appears: run `moltbot nodes pending` and approve manually.
-- Reconnect fails after reinstall: the Keychain pairing token was cleared; re-pair the node.
+- `NODE_BACKGROUND_UNAVAILABLE`：将 iOS 应用切到前台（canvas/camera/screen 需要前台）。
+- `A2UI_HOST_NOT_CONFIGURED`：Gateway 未广播 canvas host URL；检查 [Gateway configuration](/gateway/configuration) 中的 `canvasHost`。
+- 配对提示不出现：运行 `moltbot nodes pending` 并手动批准。
+- 重装后无法重连：Keychain 中的配对 token 被清除；重新配对节点。
 
-## Related docs
+## 相关文档
 
 - [Pairing](/gateway/pairing)
 - [Discovery](/gateway/discovery)

@@ -1,16 +1,15 @@
 ---
-summary: "CLI reference for `moltbot dashboard` (open the Control UI)"
+summary: "`moltbot dashboard` 的 CLI 参考（打开控制台 UI）"
 read_when:
-  - You want to open the Control UI with your current token
-  - You want to print the URL without launching a browser
+  - 想用当前令牌打开控制台 UI
+  - 想仅打印 URL 而不启动浏览器
 ---
 
 # `moltbot dashboard`
 
-Open the Control UI using your current auth.
+使用当前认证打开控制台 UI。
 
 ```bash
 moltbot dashboard
 moltbot dashboard --no-open
 ```
-

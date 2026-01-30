@@ -1,139 +1,139 @@
 ---
-summary: "Moltbot on DigitalOcean (simple paid VPS option)"
+summary: "在 DigitalOcean 上运行 Moltbot（简单的付费 VPS 方案）"
 read_when:
-  - Setting up Moltbot on DigitalOcean
-  - Looking for cheap VPS hosting for Moltbot
+  - 在 DigitalOcean 上搭建 Moltbot
+  - 寻找便宜的 Moltbot VPS 托管
 ---
 
-# Moltbot on DigitalOcean
+# 在 DigitalOcean 上运行 Moltbot
 
-## Goal
+## 目标
 
-Run a persistent Moltbot Gateway on DigitalOcean for **$6/month** (or $4/mo with reserved pricing).
+在 DigitalOcean 上运行常驻 Moltbot Gateway，**$6/月**（或预留价格 $4/月）。
 
-If you want a $0/month option and don’t mind ARM + provider-specific setup, see the [Oracle Cloud guide](/platforms/oracle).
+如果你希望 $0/月 且不介意 ARM 与厂商特定配置，请看 [Oracle Cloud 指南](/platforms/oracle)。
 
-## Cost Comparison (2026)
+## 费用对比（2026）
 
-| Provider | Plan | Specs | Price/mo | Notes |
+| 提供商 | 方案 | 规格 | 月费 | 说明 |
 |----------|------|-------|----------|-------|
-| Oracle Cloud | Always Free ARM | up to 4 OCPU, 24GB RAM | $0 | ARM, limited capacity / signup quirks |
-| Hetzner | CX22 | 2 vCPU, 4GB RAM | €3.79 (~$4) | Cheapest paid option |
-| DigitalOcean | Basic | 1 vCPU, 1GB RAM | $6 | Easy UI, good docs |
-| Vultr | Cloud Compute | 1 vCPU, 1GB RAM | $6 | Many locations |
-| Linode | Nanode | 1 vCPU, 1GB RAM | $5 | Now part of Akamai |
+| Oracle Cloud | Always Free ARM | 最高 4 OCPU, 24GB RAM | $0 | ARM，容量有限/注册麻烦 |
+| Hetzner | CX22 | 2 vCPU, 4GB RAM | €3.79 (~$4) | 最便宜的付费选项 |
+| DigitalOcean | Basic | 1 vCPU, 1GB RAM | $6 | 简单 UI，文档友好 |
+| Vultr | Cloud Compute | 1 vCPU, 1GB RAM | $6 | 位置多 |
+| Linode | Nanode | 1 vCPU, 1GB RAM | $5 | 现属 Akamai |
 
-**Picking a provider:**
-- DigitalOcean: simplest UX + predictable setup (this guide)
-- Hetzner: good price/perf (see [Hetzner guide](/platforms/hetzner))
-- Oracle Cloud: can be $0/month, but is more finicky and ARM-only (see [Oracle guide](/platforms/oracle))
+**选择建议：**
+- DigitalOcean：最简单、可预测的设置（本指南）
+- Hetzner：价格/性能更好（见 [Hetzner guide](/platforms/hetzner)）
+- Oracle Cloud：可 $0/月，但更挑剔且仅 ARM（见 [Oracle guide](/platforms/oracle)）
 
 ---
 
-## Prerequisites
+## 先决条件
 
-- DigitalOcean account ([signup with $200 free credit](https://m.do.co/c/signup))
-- SSH key pair (or willingness to use password auth)
-- ~20 minutes
+- DigitalOcean 账号（[注册可领 $200 额度](https://m.do.co/c/signup)）
+- SSH 密钥对（或愿意使用密码认证）
+- 约 20 分钟
 
-## 1) Create a Droplet
+## 1) 创建 Droplet
 
-1. Log into [DigitalOcean](https://cloud.digitalocean.com/)
-2. Click **Create → Droplets**
-3. Choose:
-   - **Region:** Closest to you (or your users)
-   - **Image:** Ubuntu 24.04 LTS
-   - **Size:** Basic → Regular → **$6/mo** (1 vCPU, 1GB RAM, 25GB SSD)
-   - **Authentication:** SSH key (recommended) or password
-4. Click **Create Droplet**
-5. Note the IP address
+1. 登录 [DigitalOcean](https://cloud.digitalocean.com/)
+2. 点击 **Create → Droplets**
+3. 选择：
+   - **Region：** 选择离你或用户最近的地区
+   - **Image：** Ubuntu 24.04 LTS
+   - **Size：** Basic → Regular → **$6/月**（1 vCPU, 1GB RAM, 25GB SSD）
+   - **Authentication：** SSH key（推荐）或密码
+4. 点击 **Create Droplet**
+5. 记录 IP 地址
 
-## 2) Connect via SSH
+## 2) 通过 SSH 连接
 
 ```bash
 ssh root@YOUR_DROPLET_IP
 ```
 
-## 3) Install Moltbot
+## 3) 安装 Moltbot
 
 ```bash
-# Update system
+# 更新系统
 apt update && apt upgrade -y
 
-# Install Node.js 22
+# 安装 Node.js 22
 curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt install -y nodejs
 
-# Install Moltbot
+# 安装 Moltbot
 curl -fsSL https://molt.bot/install.sh | bash
 
-# Verify
+# 验证
 moltbot --version
 ```
 
-## 4) Run Onboarding
+## 4) 运行引导
 
 ```bash
 moltbot onboard --install-daemon
 ```
 
-The wizard will walk you through:
-- Model auth (API keys or OAuth)
-- Channel setup (Telegram, WhatsApp, Discord, etc.)
-- Gateway token (auto-generated)
-- Daemon installation (systemd)
+向导会引导：
+- 模型认证（API key 或 OAuth）
+- 渠道设置（Telegram、WhatsApp、Discord 等）
+- Gateway token（自动生成）
+- Daemon 安装（systemd）
 
-## 5) Verify the Gateway
+## 5) 验证 Gateway
 
 ```bash
-# Check status
+# 查看状态
 moltbot status
 
-# Check service
+# 检查服务
 systemctl --user status moltbot-gateway.service
 
-# View logs
+# 查看日志
 journalctl --user -u moltbot-gateway.service -f
 ```
 
-## 6) Access the Dashboard
+## 6) 访问仪表盘
 
-The gateway binds to loopback by default. To access the Control UI:
+Gateway 默认绑定 loopback。访问 Control UI：
 
-**Option A: SSH Tunnel (recommended)**
+**方式 A：SSH 隧道（推荐）**
 ```bash
-# From your local machine
+# 在本地机器上
 ssh -L 18789:localhost:18789 root@YOUR_DROPLET_IP
 
-# Then open: http://localhost:18789
+# 然后打开：http://localhost:18789
 ```
 
-**Option B: Tailscale Serve (HTTPS, loopback-only)**
+**方式 B：Tailscale Serve（HTTPS，loopback-only）**
 ```bash
-# On the droplet
+# 在 droplet 上
 curl -fsSL https://tailscale.com/install.sh | sh
 tailscale up
 
-# Configure Gateway to use Tailscale Serve
+# 配置 Gateway 使用 Tailscale Serve
 moltbot config set gateway.tailscale.mode serve
 moltbot gateway restart
 ```
 
-Open: `https://<magicdns>/`
+打开：`https://<magicdns>/`
 
-Notes:
-- Serve keeps the Gateway loopback-only and authenticates via Tailscale identity headers.
-- To require token/password instead, set `gateway.auth.allowTailscale: false` or use `gateway.auth.mode: "password"`.
+说明：
+- Serve 保持 Gateway 仅 loopback，并通过 Tailscale 身份头认证。
+- 若要强制 token/password，设置 `gateway.auth.allowTailscale: false` 或使用 `gateway.auth.mode: "password"`。
 
-**Option C: Tailnet bind (no Serve)**
+**方式 C：Tailnet 绑定（不使用 Serve）**
 ```bash
 moltbot config set gateway.bind tailnet
 moltbot gateway restart
 ```
 
-Open: `http://<tailscale-ip>:18789` (token required).
+打开：`http://<tailscale-ip>:18789`（需要 token）。
 
-## 7) Connect Your Channels
+## 7) 连接渠道
 
 ### Telegram
 ```bash
@@ -144,18 +144,18 @@ moltbot pairing approve telegram <CODE>
 ### WhatsApp
 ```bash
 moltbot channels login whatsapp
-# Scan QR code
+# 扫描二维码
 ```
 
-See [Channels](/channels) for other providers.
+其他渠道见 [Channels](/channels)。
 
 ---
 
-## Optimizations for 1GB RAM
+## 1GB RAM 优化
 
-The $6 droplet only has 1GB RAM. To keep things running smoothly:
+$6 方案只有 1GB RAM。为稳定运行：
 
-### Add swap (recommended)
+### 添加 swap（推荐）
 ```bash
 fallocate -l 2G /swapfile
 chmod 600 /swapfile
@@ -164,12 +164,13 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
-### Use a lighter model
-If you're hitting OOMs, consider:
-- Using API-based models (Claude, GPT) instead of local models
-- Setting `agents.defaults.model.primary` to a smaller model
+### 使用更轻量模型
 
-### Monitor memory
+如果遇到 OOM：
+- 使用 API 模型（Claude、GPT）而不是本地模型
+- 把 `agents.defaults.model.primary` 设为更小的模型
+
+### 监控内存
 ```bash
 free -h
 htop
@@ -177,67 +178,67 @@ htop
 
 ---
 
-## Persistence
+## 持久化
 
-All state lives in:
-- `~/.clawdbot/` — config, credentials, session data
-- `~/clawd/` — workspace (SOUL.md, memory, etc.)
+所有状态存储在：
+- `~/.clawdbot/` — 配置、凭据、会话数据
+- `~/clawd/` — 工作区（SOUL.md、memory 等）
 
-These survive reboots. Back them up periodically:
+这些在重启后仍保留。请定期备份：
 ```bash
 tar -czvf moltbot-backup.tar.gz ~/.clawdbot ~/clawd
 ```
 
 ---
 
-## Oracle Cloud Free Alternative
+## Oracle Cloud 免费替代
 
-Oracle Cloud offers **Always Free** ARM instances that are significantly more powerful than any paid option here — for $0/month.
+Oracle Cloud 提供 **Always Free** ARM 实例，性能显著强于本文任意付费选项，且 $0/月。
 
-| What you get | Specs |
+| 你获得的资源 | 规格 |
 |--------------|-------|
 | **4 OCPUs** | ARM Ampere A1 |
-| **24GB RAM** | More than enough |
+| **24GB RAM** | 充足 |
 | **200GB storage** | Block volume |
-| **Forever free** | No credit card charges |
+| **Forever free** | 不收费 |
 
-**Caveats:**
-- Signup can be finicky (retry if it fails)
-- ARM architecture — most things work, but some binaries need ARM builds
+**注意事项：**
+- 注册可能较挑剔（失败可重试）
+- ARM 架构 —— 多数可用，但部分二进制需 ARM 构建
 
-For the full setup guide, see [Oracle Cloud](/platforms/oracle). For signup tips and troubleshooting the enrollment process, see this [community guide](https://gist.github.com/rssnyder/51e3cfedd730e7dd5f4a816143b25dbd).
+完整设置见 [Oracle Cloud](/platforms/oracle)。注册与排障建议见此 [社区指南](https://gist.github.com/rssnyder/51e3cfedd730e7dd5f4a816143b25dbd)。
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-### Gateway won't start
+### Gateway 无法启动
 ```bash
 moltbot gateway status
 moltbot doctor --non-interactive
 journalctl -u moltbot --no-pager -n 50
 ```
 
-### Port already in use
+### 端口已被占用
 ```bash
 lsof -i :18789
 kill <PID>
 ```
 
-### Out of memory
+### 内存不足
 ```bash
-# Check memory
+# 查看内存
 free -h
 
-# Add more swap
-# Or upgrade to $12/mo droplet (2GB RAM)
+# 增加 swap
+# 或升级到 $12/月 droplet（2GB RAM）
 ```
 
 ---
 
-## See Also
+## 另见
 
-- [Hetzner guide](/platforms/hetzner) — cheaper, more powerful
-- [Docker install](/install/docker) — containerized setup
-- [Tailscale](/gateway/tailscale) — secure remote access
-- [Configuration](/gateway/configuration) — full config reference
+- [Hetzner guide](/platforms/hetzner) — 更便宜 更强
+- [Docker install](/install/docker) — 容器化方案
+- [Tailscale](/gateway/tailscale) — 安全远程访问
+- [Configuration](/gateway/configuration) — 完整配置参考

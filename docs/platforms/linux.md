@@ -1,71 +1,71 @@
 ---
-summary: "Linux support + companion app status"
+summary: "Linux 支持与伴侣应用状态"
 read_when:
-  - Looking for Linux companion app status
-  - Planning platform coverage or contributions
+  - 查看 Linux 伴侣应用状态
+  - 规划平台覆盖或贡献
 ---
-# Linux App
+# Linux 应用
 
-The Gateway is fully supported on Linux. **Node is the recommended runtime**.
-Bun is not recommended for the Gateway (WhatsApp/Telegram bugs).
+Gateway 在 Linux 上完全支持。**推荐运行时是 Node**。
+Gateway 不推荐使用 Bun（WhatsApp/Telegram 有已知问题）。
 
-Native Linux companion apps are planned. Contributions are welcome if you want to help build one.
+原生 Linux 伴侣应用在计划中。如果你想参与构建，欢迎贡献。
 
-## Beginner quick path (VPS)
+## 新手快捷路径（VPS）
 
-1) Install Node 22+  
+1) 安装 Node 22+  
 2) `npm i -g moltbot@latest`  
 3) `moltbot onboard --install-daemon`  
-4) From your laptop: `ssh -N -L 18789:127.0.0.1:18789 <user>@<host>`  
-5) Open `http://127.0.0.1:18789/` and paste your token
+4) 在你的笔记本上：`ssh -N -L 18789:127.0.0.1:18789 <user>@<host>`  
+5) 打开 `http://127.0.0.1:18789/` 并粘贴 token
 
-Step-by-step VPS guide: [exe.dev](/platforms/exe-dev)
+VPS 分步指南：[exe.dev](/platforms/exe-dev)
 
-## Install
+## 安装
 - [Getting Started](/start/getting-started)
 - [Install & updates](/install/updating)
-- Optional flows: [Bun (experimental)](/install/bun), [Nix](/install/nix), [Docker](/install/docker)
+- 可选流程：[Bun (experimental)](/install/bun)、[Nix](/install/nix)、[Docker](/install/docker)
 
 ## Gateway
 - [Gateway runbook](/gateway)
 - [Configuration](/gateway/configuration)
 
-## Gateway service install (CLI)
+## Gateway 服务安装（CLI）
 
-Use one of these:
+任选一种：
 
 ```
 moltbot onboard --install-daemon
 ```
 
-Or:
+或：
 
 ```
 moltbot gateway install
 ```
 
-Or:
+或：
 
 ```
 moltbot configure
 ```
 
-Select **Gateway service** when prompted.
+提示时选择 **Gateway service**。
 
-Repair/migrate:
+修复/迁移：
 
 ```
 moltbot doctor
 ```
 
-## System control (systemd user unit)
-Moltbot installs a systemd **user** service by default. Use a **system**
-service for shared or always-on servers. The full unit example and guidance
-live in the [Gateway runbook](/gateway).
+## 系统控制（systemd 用户单元）
 
-Minimal setup:
+Moltbot 默认安装 systemd **用户**服务。对共享或常驻服务器请使用 **system** 服务。
+完整 unit 示例与说明见 [Gateway runbook](/gateway)。
 
-Create `~/.config/systemd/user/moltbot-gateway[-<profile>].service`:
+最小示例：
+
+创建 `~/.config/systemd/user/moltbot-gateway[-<profile>].service`：
 
 ```
 [Unit]
@@ -82,7 +82,7 @@ RestartSec=5
 WantedBy=default.target
 ```
 
-Enable it:
+启用：
 
 ```
 systemctl --user enable --now moltbot-gateway[-<profile>].service
