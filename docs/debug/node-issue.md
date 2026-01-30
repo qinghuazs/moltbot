@@ -1,14 +1,14 @@
 ---
-summary: Node + tsx "__name is not a function" crash notes and workarounds
+summary: Node + tsx "__name is not a function" 崩溃说明与绕过方案
 read_when:
-  - Debugging Node-only dev scripts or watch mode failures
-  - Investigating tsx/esbuild loader crashes in Moltbot
+  - 排查仅 Node 的开发脚本或 watch 模式失败
+  - 调查 Moltbot 中 tsx/esbuild loader 崩溃
 ---
 
-# Node + tsx "__name is not a function" crash
+# Node + tsx "__name is not a function" 崩溃
 
-## Summary
-Running Moltbot via Node with `tsx` fails at startup with:
+## 概要
+通过 Node + `tsx` 运行 Moltbot 时启动失败，报错：
 
 ```
 [moltbot] Failed to start CLI: TypeError: __name is not a function
@@ -16,57 +16,57 @@ Running Moltbot via Node with `tsx` fails at startup with:
     at .../src/agents/auth-profiles/constants.ts:25:20
 ```
 
-This began after switching dev scripts from Bun to `tsx` (commit `2871657e`, 2026-01-06). The same runtime path worked with Bun.
+该问题出现在开发脚本从 Bun 切换到 `tsx` 之后（提交 `2871657e`，2026-01-06）。同一路径在 Bun 下可运行。
 
-## Environment
-- Node: v25.x (observed on v25.3.0)
-- tsx: 4.21.0
-- OS: macOS (repro also likely on other platforms that run Node 25)
+## 环境
+- Node：v25.x（在 v25.3.0 观察到）
+- tsx：4.21.0
+- OS：macOS（其它运行 Node 25 的平台可能也可复现）
 
-## Repro (Node-only)
+## 复现（仅 Node）
 ```bash
-# in repo root
+# 在仓库根目录
 node --version
 pnpm install
 node --import tsx src/entry.ts status
 ```
 
-## Minimal repro in repo
+## 仓库最小复现
 ```bash
 node --import tsx scripts/repro/tsx-name-repro.ts
 ```
 
-## Node version check
-- Node 25.3.0: fails
-- Node 22.22.0 (Homebrew `node@22`): fails
-- Node 24: not installed here yet; needs verification
+## Node 版本验证
+- Node 25.3.0：失败
+- Node 22.22.0（Homebrew `node@22`）：失败
+- Node 24：此处未安装，待验证
 
-## Notes / hypothesis
-- `tsx` uses esbuild to transform TS/ESM. esbuild’s `keepNames` emits a `__name` helper and wraps function definitions with `__name(...)`.
-- The crash indicates `__name` exists but is not a function at runtime, which implies the helper is missing or overwritten for this module in the Node 25 loader path.
-- Similar `__name` helper issues have been reported in other esbuild consumers when the helper is missing or rewritten.
+## 说明与假设
+- `tsx` 使用 esbuild 转换 TS/ESM。esbuild 的 `keepNames` 会注入 `__name` helper，并用 `__name(...)` 包裹函数定义。
+- 崩溃显示 `__name` 存在但不是函数，说明该 helper 在 Node 25 loader 路径中缺失或被覆盖。
+- 其它 esbuild 使用方也曾在 helper 缺失或被重写时出现类似问题。
 
-## Regression history
-- `2871657e` (2026-01-06): scripts changed from Bun to tsx to make Bun optional.
-- Before that (Bun path), `moltbot status` and `gateway:watch` worked.
+## 回归历史
+- `2871657e`（2026-01-06）：脚本从 Bun 切到 tsx，使 Bun 可选。
+- 之前（Bun 路径）`moltbot status` 与 `gateway:watch` 可正常运行。
 
-## Workarounds
-- Use Bun for dev scripts (current temporary revert).
-- Use Node + tsc watch, then run compiled output:
+## 临时绕过
+- 使用 Bun 运行开发脚本（当前临时回退）。
+- 使用 Node + tsc watch，再运行编译输出：
   ```bash
   pnpm exec tsc --watch --preserveWatchOutput
   node --watch moltbot.mjs status
   ```
-- Confirmed locally: `pnpm exec tsc -p tsconfig.json` + `node moltbot.mjs status` works on Node 25.
-- Disable esbuild keepNames in the TS loader if possible (prevents `__name` helper insertion); tsx does not currently expose this.
-- Test Node LTS (22/24) with `tsx` to see if the issue is Node 25–specific.
+- 本地验证：`pnpm exec tsc -p tsconfig.json` + `node moltbot.mjs status` 在 Node 25 可用。
+- 如果可能，禁用 TS loader 的 esbuild keepNames（可避免注入 `__name` helper）；tsx 目前未暴露该配置。
+- 用 Node LTS（22/24）+ `tsx` 测试，确认问题是否仅限 Node 25。
 
-## References
+## 参考
 - https://opennext.js.org/cloudflare/howtos/keep_names
 - https://esbuild.github.io/api/#keep-names
 - https://github.com/evanw/esbuild/issues/1031
 
-## Next steps
-- Repro on Node 22/24 to confirm Node 25 regression.
-- Test `tsx` nightly or pin to earlier version if a known regression exists.
-- If reproduces on Node LTS, file a minimal repro upstream with the `__name` stack trace.
+## 下一步
+- 在 Node 22/24 复现，确认是否为 Node 25 回归。
+- 测试 `tsx` nightly 或锁定到较早版本，确认是否存在已知回归。
+- 若在 Node LTS 也可复现，向上游提交最小复现与 `__name` 堆栈。

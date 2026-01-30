@@ -1,27 +1,27 @@
 ---
-summary: "macOS Skills settings UI and gateway-backed status"
+summary: "macOS Skills 设置 UI 与 gateway 侧状态"
 read_when:
-  - Updating the macOS Skills settings UI
-  - Changing skills gating or install behavior
+  - 更新 macOS Skills 设置界面
+  - 修改技能门控或安装行为
 ---
-# Skills (macOS)
+# Skills（macOS）
 
-The macOS app surfaces Moltbot skills via the gateway; it does not parse skills locally.
+macOS 应用通过 gateway 展示 Moltbot 技能；不会在本地解析技能。
 
-## Data source
-- `skills.status` (gateway) returns all skills plus eligibility and missing requirements
-  (including allowlist blocks for bundled skills).
-- Requirements are derived from `metadata.moltbot.requires` in each `SKILL.md`.
+## 数据来源
+- `skills.status`（gateway）返回所有技能及其可用性与缺失要求
+  （包含对内置技能的 allowlist 阻止）。
+- 要求来源于每个 `SKILL.md` 的 `metadata.moltbot.requires`。
 
-## Install actions
-- `metadata.moltbot.install` defines install options (brew/node/go/uv).
-- The app calls `skills.install` to run installers on the gateway host.
-- The gateway surfaces only one preferred installer when multiple are provided
-  (brew when available, otherwise node manager from `skills.install`, default npm).
+## 安装行为
+- `metadata.moltbot.install` 定义安装选项（brew/node/go/uv）。
+- 应用调用 `skills.install` 在 gateway 主机上运行安装器。
+- 当提供多个安装器时，gateway 只暴露一个首选项
+  （有 brew 则用 brew，否则使用 `skills.install` 中的 node manager，默认 npm）。
 
-## Env/API keys
-- The app stores keys in `~/.clawdbot/moltbot.json` under `skills.entries.<skillKey>`.
-- `skills.update` patches `enabled`, `apiKey`, and `env`.
+## 环境变量与 API key
+- 应用将 key 存在 `~/.clawdbot/moltbot.json` 的 `skills.entries.<skillKey>` 下。
+- `skills.update` 会补丁更新 `enabled`、`apiKey` 与 `env`。
 
-## Remote mode
-- Install + config updates happen on the gateway host (not the local Mac).
+## 远程模式
+- 安装与配置更新都发生在 gateway 主机上（不是本地 Mac）。

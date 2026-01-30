@@ -1,126 +1,123 @@
 ---
-summary: "Agent loop lifecycle, streams, and wait semantics"
+summary: "代理循环的生命周期、流与等待语义"
 read_when:
-  - You need an exact walkthrough of the agent loop or lifecycle events
+  - 你需要精确了解代理循环或生命周期事件
 ---
-# Agent Loop (Moltbot)
+# Agent Loop（Moltbot）
 
-An agentic loop is the full “real” run of an agent: intake → context assembly → model inference →
-tool execution → streaming replies → persistence. It’s the authoritative path that turns a message
-into actions and a final reply, while keeping session state consistent.
+代理循环是一次完整的“真实”代理运行：输入 → 上下文组装 → 模型推理 →
+工具执行 → 流式回复 → 持久化。它是将消息转化为动作与最终回复的权威路径，同时保持会话状态一致。
 
-In Moltbot, a loop is a single, serialized run per session that emits lifecycle and stream events
-as the model thinks, calls tools, and streams output. This doc explains how that authentic loop is
-wired end-to-end.
+在 Moltbot 中，一个循环对应某个会话的单次串行运行，会在模型思考、调用工具与输出流时发出生命周期与流事件。本文解释该真实循环的端到端连接方式。
 
-## Entry points
-- Gateway RPC: `agent` and `agent.wait`.
-- CLI: `agent` command.
+## 入口
+- Gateway RPC：`agent` 与 `agent.wait`。
+- CLI：`agent` 命令。
 
-## How it works (high-level)
-1) `agent` RPC validates params, resolves session (sessionKey/sessionId), persists session metadata, returns `{ runId, acceptedAt }` immediately.
-2) `agentCommand` runs the agent:
-   - resolves model + thinking/verbose defaults
-   - loads skills snapshot
-   - calls `runEmbeddedPiAgent` (pi-agent-core runtime)
-   - emits **lifecycle end/error** if the embedded loop does not emit one
-3) `runEmbeddedPiAgent`:
-   - serializes runs via per-session + global queues
-   - resolves model + auth profile and builds the pi session
-   - subscribes to pi events and streams assistant/tool deltas
-   - enforces timeout -> aborts run if exceeded
-   - returns payloads + usage metadata
-4) `subscribeEmbeddedPiSession` bridges pi-agent-core events to Moltbot `agent` stream:
-   - tool events => `stream: "tool"`
-   - assistant deltas => `stream: "assistant"`
-   - lifecycle events => `stream: "lifecycle"` (`phase: "start" | "end" | "error"`)
-5) `agent.wait` uses `waitForAgentJob`:
-   - waits for **lifecycle end/error** for `runId`
-   - returns `{ status: ok|error|timeout, startedAt, endedAt, error? }`
+## 工作方式（高层）
+1) `agent` RPC 校验参数，解析会话（sessionKey/sessionId），持久化会话元数据，并立即返回 `{ runId, acceptedAt }`。
+2) `agentCommand` 运行代理：
+   - 解析模型与 thinking/verbose 默认值
+   - 加载技能快照
+   - 调用 `runEmbeddedPiAgent`（pi-agent-core 运行时）
+   - 如果嵌入循环未发出，则补发 **lifecycle end/error**
+3) `runEmbeddedPiAgent`：
+   - 通过按会话与全局队列串行化运行
+   - 解析模型与认证配置并构建 pi 会话
+   - 订阅 pi 事件并流式输出 assistant 与 tool 增量
+   - 强制超时，超过即中止运行
+   - 返回 payload 与用量元数据
+4) `subscribeEmbeddedPiSession` 将 pi-agent-core 事件桥接到 Moltbot `agent` 流：
+   - tool 事件 => `stream: "tool"`
+   - assistant 增量 => `stream: "assistant"`
+   - 生命周期事件 => `stream: "lifecycle"`（`phase: "start" | "end" | "error"`）
+5) `agent.wait` 使用 `waitForAgentJob`：
+   - 等待 `runId` 的 **lifecycle end/error**
+   - 返回 `{ status: ok|error|timeout, startedAt, endedAt, error? }`
 
-## Queueing + concurrency
-- Runs are serialized per session key (session lane) and optionally through a global lane.
-- This prevents tool/session races and keeps session history consistent.
-- Messaging channels can choose queue modes (collect/steer/followup) that feed this lane system.
-  See [Command Queue](/concepts/queue).
+## 排队与并发
+- 运行按会话 key（会话通道）串行，可选再经过全局通道。
+- 这可避免工具与会话竞态，并保证会话历史一致。
+- 消息渠道可选择队列模式（collect/steer/followup），并接入该通道系统。
+  见 [Command Queue](/concepts/queue)。
 
-## Session + workspace preparation
-- Workspace is resolved and created; sandboxed runs may redirect to a sandbox workspace root.
-- Skills are loaded (or reused from a snapshot) and injected into env and prompt.
-- Bootstrap/context files are resolved and injected into the system prompt report.
-- A session write lock is acquired; `SessionManager` is opened and prepared before streaming.
+## 会话与工作区准备
+- 解析并创建工作区；沙箱运行可能重定向到沙箱工作区根目录。
+- 加载技能（或复用快照），并注入到环境与提示词中。
+- 解析 bootstrap/context 文件并注入到系统提示词报告。
+- 获取会话写锁；在开始流式输出前打开并准备 `SessionManager`。
 
-## Prompt assembly + system prompt
-- System prompt is built from Moltbot’s base prompt, skills prompt, bootstrap context, and per-run overrides.
-- Model-specific limits and compaction reserve tokens are enforced.
-- See [System prompt](/concepts/system-prompt) for what the model sees.
+## 提示词组装与系统提示词
+- 系统提示词由 Moltbot 基础提示词、技能提示词、bootstrap 上下文与每次运行覆盖构建而成。
+- 强制模型特定限制与压缩预留 token。
+- 见 [System prompt](/concepts/system-prompt) 了解模型看到的内容。
 
-## Hook points (where you can intercept)
-Moltbot has two hook systems:
-- **Internal hooks** (Gateway hooks): event-driven scripts for commands and lifecycle events.
-- **Plugin hooks**: extension points inside the agent/tool lifecycle and gateway pipeline.
+## Hook 点（可拦截位置）
+Moltbot 有两套 hook 系统：
+- **内部 hooks**（Gateway hooks）：用于命令与生命周期事件的事件驱动脚本。
+- **插件 hooks**：代理与工具生命周期及 gateway 管线内的扩展点。
 
-### Internal hooks (Gateway hooks)
-- **`agent:bootstrap`**: runs while building bootstrap files before the system prompt is finalized.
-  Use this to add/remove bootstrap context files.
-- **Command hooks**: `/new`, `/reset`, `/stop`, and other command events (see Hooks doc).
+### 内部 hooks（Gateway hooks）
+- **`agent:bootstrap`**：在系统提示词最终确定前构建 bootstrap 文件时运行。
+  用于添加或移除 bootstrap 上下文文件。
+- **命令 hooks**：`/new`、`/reset`、`/stop` 等命令事件（见 Hooks 文档）。
 
-See [Hooks](/hooks) for setup and examples.
+设置与示例见 [Hooks](/hooks)。
 
-### Plugin hooks (agent + gateway lifecycle)
-These run inside the agent loop or gateway pipeline:
-- **`before_agent_start`**: inject context or override system prompt before the run starts.
-- **`agent_end`**: inspect the final message list and run metadata after completion.
-- **`before_compaction` / `after_compaction`**: observe or annotate compaction cycles.
-- **`before_tool_call` / `after_tool_call`**: intercept tool params/results.
-- **`tool_result_persist`**: synchronously transform tool results before they are written to the session transcript.
-- **`message_received` / `message_sending` / `message_sent`**: inbound + outbound message hooks.
-- **`session_start` / `session_end`**: session lifecycle boundaries.
-- **`gateway_start` / `gateway_stop`**: gateway lifecycle events.
+### 插件 hooks（代理与 gateway 生命周期）
+这些在代理循环或 gateway 管线中运行：
+- **`before_agent_start`**：在运行开始前注入上下文或覆盖系统提示词。
+- **`agent_end`**：完成后检查最终消息列表与运行元数据。
+- **`before_compaction` / `after_compaction`**：观察或标注压缩周期。
+- **`before_tool_call` / `after_tool_call`**：拦截工具参数或结果。
+- **`tool_result_persist`**：在写入会话记录前同步转换工具结果。
+- **`message_received` / `message_sending` / `message_sent`**：入站与出站消息 hooks。
+- **`session_start` / `session_end`**：会话生命周期边界。
+- **`gateway_start` / `gateway_stop`**：gateway 生命周期事件。
 
-See [Plugins](/plugin#plugin-hooks) for the hook API and registration details.
+Hook API 与注册细节见 [Plugins](/plugin#plugin-hooks)。
 
-## Streaming + partial replies
-- Assistant deltas are streamed from pi-agent-core and emitted as `assistant` events.
-- Block streaming can emit partial replies either on `text_end` or `message_end`.
-- Reasoning streaming can be emitted as a separate stream or as block replies.
-- See [Streaming](/concepts/streaming) for chunking and block reply behavior.
+## 流式输出与部分回复
+- assistant 增量由 pi-agent-core 流出，并作为 `assistant` 事件发送。
+- 块式流可在 `text_end` 或 `message_end` 输出部分回复。
+- 推理流可作为独立流或块式回复输出。
+- 分块与块式行为见 [Streaming](/concepts/streaming)。
 
-## Tool execution + messaging tools
-- Tool start/update/end events are emitted on the `tool` stream.
-- Tool results are sanitized for size and image payloads before logging/emitting.
-- Messaging tool sends are tracked to suppress duplicate assistant confirmations.
+## 工具执行与消息工具
+- 工具 start/update/end 事件会在 `tool` 流中发出。
+- 工具结果在记录或发送前会进行大小与图像载荷清理。
+- 会跟踪消息工具发送以抑制重复的 assistant 确认。
 
-## Reply shaping + suppression
-- Final payloads are assembled from:
-  - assistant text (and optional reasoning)
-  - inline tool summaries (when verbose + allowed)
-  - assistant error text when the model errors
-- `NO_REPLY` is treated as a silent token and filtered from outgoing payloads.
-- Messaging tool duplicates are removed from the final payload list.
-- If no renderable payloads remain and a tool errored, a fallback tool error reply is emitted
-  (unless a messaging tool already sent a user-visible reply).
+## 回复整形与抑制
+- 最终 payload 由以下内容组成：
+  - assistant 文本（以及可选推理）
+  - 内联工具摘要（当 verbose 且允许时）
+  - 模型错误时的 assistant 错误文本
+- `NO_REPLY` 被视为静默 token，并从输出 payload 中过滤。
+- 消息工具重复项会从最终 payload 列表中移除。
+- 若没有可渲染 payload 且工具出错，则会发出回退的工具错误回复
+  （除非消息工具已经发送了用户可见回复）。
 
-## Compaction + retries
-- Auto-compaction emits `compaction` stream events and can trigger a retry.
-- On retry, in-memory buffers and tool summaries are reset to avoid duplicate output.
-- See [Compaction](/concepts/compaction) for the compaction pipeline.
+## 压缩与重试
+- 自动压缩会发出 `compaction` 流事件，并可能触发重试。
+- 重试时会重置内存缓冲与工具摘要，避免重复输出。
+- 压缩管线见 [Compaction](/concepts/compaction)。
 
-## Event streams (today)
-- `lifecycle`: emitted by `subscribeEmbeddedPiSession` (and as a fallback by `agentCommand`)
-- `assistant`: streamed deltas from pi-agent-core
-- `tool`: streamed tool events from pi-agent-core
+## 事件流（当前）
+- `lifecycle`：由 `subscribeEmbeddedPiSession` 发出（`agentCommand` 会兜底）
+- `assistant`：pi-agent-core 的增量流
+- `tool`：pi-agent-core 的工具事件流
 
-## Chat channel handling
-- Assistant deltas are buffered into chat `delta` messages.
-- A chat `final` is emitted on **lifecycle end/error**.
+## 聊天渠道处理
+- assistant 增量会缓冲为聊天 `delta` 消息。
+- 聊天 `final` 会在 **lifecycle end/error** 时发出。
 
-## Timeouts
-- `agent.wait` default: 30s (just the wait). `timeoutMs` param overrides.
-- Agent runtime: `agents.defaults.timeoutSeconds` default 600s; enforced in `runEmbeddedPiAgent` abort timer.
+## 超时
+- `agent.wait` 默认 30 秒（仅等待）。可通过 `timeoutMs` 参数覆盖。
+- 代理运行时：`agents.defaults.timeoutSeconds` 默认 600 秒；在 `runEmbeddedPiAgent` 中强制执行中止计时器。
 
-## Where things can end early
-- Agent timeout (abort)
-- AbortSignal (cancel)
-- Gateway disconnect or RPC timeout
-- `agent.wait` timeout (wait-only, does not stop agent)
+## 可提前结束的情况
+- 代理超时（中止）
+- AbortSignal（取消）
+- Gateway 断开或 RPC 超时
+- `agent.wait` 超时（仅等待，不会停止代理）

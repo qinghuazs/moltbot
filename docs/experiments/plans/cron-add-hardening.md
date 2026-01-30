@@ -1,57 +1,57 @@
 ---
-summary: "Harden cron.add input handling, align schemas, and improve cron UI/agent tooling"
+summary: "加固 cron.add 输入处理、对齐 schema，并改进 cron UI 与代理工具"
 owner: "moltbot"
 status: "complete"
 last_updated: "2026-01-05"
 ---
 
-# Cron Add Hardening & Schema Alignment
+# Cron Add 加固与 Schema 对齐
 
-## Context
-Recent gateway logs show repeated `cron.add` failures with invalid parameters (missing `sessionTarget`, `wakeMode`, `payload`, and malformed `schedule`). This indicates that at least one client (likely the agent tool call path) is sending wrapped or partially specified job payloads. Separately, there is drift between cron provider enums in TypeScript, gateway schema, CLI flags, and UI form types, plus a UI mismatch for `cron.status` (expects `jobCount` while gateway returns `jobs`).
+## 背景
+近期 gateway 日志显示大量 `cron.add` 因参数无效而失败（缺少 `sessionTarget`、`wakeMode`、`payload`，以及 `schedule` 结构不正确）。这表明至少有一个客户端（很可能是代理工具调用路径）在发送包裹型或不完整的任务 payload。与此同时，TypeScript、gateway schema、CLI 标志与 UI 表单类型之间的 cron provider 枚举存在漂移，且 `cron.status` 的 UI 字段不匹配（UI 期待 `jobCount`，而 gateway 返回 `jobs`）。
 
-## Goals
-- Stop `cron.add` INVALID_REQUEST spam by normalizing common wrapper payloads and inferring missing `kind` fields.
-- Align cron provider lists across gateway schema, cron types, CLI docs, and UI forms.
-- Make agent cron tool schema explicit so the LLM produces correct job payloads.
-- Fix the Control UI cron status job count display.
-- Add tests to cover normalization and tool behavior.
+## 目标
+- 通过规范化常见包裹形态并推断缺失的 `kind` 字段，停止 `cron.add` 的 INVALID_REQUEST 垃圾日志。
+- 对齐 gateway schema、cron 类型、CLI 文档与 UI 表单中的 provider 列表。
+- 明确代理 cron 工具 schema，让 LLM 生成正确的任务 payload。
+- 修复 Control UI 中 cron 状态的任务数显示。
+- 添加测试覆盖规范化与工具行为。
 
-## Non-goals
-- Change cron scheduling semantics or job execution behavior.
-- Add new schedule kinds or cron expression parsing.
-- Overhaul the UI/UX for cron beyond the necessary field fixes.
+## 非目标
+- 改变 cron 调度语义或任务执行行为。
+- 新增调度类型或 cron 表达式解析。
+- 对 cron 的 UI/UX 做超过字段修复之外的改造。
 
-## Findings (current gaps)
-- `CronPayloadSchema` in gateway excludes `signal` + `imessage`, while TS types include them.
-- Control UI CronStatus expects `jobCount`, but gateway returns `jobs`.
-- Agent cron tool schema allows arbitrary `job` objects, enabling malformed inputs.
-- Gateway strictly validates `cron.add` with no normalization, so wrapped payloads fail.
+## 发现的问题（当前缺口）
+- gateway 的 `CronPayloadSchema` 排除了 `signal` 与 `imessage`，但 TS 类型包含它们。
+- Control UI 的 CronStatus 期望 `jobCount`，但 gateway 返回 `jobs`。
+- 代理 cron 工具 schema 允许任意 `job` 对象，导致无效输入。
+- gateway 对 `cron.add` 严格校验且无规范化，包裹 payload 会失败。
 
-## What changed
+## 已变更内容
 
-- `cron.add` and `cron.update` now normalize common wrapper shapes and infer missing `kind` fields.
-- Agent cron tool schema matches the gateway schema, which reduces invalid payloads.
-- Provider enums are aligned across gateway, CLI, UI, and macOS picker.
-- Control UI uses the gateway’s `jobs` count field for status.
+- `cron.add` 与 `cron.update` 现在会规范化常见包裹形态，并推断缺失的 `kind` 字段。
+- 代理 cron 工具 schema 与 gateway schema 对齐，减少无效 payload。
+- provider 枚举在 gateway、CLI、UI 与 macOS 选择器中对齐。
+- Control UI 使用 gateway 返回的 `jobs` 字段来显示状态计数。
 
-## Current behavior
+## 当前行为
 
-- **Normalization:** wrapped `data`/`job` payloads are unwrapped; `schedule.kind` and `payload.kind` are inferred when safe.
-- **Defaults:** safe defaults are applied for `wakeMode` and `sessionTarget` when missing.
-- **Providers:** Discord/Slack/Signal/iMessage are now consistently surfaced across CLI/UI.
+- **规范化：**`data`/`job` 包裹的 payload 会被解包；在安全时推断 `schedule.kind` 与 `payload.kind`。
+- **默认值：**当缺失时，为 `wakeMode` 与 `sessionTarget` 设定安全默认值。
+- **Providers：**Discord/Slack/Signal/iMessage 现已在 CLI 与 UI 中一致展示。
 
-See [Cron jobs](/automation/cron-jobs) for the normalized shape and examples.
+规范化形态与示例见 [Cron jobs](/automation/cron-jobs)。
 
-## Verification
+## 验证
 
-- Watch gateway logs for reduced `cron.add` INVALID_REQUEST errors.
-- Confirm Control UI cron status shows job count after refresh.
+- 观察 gateway 日志，确认 `cron.add` INVALID_REQUEST 错误减少。
+- 刷新后确认 Control UI 的 cron 状态显示任务数量。
 
-## Optional Follow-ups
+## 可选后续
 
-- Manual Control UI smoke: add a cron job per provider + verify status job count.
+- 手动 Control UI 冒烟：为每个 provider 添加一个 cron 任务并验证状态计数。
 
-## Open Questions
-- Should `cron.add` accept explicit `state` from clients (currently disallowed by schema)?
-- Should we allow `webchat` as an explicit delivery provider (currently filtered in delivery resolution)?
+## 未决问题
+- 是否让 `cron.add` 接受客户端传入的 `state`（当前 schema 禁止）？
+- 是否允许 `webchat` 作为显式投递 provider（当前在投递解析中被过滤）？

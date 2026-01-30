@@ -1,38 +1,36 @@
 ---
-summary: "Telegram allowlist hardening: prefix + whitespace normalization"
+summary: "Telegram 允许列表加固：前缀与空白规范化"
 read_when:
-  - Reviewing historical Telegram allowlist changes
+  - 回顾 Telegram 允许列表历史变更
 ---
-# Telegram Allowlist Hardening
+# Telegram 允许列表加固
 
-**Date**: 2026-01-05  
-**Status**: Complete  
-**PR**: #216
+**日期**：2026-01-05  
+**状态**：完成  
+**PR**：#216
 
-## Summary
+## 概要
 
-Telegram allowlists now accept `telegram:` and `tg:` prefixes case-insensitively, and tolerate
-accidental whitespace. This aligns inbound allowlist checks with outbound send normalization.
+Telegram 允许列表现在以不区分大小写的方式接受 `telegram:` 与 `tg:` 前缀，并容忍意外空白。这样可让入站允许列表校验与出站发送的规范化保持一致。
 
-## What changed
+## 变更内容
 
-- Prefixes `telegram:` and `tg:` are treated the same (case-insensitive).
-- Allowlist entries are trimmed; empty entries are ignored.
+- 前缀 `telegram:` 与 `tg:` 视为等价（不区分大小写）。
+- 允许列表条目会被 trim，空条目忽略。
 
-## Examples
+## 示例
 
-All of these are accepted for the same ID:
+以下都被视为同一个 ID：
 
 - `telegram:123456`
 - `TG:123456`
 - ` tg:123456 `
 
-## Why it matters
+## 意义
 
-Copy/paste from logs or chat IDs often includes prefixes and whitespace. Normalizing avoids
-false negatives when deciding whether to respond in DMs or groups.
+从日志或聊天 ID 复制时常带前缀或空白。规范化可避免在决定是否回复私聊或群聊时出现误判。
 
-## Related docs
+## 相关文档
 
 - [Group Chats](/concepts/groups)
 - [Telegram Provider](/channels/telegram)

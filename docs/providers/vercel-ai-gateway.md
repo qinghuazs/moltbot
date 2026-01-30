@@ -1,28 +1,28 @@
 ---
 title: "Vercel AI Gateway"
-summary: "Vercel AI Gateway setup (auth + model selection)"
+summary: "Vercel AI Gateway 设置（认证与模型选择）"
 read_when:
-  - You want to use Vercel AI Gateway with Moltbot
-  - You need the API key env var or CLI auth choice
+  - 想在 Moltbot 中使用 Vercel AI Gateway
+  - 需要 API key 环境变量或 CLI 认证选项
 ---
 # Vercel AI Gateway
 
 
-The [Vercel AI Gateway](https://vercel.com/ai-gateway) provides a unified API to access hundreds of models through a single endpoint. 
+[Vercel AI Gateway](https://vercel.com/ai-gateway) 提供统一 API，可通过单一端点访问数百模型。
 
-- Provider: `vercel-ai-gateway`
-- Auth: `AI_GATEWAY_API_KEY`
-- API: Anthropic Messages compatible
+- Provider：`vercel-ai-gateway`
+- 认证：`AI_GATEWAY_API_KEY`
+- API：兼容 Anthropic Messages
 
-## Quick start
+## 快速开始
 
-1) Set the API key (recommended: store it for the Gateway):
+1) 设置 API key（推荐存入 Gateway 侧）：
 
 ```bash
 moltbot onboard --auth-choice ai-gateway-api-key
 ```
 
-2) Set a default model:
+2) 设置默认模型：
 
 ```json5
 {
@@ -34,7 +34,7 @@ moltbot onboard --auth-choice ai-gateway-api-key
 }
 ```
 
-## Non-interactive example
+## 非交互示例
 
 ```bash
 moltbot onboard --non-interactive \
@@ -43,8 +43,6 @@ moltbot onboard --non-interactive \
   --ai-gateway-api-key "$AI_GATEWAY_API_KEY"
 ```
 
-## Environment note
+## 环境变量说明
 
-If the Gateway runs as a daemon (launchd/systemd), make sure `AI_GATEWAY_API_KEY`
-is available to that process (for example, in `~/.clawdbot/.env` or via
-`env.shellEnv`).
+如果 Gateway 作为守护进程运行（launchd/systemd），请确保 `AI_GATEWAY_API_KEY` 对该进程可见（例如在 `~/.clawdbot/.env` 或通过 `env.shellEnv` 设置）。

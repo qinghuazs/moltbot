@@ -1,20 +1,20 @@
 ---
-summary: "Help hub: common fixes, install sanity, and where to look when something breaks"
+summary: "帮助中心：常见修复、安装自检与问题排查入口"
 read_when:
-  - You’re new and want the “what do I click/run” guide
-  - Something broke and you want the fastest path to a fix
+  - 你是新手，想要“该点哪里或运行什么”的指南
+  - 出了问题，想尽快修复
 ---
 
-# Help
+# 帮助
 
-If you want a quick “get unstuck” flow, start here:
+如果你想快速“脱困”，从这里开始：
 
-- **Troubleshooting:** [Start here](/help/troubleshooting)
-- **Install sanity (Node/npm/PATH):** [Install](/install#nodejs--npm-path-sanity)
-- **Gateway issues:** [Gateway troubleshooting](/gateway/troubleshooting)
-- **Logs:** [Logging](/logging) and [Gateway logging](/gateway/logging)
-- **Repairs:** [Doctor](/gateway/doctor)
+- **故障排查：**[从这里开始](/help/troubleshooting)
+- **安装自检（Node/npm/PATH）：**[Install](/install#nodejs--npm-path-sanity)
+- **Gateway 问题：**[Gateway troubleshooting](/gateway/troubleshooting)
+- **日志：**[Logging](/logging) 与 [Gateway logging](/gateway/logging)
+- **修复：**[Doctor](/gateway/doctor)
 
-If you’re looking for conceptual questions (not “something broke”):
+如果你要找的是概念问题（不是“坏了”）：
 
-- [FAQ (concepts)](/help/faq)
+- [FAQ（概念）](/help/faq)

@@ -1,38 +1,38 @@
 ---
-summary: "Run Moltbot with Ollama (local LLM runtime)"
+summary: "使用 Ollama（本地 LLM 运行时）运行 Moltbot"
 read_when:
-  - You want to run Moltbot with local models via Ollama
-  - You need Ollama setup and configuration guidance
+  - 想通过 Ollama 使用本地模型
+  - 需要 Ollama 设置与配置指南
 ---
 # Ollama
 
-Ollama is a local LLM runtime that makes it easy to run open-source models on your machine. Moltbot integrates with Ollama's OpenAI-compatible API and can **auto-discover tool-capable models** when you opt in with `OLLAMA_API_KEY` (or an auth profile) and do not define an explicit `models.providers.ollama` entry.
+Ollama 是本地 LLM 运行时，可轻松在机器上运行开源模型。Moltbot 集成了 Ollama 的 OpenAI 兼容 API，并在设置 `OLLAMA_API_KEY`（或认证配置）且未显式定义 `models.providers.ollama` 时，**自动发现支持工具的模型**。
 
-## Quick start
+## 快速开始
 
-1) Install Ollama: https://ollama.ai
+1) 安装 Ollama：https://ollama.ai
 
-2) Pull a model:
+2) 拉取模型：
 
 ```bash
 ollama pull llama3.3
-# or
+# 或
 ollama pull qwen2.5-coder:32b
-# or
+# 或
 ollama pull deepseek-r1:32b
 ```
 
-3) Enable Ollama for Moltbot (any value works; Ollama doesn't require a real key):
+3) 为 Moltbot 启用 Ollama（任意值即可；Ollama 不要求真实 key）：
 
 ```bash
-# Set environment variable
+# 设置环境变量
 export OLLAMA_API_KEY="ollama-local"
 
-# Or configure in your config file
+# 或在配置中设置
 moltbot config set models.providers.ollama.apiKey "ollama-local"
 ```
 
-4) Use Ollama models:
+4) 使用 Ollama 模型：
 
 ```json5
 {
@@ -44,59 +44,59 @@ moltbot config set models.providers.ollama.apiKey "ollama-local"
 }
 ```
 
-## Model discovery (implicit provider)
+## 模型发现（隐式 provider）
 
-When you set `OLLAMA_API_KEY` (or an auth profile) and **do not** define `models.providers.ollama`, Moltbot discovers models from the local Ollama instance at `http://127.0.0.1:11434`:
+当设置了 `OLLAMA_API_KEY`（或认证配置），且**未**定义 `models.providers.ollama` 时，Moltbot 会从本地 Ollama 实例 `http://127.0.0.1:11434` 发现模型：
 
-- Queries `/api/tags` and `/api/show`
-- Keeps only models that report `tools` capability
-- Marks `reasoning` when the model reports `thinking`
-- Reads `contextWindow` from `model_info["<arch>.context_length"]` when available
-- Sets `maxTokens` to 10× the context window
-- Sets all costs to `0`
+- 查询 `/api/tags` 与 `/api/show`
+- 仅保留报告 `tools` 能力的模型
+- 当模型报告 `thinking` 时标记为 `reasoning`
+- 从 `model_info["<arch>.context_length"]` 读取 `contextWindow`
+- 将 `maxTokens` 设为上下文窗口的 10 倍
+- 将成本全部设为 `0`
 
-This avoids manual model entries while keeping the catalog aligned with Ollama's capabilities.
+这样无需手动写模型条目，同时保持与 Ollama 能力一致。
 
-To see what models are available:
+查看可用模型：
 
 ```bash
 ollama list
 moltbot models list
 ```
 
-To add a new model, simply pull it with Ollama:
+新增模型只需拉取：
 
 ```bash
 ollama pull mistral
 ```
 
-The new model will be automatically discovered and available to use.
+新模型会自动发现并可用。
 
-If you set `models.providers.ollama` explicitly, auto-discovery is skipped and you must define models manually (see below).
+如果显式设置 `models.providers.ollama`，则会跳过自动发现，需手动定义模型（见下）。
 
-## Configuration
+## 配置
 
-### Basic setup (implicit discovery)
+### 基础设置（隐式发现）
 
-The simplest way to enable Ollama is via environment variable:
+最简单的启用方式是环境变量：
 
 ```bash
 export OLLAMA_API_KEY="ollama-local"
 ```
 
-### Explicit setup (manual models)
+### 显式设置（手动模型）
 
-Use explicit config when:
-- Ollama runs on another host/port.
-- You want to force specific context windows or model lists.
-- You want to include models that do not report tool support.
+以下场景使用显式配置：
+- Ollama 运行在其它主机或端口。
+- 需要强制特定上下文窗口或模型列表。
+- 想包含未报告工具支持的模型。
 
 ```json5
 {
   models: {
     providers: {
       ollama: {
-        // Use a host that includes /v1 for OpenAI-compatible APIs
+        // 使用包含 /v1 的主机以适配 OpenAI 兼容 API
         baseUrl: "http://ollama-host:11434/v1",
         apiKey: "ollama-local",
         api: "openai-completions",
@@ -117,11 +117,11 @@ Use explicit config when:
 }
 ```
 
-If `OLLAMA_API_KEY` is set, you can omit `apiKey` in the provider entry and Moltbot will fill it for availability checks.
+若已设置 `OLLAMA_API_KEY`，可在 provider 条目中省略 `apiKey`，Moltbot 会用于可用性检查。
 
-### Custom base URL (explicit config)
+### 自定义 base URL（显式配置）
 
-If Ollama is running on a different host or port (explicit config disables auto-discovery, so define models manually):
+若 Ollama 运行在不同主机或端口（显式配置会禁用自动发现，因此需手动定义模型）：
 
 ```json5
 {
@@ -136,9 +136,9 @@ If Ollama is running on a different host or port (explicit config disables auto-
 }
 ```
 
-### Model selection
+### 模型选择
 
-Once configured, all your Ollama models are available:
+配置完成后，所有 Ollama 模型都可用：
 
 ```json5
 {
@@ -153,67 +153,49 @@ Once configured, all your Ollama models are available:
 }
 ```
 
-## Advanced
+## 高级
 
-### Reasoning models
+### 推理模型
 
-Moltbot marks models as reasoning-capable when Ollama reports `thinking` in `/api/show`:
+当 Ollama 在 `/api/show` 报告 `thinking` 时，Moltbot 会标记为推理模型：
 
 ```bash
 ollama pull deepseek-r1:32b
 ```
 
-### Model Costs
+### 模型成本
 
-Ollama is free and runs locally, so all model costs are set to $0.
+Ollama 在本地运行且免费，因此所有模型成本设为 $0。
 
-### Context windows
+### 上下文窗口
 
-For auto-discovered models, Moltbot uses the context window reported by Ollama when available, otherwise it defaults to `8192`. You can override `contextWindow` and `maxTokens` in explicit provider config.
+对自动发现的模型，Moltbot 优先使用 Ollama 报告的上下文窗口，否则默认 `8192`。你可以在显式 provider 配置中覆盖 `contextWindow` 与 `maxTokens`。
 
-## Troubleshooting
+## 故障排查
 
-### Ollama not detected
+### 未检测到 Ollama
 
-Make sure Ollama is running and that you set `OLLAMA_API_KEY` (or an auth profile), and that you did **not** define an explicit `models.providers.ollama` entry:
+确认 Ollama 正在运行，并设置了 `OLLAMA_API_KEY`（或认证配置），且**未**定义显式 `models.providers.ollama`：
 
 ```bash
 ollama serve
 ```
 
-And that the API is accessible:
+并确认 API 可访问：
 
 ```bash
 curl http://localhost:11434/api/tags
 ```
 
-### No models available
+### 无可用模型
 
-Moltbot only auto-discovers models that report tool support. If your model isn't listed, either:
-- Pull a tool-capable model, or
-- Define the model explicitly in `models.providers.ollama`.
+Moltbot 仅自动发现报告工具支持的模型。若未列出你的模型：
+- 拉取支持工具的模型，或
+- 在 `models.providers.ollama` 中显式定义该模型。
 
-To add models:
-
-```bash
-ollama list  # See what's installed
-ollama pull llama3.3  # Pull a model
-```
-
-### Connection refused
-
-Check that Ollama is running on the correct port:
+添加模型：
 
 ```bash
-# Check if Ollama is running
-ps aux | grep ollama
-
-# Or restart Ollama
-ollama serve
+ollama list  # 查看已安装
+ollama pull llama3.3  # 拉取模型
 ```
-
-## See Also
-
-- [Model Providers](/concepts/model-providers) - Overview of all providers
-- [Model Selection](/concepts/models) - How to choose models
-- [Configuration](/gateway/configuration) - Full config reference

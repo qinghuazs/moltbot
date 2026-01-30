@@ -1,22 +1,22 @@
 ---
-summary: "Diagnostics flags for targeted debug logs"
+summary: "用于定向调试日志的诊断标志"
 read_when:
-  - You need targeted debug logs without raising global logging levels
-  - You need to capture subsystem-specific logs for support
+  - 需要定向调试日志但不想全局提高日志级别
+  - 需要为支持收集特定子系统日志
 ---
-# Diagnostics Flags
+# 诊断标志
 
-Diagnostics flags let you enable targeted debug logs without turning on verbose logging everywhere. Flags are opt-in and have no effect unless a subsystem checks them.
+诊断标志允许你开启定向调试日志，而无需在所有地方启用 verbose 日志。标志是可选的，只有子系统显式检查时才会生效。
 
-## How it works
+## 工作方式
 
-- Flags are strings (case-insensitive).
-- You can enable flags in config or via an env override.
-- Wildcards are supported:
-  - `telegram.*` matches `telegram.http`
-  - `*` enables all flags
+- 标志是字符串（不区分大小写）。
+- 可通过配置或环境变量覆盖启用。
+- 支持通配符：
+  - `telegram.*` 匹配 `telegram.http`
+  - `*` 启用所有标志
 
-## Enable via config
+## 通过配置启用
 
 ```json
 {
@@ -26,7 +26,7 @@ Diagnostics flags let you enable targeted debug logs without turning on verbose 
 }
 ```
 
-Multiple flags:
+多个标志：
 
 ```json
 {
@@ -36,54 +36,54 @@ Multiple flags:
 }
 ```
 
-Restart the gateway after changing flags.
+修改后请重启 gateway。
 
-## Env override (one-off)
+## 环境变量覆盖（一次性）
 
 ```bash
 CLAWDBOT_DIAGNOSTICS=telegram.http,telegram.payload
 ```
 
-Disable all flags:
+禁用所有标志：
 
 ```bash
 CLAWDBOT_DIAGNOSTICS=0
 ```
 
-## Where logs go
+## 日志位置
 
-Flags emit logs into the standard diagnostics log file. By default:
+标志会将日志写入标准诊断日志文件。默认路径：
 
 ```
 /tmp/moltbot/moltbot-YYYY-MM-DD.log
 ```
 
-If you set `logging.file`, use that path instead. Logs are JSONL (one JSON object per line). Redaction still applies based on `logging.redactSensitive`.
+如果设置了 `logging.file`，则使用该路径。日志为 JSONL（每行一个 JSON 对象）。脱敏仍受 `logging.redactSensitive` 控制。
 
-## Extract logs
+## 提取日志
 
-Pick the latest log file:
+选择最新日志文件：
 
 ```bash
 ls -t /tmp/moltbot/moltbot-*.log | head -n 1
 ```
 
-Filter for Telegram HTTP diagnostics:
+过滤 Telegram HTTP 诊断：
 
 ```bash
 rg "telegram http error" /tmp/moltbot/moltbot-*.log
 ```
 
-Or tail while reproducing:
+或在复现时跟随：
 
 ```bash
 tail -f /tmp/moltbot/moltbot-$(date +%F).log | rg "telegram http error"
 ```
 
-For remote gateways, you can also use `moltbot logs --follow` (see [/cli/logs](/cli/logs)).
+对于远程 gateway，也可使用 `moltbot logs --follow`（见 [/cli/logs](/cli/logs)）。
 
-## Notes
+## 说明
 
-- If `logging.level` is set higher than `warn`, these logs may be suppressed. Default `info` is fine.
-- Flags are safe to leave enabled; they only affect log volume for the specific subsystem.
-- Use [/logging](/logging) to change log destinations, levels, and redaction.
+- 若 `logging.level` 高于 `warn`，这些日志可能被抑制。默认 `info` 没问题。
+- 标志可以长期开启；只影响特定子系统的日志量。
+- 通过 [/logging](/logging) 调整日志目的地、级别与脱敏。

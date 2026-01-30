@@ -1,15 +1,15 @@
 ---
-summary: "Troubleshooting hub: symptoms → checks → fixes"
+summary: "故障排查中心：症状 → 检查 → 修复"
 read_when:
-  - You see an error and want the fix path
-  - The installer says “success” but the CLI doesn’t work
+  - 看到错误并想快速定位修复路径
+  - 安装器显示成功但 CLI 无法工作
 ---
 
-# Troubleshooting
+# 故障排查
 
-## First 60 seconds
+## 前 60 秒
 
-Run these in order:
+按顺序运行：
 
 ```bash
 moltbot status
@@ -19,79 +19,78 @@ moltbot logs --follow
 moltbot doctor
 ```
 
-If the gateway is reachable, deep probes:
+如果 gateway 可达，运行深度探测：
 
 ```bash
 moltbot status --deep
 ```
 
-## Common “it broke” cases
+## 常见“崩了”场景
 
 ### `moltbot: command not found`
 
-Almost always a Node/npm PATH issue. Start here:
+几乎总是 Node/npm PATH 问题。从这里开始：
 
-- [Install (Node/npm PATH sanity)](/install#nodejs--npm-path-sanity)
+- [Install（Node/npm PATH 自检）](/install#nodejs--npm-path-sanity)
 
-### Installer fails (or you need full logs)
+### 安装器失败（或需要完整日志）
 
-Re-run the installer in verbose mode to see the full trace and npm output:
+用 verbose 模式重跑安装器，查看完整追踪与 npm 输出：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --verbose
 ```
 
-For beta installs:
+beta 安装：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --beta --verbose
 ```
 
-You can also set `CLAWDBOT_VERBOSE=1` instead of the flag.
+也可以设置 `CLAWDBOT_VERBOSE=1` 替代标志。
 
-### Gateway “unauthorized”, can’t connect, or keeps reconnecting
+### Gateway 显示“unauthorized”、无法连接或反复重连
 
 - [Gateway troubleshooting](/gateway/troubleshooting)
 - [Gateway authentication](/gateway/authentication)
 
-### Control UI fails on HTTP (device identity required)
+### Control UI 通过 HTTP 失败（需要设备身份）
 
 - [Gateway troubleshooting](/gateway/troubleshooting)
 - [Control UI](/web/control-ui#insecure-http)
 
-### `docs.molt.bot` shows an SSL error (Comcast/Xfinity)
+### `docs.molt.bot` 出现 SSL 错误（Comcast/Xfinity）
 
-Some Comcast/Xfinity connections block `docs.molt.bot` via Xfinity Advanced Security.
-Disable Advanced Security or add `docs.molt.bot` to the allowlist, then retry.
+部分 Comcast/Xfinity 连接会通过 Xfinity Advanced Security 阻止 `docs.molt.bot`。
+请关闭 Advanced Security 或将 `docs.molt.bot` 加入允许列表后重试。
 
-- Xfinity Advanced Security help: https://www.xfinity.com/support/articles/using-xfinity-xfi-advanced-security
-- Quick sanity checks: try a mobile hotspot or VPN to confirm it’s ISP-level filtering
+- Xfinity Advanced Security 帮助： https://www.xfinity.com/support/articles/using-xfinity-xfi-advanced-security
+- 快速自检：尝试手机热点或 VPN，以确认是否为 ISP 层级过滤
 
-### Service says running, but RPC probe fails
+### 服务显示运行但 RPC 探测失败
 
 - [Gateway troubleshooting](/gateway/troubleshooting)
 - [Background process / service](/gateway/background-process)
 
-### Model/auth failures (rate limit, billing, “all models failed”)
+### 模型或认证失败（限流、计费、“all models failed”）
 
 - [Models](/cli/models)
 - [OAuth / auth concepts](/concepts/oauth)
 
-### `/model` says `model not allowed`
+### `/model` 提示 `model not allowed`
 
-This usually means `agents.defaults.models` is configured as an allowlist. When it’s non-empty,
-only those provider/model keys can be selected.
+通常表示 `agents.defaults.models` 被配置为允许列表。非空时只能选择其中的 provider/model。
 
-- Check the allowlist: `moltbot config get agents.defaults.models`
-- Add the model you want (or clear the allowlist) and retry `/model`
-- Use `/models` to browse the allowed providers/models
+- 查看允许列表：`moltbot config get agents.defaults.models`
+- 添加所需模型（或清空允许列表）后重试 `/model`
+- 使用 `/models` 浏览允许的 provider/model
 
-### When filing an issue
+### 提交问题时
 
-Paste a safe report:
+粘贴安全报告：
 
 ```bash
 moltbot status --all
 ```
 
-If you can, include the relevant log tail from `moltbot logs --follow`.
+如能提供，请附上 `moltbot logs --follow` 的相关日志尾部。

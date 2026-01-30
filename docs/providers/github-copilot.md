@@ -1,59 +1,49 @@
 ---
-summary: "Sign in to GitHub Copilot from Moltbot using the device flow"
+summary: "在 Moltbot 中通过设备登录使用 GitHub Copilot"
 read_when:
-  - You want to use GitHub Copilot as a model provider
-  - You need the `moltbot models auth login-github-copilot` flow
+  - 想将 GitHub Copilot 作为模型提供商
+  - 需要 `moltbot models auth login-github-copilot` 流程
 ---
-# Github Copilot
+# GitHub Copilot
 
-## What is GitHub Copilot?
+## 什么是 GitHub Copilot
 
-GitHub Copilot is GitHub's AI coding assistant. It provides access to Copilot
-models for your GitHub account and plan. Moltbot can use Copilot as a model
-provider in two different ways.
+GitHub Copilot 是 GitHub 的 AI 编程助手。它为你的 GitHub 账号与订阅提供 Copilot 模型访问。Moltbot 可以通过两种方式使用 Copilot。
 
-## Two ways to use Copilot in Moltbot
+## 在 Moltbot 中使用 Copilot 的两种方式
 
-### 1) Built-in GitHub Copilot provider (`github-copilot`)
+### 1) 内置 GitHub Copilot 提供商（`github-copilot`）
 
-Use the native device-login flow to obtain a GitHub token, then exchange it for
-Copilot API tokens when Moltbot runs. This is the **default** and simplest path
-because it does not require VS Code.
+使用原生设备登录流程获取 GitHub token，并在 Moltbot 运行时换取 Copilot API token。这是**默认**且最简单的路径，不需要 VS Code。
 
-### 2) Copilot Proxy plugin (`copilot-proxy`)
+### 2) Copilot Proxy 插件（`copilot-proxy`）
 
-Use the **Copilot Proxy** VS Code extension as a local bridge. Moltbot talks to
-the proxy’s `/v1` endpoint and uses the model list you configure there. Choose
-this when you already run Copilot Proxy in VS Code or need to route through it.
-You must enable the plugin and keep the VS Code extension running.
+使用 **Copilot Proxy** VS Code 扩展作为本地桥接。Moltbot 连接代理的 `/v1` 端点，并使用你在代理中配置的模型列表。当你已在 VS Code 中运行 Copilot Proxy 或需要通过它转发时选择此方式。你必须启用插件并保持 VS Code 扩展运行。
 
-Use GitHub Copilot as a model provider (`github-copilot`). The login command runs
-the GitHub device flow, saves an auth profile, and updates your config to use that
-profile.
+使用 GitHub Copilot 作为模型提供商（`github-copilot`）。该登录命令会运行 GitHub 设备登录流程，保存认证配置，并更新配置以使用该配置。
 
-## CLI setup
+## CLI 设置
 
 ```bash
 moltbot models auth login-github-copilot
 ```
 
-You'll be prompted to visit a URL and enter a one-time code. Keep the terminal
-open until it completes.
+系统会提示你访问 URL 并输入一次性代码。请保持终端打开直到完成。
 
-### Optional flags
+### 可选标志
 
 ```bash
 moltbot models auth login-github-copilot --profile-id github-copilot:work
 moltbot models auth login-github-copilot --yes
 ```
 
-## Set a default model
+## 设置默认模型
 
 ```bash
 moltbot models set github-copilot/gpt-4o
 ```
 
-### Config snippet
+### 配置片段
 
 ```json5
 {
@@ -61,10 +51,8 @@ moltbot models set github-copilot/gpt-4o
 }
 ```
 
-## Notes
+## 说明
 
-- Requires an interactive TTY; run it directly in a terminal.
-- Copilot model availability depends on your plan; if a model is rejected, try
-  another ID (for example `github-copilot/gpt-4.1`).
-- The login stores a GitHub token in the auth profile store and exchanges it for a
-  Copilot API token when Moltbot runs.
+- 需要交互式 TTY；请在终端中直接运行。
+- Copilot 可用模型取决于订阅；若模型被拒，尝试其它 ID（如 `github-copilot/gpt-4.1`）。
+- 登录会在认证配置中保存 GitHub token，并在 Moltbot 运行时换取 Copilot API token。

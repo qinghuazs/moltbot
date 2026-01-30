@@ -1,18 +1,16 @@
 ---
-summary: "Configure Moonshot K2 vs Kimi Code (separate providers + keys)"
+summary: "配置 Moonshot K2 与 Kimi Code（分离的 provider 与 key）"
 read_when:
-  - You want Moonshot K2 (Moonshot Open Platform) vs Kimi Code setup
-  - You need to understand separate endpoints, keys, and model refs
-  - You want copy/paste config for either provider
+  - 需要 Moonshot K2（Moonshot Open Platform）或 Kimi Code 的设置
+  - 想了解不同端点、key 与模型引用
+  - 需要可复制的配置示例
 ---
 
-# Moonshot AI (Kimi)
+# Moonshot AI（Kimi）
 
-Moonshot provides the Kimi API with OpenAI-compatible endpoints. Configure the
-provider and set the default model to `moonshot/kimi-k2.5`, or use
-Kimi Code with `kimi-code/kimi-for-coding`.
+Moonshot 提供 OpenAI 兼容的 Kimi API。配置 provider 并将默认模型设为 `moonshot/kimi-k2.5`，或使用 Kimi Code 的 `kimi-code/kimi-for-coding`。
 
-Current Kimi K2 model IDs:
+当前 Kimi K2 模型 ID：
 {/* moonshot-kimi-k2-ids:start */}
 - `kimi-k2.5`
 - `kimi-k2-0905-preview`
@@ -25,15 +23,15 @@ Current Kimi K2 model IDs:
 moltbot onboard --auth-choice moonshot-api-key
 ```
 
-Kimi Code:
+Kimi Code：
 
 ```bash
 moltbot onboard --auth-choice kimi-code-api-key
 ```
 
-Note: Moonshot and Kimi Code are separate providers. Keys are not interchangeable, endpoints differ, and model refs differ (Moonshot uses `moonshot/...`, Kimi Code uses `kimi-code/...`).
+说明：Moonshot 与 Kimi Code 是两个独立提供商。key 不可互换，端点不同，模型引用也不同（Moonshot 使用 `moonshot/...`，Kimi Code 使用 `kimi-code/...`）。
 
-## Config snippet (Moonshot API)
+## 配置片段（Moonshot API）
 
 ```json5
 {
@@ -153,10 +151,9 @@ Note: Moonshot and Kimi Code are separate providers. Keys are not interchangeabl
 }
 ```
 
-## Notes
+## 说明
 
-- Moonshot model refs use `moonshot/<modelId>`. Kimi Code model refs use `kimi-code/<modelId>`.
-- Override pricing and context metadata in `models.providers` if needed.
-- If Moonshot publishes different context limits for a model, adjust
-  `contextWindow` accordingly.
-- Use `https://api.moonshot.cn/v1` if you need the China endpoint.
+- Moonshot 模型引用使用 `moonshot/<modelId>`，Kimi Code 使用 `kimi-code/<modelId>`。
+- 如需定价与上下文元数据，可在 `models.providers` 中覆盖。
+- 若 Moonshot 发布不同上下文上限，请相应调整 `contextWindow`。
+- 如需中国区端点，使用 `https://api.moonshot.cn/v1`。

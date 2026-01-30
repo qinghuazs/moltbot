@@ -1,21 +1,20 @@
 ---
-summary: "Use OpenRouter's unified API to access many models in Moltbot"
+summary: "在 Moltbot 中使用 OpenRouter 统一 API 访问多模型"
 read_when:
-  - You want a single API key for many LLMs
-  - You want to run models via OpenRouter in Moltbot
+  - 想用一个 API key 访问多个 LLM
+  - 想在 Moltbot 中通过 OpenRouter 运行模型
 ---
 # OpenRouter
 
-OpenRouter provides a **unified API** that routes requests to many models behind a single
-endpoint and API key. It is OpenAI-compatible, so most OpenAI SDKs work by switching the base URL.
+OpenRouter 提供一个**统一 API**，通过单一端点与 API key 路由到多模型。它与 OpenAI 兼容，因此多数 OpenAI SDK 只需切换 base URL。
 
-## CLI setup
+## CLI 设置
 
 ```bash
 moltbot onboard --auth-choice apiKey --token-provider openrouter --token "$OPENROUTER_API_KEY"
 ```
 
-## Config snippet
+## 配置片段
 
 ```json5
 {
@@ -28,8 +27,8 @@ moltbot onboard --auth-choice apiKey --token-provider openrouter --token "$OPENR
 }
 ```
 
-## Notes
+## 说明
 
-- Model refs are `openrouter/<provider>/<model>`.
-- For more model/provider options, see [/concepts/model-providers](/concepts/model-providers).
-- OpenRouter uses a Bearer token with your API key under the hood.
+- 模型引用格式：`openrouter/<provider>/<model>`。
+- 更多模型与 provider 选项见 [/concepts/model-providers](/concepts/model-providers)。
+- OpenRouter 底层使用 Bearer token 携带你的 API key。

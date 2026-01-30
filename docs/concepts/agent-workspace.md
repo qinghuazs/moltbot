@@ -1,30 +1,28 @@
 ---
-summary: "Agent workspace: location, layout, and backup strategy"
+summary: "代理工作区：位置、结构与备份策略"
 read_when:
-  - You need to explain the agent workspace or its file layout
-  - You want to back up or migrate an agent workspace
+  - 需要解释代理工作区及其文件布局
+  - 想备份或迁移代理工作区
 ---
-# Agent workspace
+# 代理工作区
 
-The workspace is the agent's home. It is the only working directory used for
-file tools and for workspace context. Keep it private and treat it as memory.
+工作区是代理的家。它是文件工具与工作区上下文的唯一工作目录。
+请保持私密，并把它当作记忆。
 
-This is separate from `~/.clawdbot/`, which stores config, credentials, and
-sessions.
+这与 `~/.clawdbot/` 不同，后者存储配置、凭据与会话。
 
-**Important:** the workspace is the **default cwd**, not a hard sandbox. Tools
-resolve relative paths against the workspace, but absolute paths can still reach
-elsewhere on the host unless sandboxing is enabled. If you need isolation, use
-[`agents.defaults.sandbox`](/gateway/sandboxing) (and/or per‑agent sandbox config).
-When sandboxing is enabled and `workspaceAccess` is not `"rw"`, tools operate
-inside a sandbox workspace under `~/.clawdbot/sandboxes`, not your host workspace.
+**重要：**工作区是**默认 cwd**，不是硬性沙箱。工具会以工作区为相对路径解析，
+但若未启用沙箱，绝对路径仍可访问主机其它位置。如需隔离，请使用
+[`agents.defaults.sandbox`](/gateway/sandboxing)（以及或单独代理的沙箱配置）。
+启用沙箱且 `workspaceAccess` 不是 `"rw"` 时，工具会在 `~/.clawdbot/sandboxes`
+下的沙箱工作区中运行，而不是你的主机工作区。
 
-## Default location
+## 默认位置
 
-- Default: `~/clawd`
-- If `CLAWDBOT_PROFILE` is set and not `"default"`, the default becomes
-  `~/clawd-<profile>`.
-- Override in `~/.clawdbot/moltbot.json`:
+- 默认：`~/clawd`
+- 如果设置了 `CLAWDBOT_PROFILE` 且不是 `"default"`，默认变为
+  `~/clawd-<profile>`。
+- 在 `~/.clawdbot/moltbot.json` 中覆盖：
 
 ```json5
 {
@@ -34,114 +32,103 @@ inside a sandbox workspace under `~/.clawdbot/sandboxes`, not your host workspac
 }
 ```
 
-`moltbot onboard`, `moltbot configure`, or `moltbot setup` will create the
-workspace and seed the bootstrap files if they are missing.
+`moltbot onboard`、`moltbot configure` 或 `moltbot setup` 会创建工作区并在缺失时写入 bootstrap 文件。
 
-If you already manage the workspace files yourself, you can disable bootstrap
-file creation:
+如果你自行管理工作区文件，可禁用 bootstrap 文件创建：
 
 ```json5
 { agent: { skipBootstrap: true } }
 ```
 
-## Extra workspace folders
+## 额外的工作区目录
 
-Older installs may have created `~/moltbot`. Keeping multiple workspace
-directories around can cause confusing auth or state drift, because only one
-workspace is active at a time.
+旧安装可能创建过 `~/moltbot`。保留多个工作区目录会造成认证或状态漂移，因为同一时间只有一个工作区是活跃的。
 
-**Recommendation:** keep a single active workspace. If you no longer use the
-extra folders, archive or move them to Trash (for example `trash ~/moltbot`).
-If you intentionally keep multiple workspaces, make sure
-`agents.defaults.workspace` points to the active one.
+**建议：**仅保留一个活跃工作区。若不再使用额外目录，请归档或移入废纸篓（例如 `trash ~/moltbot`）。
+如果你有意保留多个工作区，确保 `agents.defaults.workspace` 指向活跃的那个。
 
-`moltbot doctor` warns when it detects extra workspace directories.
+`moltbot doctor` 会在检测到多余工作区目录时给出警告。
 
-## Workspace file map (what each file means)
+## 工作区文件地图（每个文件的含义）
 
-These are the standard files Moltbot expects inside the workspace:
+以下是 Moltbot 在工作区内期望的标准文件：
 
 - `AGENTS.md`
-  - Operating instructions for the agent and how it should use memory.
-  - Loaded at the start of every session.
-  - Good place for rules, priorities, and "how to behave" details.
+  - 代理的操作指令，以及如何使用记忆。
+  - 每次会话开始时加载。
+  - 适合放规则、优先级与行为细节。
 
 - `SOUL.md`
-  - Persona, tone, and boundaries.
-  - Loaded every session.
+  - 角色设定、语气与边界。
+  - 每次会话加载。
 
 - `USER.md`
-  - Who the user is and how to address them.
-  - Loaded every session.
+  - 用户是谁以及如何称呼。
+  - 每次会话加载。
 
 - `IDENTITY.md`
-  - The agent's name, vibe, and emoji.
-  - Created/updated during the bootstrap ritual.
+  - 代理名称、风格与 emoji。
+  - 在 bootstrap 过程中创建或更新。
 
 - `TOOLS.md`
-  - Notes about your local tools and conventions.
-  - Does not control tool availability; it is only guidance.
+  - 本地工具与约定说明。
+  - 不控制工具可用性，仅提供指导。
 
 - `HEARTBEAT.md`
-  - Optional tiny checklist for heartbeat runs.
-  - Keep it short to avoid token burn.
+  - 心跳运行的可选小清单。
+  - 保持精简以避免消耗过多 token。
 
 - `BOOT.md`
-  - Optional startup checklist executed on gateway restart when internal hooks are enabled.
-  - Keep it short; use the message tool for outbound sends.
+  - 在启用内部 hooks 时，gateway 重启时执行的可选启动清单。
+  - 保持精简；外发消息请用 message 工具。
 
 - `BOOTSTRAP.md`
-  - One-time first-run ritual.
-  - Only created for a brand-new workspace.
-  - Delete it after the ritual is complete.
+  - 一次性首次运行仪式。
+  - 仅在全新工作区创建。
+  - 完成后删除。
 
 - `memory/YYYY-MM-DD.md`
-  - Daily memory log (one file per day).
-  - Recommended to read today + yesterday on session start.
+  - 日记忆日志（每日一个文件）。
+  - 建议在会话开始时读取今天与昨天。
 
-- `MEMORY.md` (optional)
-  - Curated long-term memory.
-  - Only load in the main, private session (not shared/group contexts).
+- `MEMORY.md`（可选）
+  - 精选的长期记忆。
+  - 仅在主私有会话中加载（非共享或群聊）。
 
-See [Memory](/concepts/memory) for the workflow and automatic memory flush.
+记忆流程与自动刷写见 [Memory](/concepts/memory)。
 
-- `skills/` (optional)
-  - Workspace-specific skills.
-  - Overrides managed/bundled skills when names collide.
+- `skills/`（可选）
+  - 工作区专属技能。
+  - 与已管理或内置技能重名时会覆盖。
 
-- `canvas/` (optional)
-  - Canvas UI files for node displays (for example `canvas/index.html`).
+- `canvas/`（可选）
+  - 节点显示用的 Canvas UI 文件（例如 `canvas/index.html`）。
 
-If any bootstrap file is missing, Moltbot injects a "missing file" marker into
-the session and continues. Large bootstrap files are truncated when injected;
-adjust the limit with `agents.defaults.bootstrapMaxChars` (default: 20000).
-`moltbot setup` can recreate missing defaults without overwriting existing
-files.
+如果任一 bootstrap 文件缺失，Moltbot 会在会话中注入“missing file”标记并继续。
+大型 bootstrap 文件在注入时会被截断；可用 `agents.defaults.bootstrapMaxChars`
+（默认：20000）调整限制。
+`moltbot setup` 可在不覆盖已有文件的情况下重建缺失的默认文件。
 
-## What is NOT in the workspace
+## 工作区中不包含的内容
 
-These live under `~/.clawdbot/` and should NOT be committed to the workspace repo:
+以下内容位于 `~/.clawdbot/`，**不应**提交到工作区仓库：
 
-- `~/.clawdbot/moltbot.json` (config)
-- `~/.clawdbot/credentials/` (OAuth tokens, API keys)
-- `~/.clawdbot/agents/<agentId>/sessions/` (session transcripts + metadata)
-- `~/.clawdbot/skills/` (managed skills)
+- `~/.clawdbot/moltbot.json`（配置）
+- `~/.clawdbot/credentials/`（OAuth token、API key）
+- `~/.clawdbot/agents/<agentId>/sessions/`（会话记录与元数据）
+- `~/.clawdbot/skills/`（管理的技能）
 
-If you need to migrate sessions or config, copy them separately and keep them
-out of version control.
+如果需要迁移会话或配置，请单独复制，并避免纳入版本控制。
 
-## Git backup (recommended, private)
+## Git 备份（推荐，私有）
 
-Treat the workspace as private memory. Put it in a **private** git repo so it is
-backed up and recoverable.
+将工作区视为私密记忆。放到**私有** git 仓库以便备份与恢复。
 
-Run these steps on the machine where the Gateway runs (that is where the
-workspace lives).
+请在 Gateway 运行的机器上执行以下步骤（工作区所在机器）。
 
-### 1) Initialize the repo
+### 1) 初始化仓库
 
-If git is installed, brand-new workspaces are initialized automatically. If this
-workspace is not already a repo, run:
+若已安装 git，新建工作区会自动初始化。若该工作区尚未是仓库，请执行：
 
 ```bash
 cd ~/clawd
@@ -150,14 +137,14 @@ git add AGENTS.md SOUL.md TOOLS.md IDENTITY.md USER.md HEARTBEAT.md memory/
 git commit -m "Add agent workspace"
 ```
 
-### 2) Add a private remote (beginner-friendly options)
+### 2) 添加私有远程（新手友好选项）
 
-Option A: GitHub web UI
+选项 A：GitHub 网页 UI
 
-1. Create a new **private** repository on GitHub.
-2. Do not initialize with a README (avoids merge conflicts).
-3. Copy the HTTPS remote URL.
-4. Add the remote and push:
+1. 在 GitHub 创建新的**私有**仓库。
+2. 不要初始化 README（避免合并冲突）。
+3. 复制 HTTPS 远程 URL。
+4. 添加远程并推送：
 
 ```bash
 git branch -M main
@@ -165,19 +152,19 @@ git remote add origin <https-url>
 git push -u origin main
 ```
 
-Option B: GitHub CLI (`gh`)
+选项 B：GitHub CLI（`gh`）
 
 ```bash
 gh auth login
 gh repo create clawd-workspace --private --source . --remote origin --push
 ```
 
-Option C: GitLab web UI
+选项 C：GitLab 网页 UI
 
-1. Create a new **private** repository on GitLab.
-2. Do not initialize with a README (avoids merge conflicts).
-3. Copy the HTTPS remote URL.
-4. Add the remote and push:
+1. 在 GitLab 创建新的**私有**仓库。
+2. 不要初始化 README（避免合并冲突）。
+3. 复制 HTTPS 远程 URL。
+4. 添加远程并推送：
 
 ```bash
 git branch -M main
@@ -185,7 +172,7 @@ git remote add origin <https-url>
 git push -u origin main
 ```
 
-### 3) Ongoing updates
+### 3) 持续更新
 
 ```bash
 git status
@@ -194,18 +181,17 @@ git commit -m "Update memory"
 git push
 ```
 
-## Do not commit secrets
+## 不要提交机密
 
-Even in a private repo, avoid storing secrets in the workspace:
+即便是私有仓库，也应避免将机密存到工作区：
 
-- API keys, OAuth tokens, passwords, or private credentials.
-- Anything under `~/.clawdbot/`.
-- Raw dumps of chats or sensitive attachments.
+- API key、OAuth token、密码或私人凭据。
+- `~/.clawdbot/` 目录中的任何内容。
+- 原始聊天导出或敏感附件。
 
-If you must store sensitive references, use placeholders and keep the real
-secret elsewhere (password manager, environment variables, or `~/.clawdbot/`).
+如必须存放敏感引用，请使用占位符，并将真实密钥放在其它位置（密码管理器、环境变量或 `~/.clawdbot/`）。
 
-Suggested `.gitignore` starter:
+建议的 `.gitignore` 起始配置：
 
 ```gitignore
 .DS_Store
@@ -215,17 +201,16 @@ Suggested `.gitignore` starter:
 **/secrets*
 ```
 
-## Moving the workspace to a new machine
+## 将工作区迁移到新机器
 
-1. Clone the repo to the desired path (default `~/clawd`).
-2. Set `agents.defaults.workspace` to that path in `~/.clawdbot/moltbot.json`.
-3. Run `moltbot setup --workspace <path>` to seed any missing files.
-4. If you need sessions, copy `~/.clawdbot/agents/<agentId>/sessions/` from the
-   old machine separately.
+1. 将仓库克隆到目标路径（默认 `~/clawd`）。
+2. 在 `~/.clawdbot/moltbot.json` 中设置 `agents.defaults.workspace` 为该路径。
+3. 运行 `moltbot setup --workspace <path>` 以补齐缺失文件。
+4. 若需要会话，单独复制旧机器上的 `~/.clawdbot/agents/<agentId>/sessions/`。
 
-## Advanced notes
+## 高级说明
 
-- Multi-agent routing can use different workspaces per agent. See
-  [Channel routing](/concepts/channel-routing) for routing configuration.
-- If `agents.defaults.sandbox` is enabled, non-main sessions can use per-session sandbox
-  workspaces under `agents.defaults.sandbox.workspaceRoot`.
+- 多代理路由可为不同代理使用不同工作区。路由配置见
+  [Channel routing](/concepts/channel-routing)。
+- 若启用 `agents.defaults.sandbox`，非主会话可使用
+  `agents.defaults.sandbox.workspaceRoot` 下的每会话沙箱工作区。

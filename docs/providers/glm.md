@@ -1,21 +1,20 @@
 ---
-summary: "GLM model family overview + how to use it in Moltbot"
+summary: "GLM 模型家族概览及在 Moltbot 中的使用方式"
 read_when:
-  - You want GLM models in Moltbot
-  - You need the model naming convention and setup
+  - 想在 Moltbot 中使用 GLM 模型
+  - 需要模型命名规则与设置
 ---
 # GLM models
 
-GLM is a **model family** (not a company) available through the Z.AI platform. In Moltbot, GLM
-models are accessed via the `zai` provider and model IDs like `zai/glm-4.7`.
+GLM 是一个**模型家族**（非公司），通过 Z.AI 平台提供。在 Moltbot 中，GLM 模型通过 `zai` provider 访问，模型 ID 类似 `zai/glm-4.7`。
 
-## CLI setup
+## CLI 设置
 
 ```bash
 moltbot onboard --auth-choice zai-api-key
 ```
 
-## Config snippet
+## 配置片段
 
 ```json5
 {
@@ -24,8 +23,8 @@ moltbot onboard --auth-choice zai-api-key
 }
 ```
 
-## Notes
+## 说明
 
-- GLM versions and availability can change; check Z.AI's docs for the latest.
-- Example model IDs include `glm-4.7` and `glm-4.6`.
-- For provider details, see [/providers/zai](/providers/zai).
+- GLM 版本与可用性可能变化，请查看 Z.AI 最新文档。
+- 示例模型 ID：`glm-4.7`、`glm-4.6`。
+- 提供商详情见 [/providers/zai](/providers/zai)。

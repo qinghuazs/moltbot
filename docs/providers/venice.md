@@ -1,71 +1,71 @@
 ---
-summary: "Use Venice AI privacy-focused models in Moltbot"
+summary: "在 Moltbot 中使用 Venice AI 的隐私优先模型"
 read_when:
-  - You want privacy-focused inference in Moltbot
-  - You want Venice AI setup guidance
+  - 想在 Moltbot 中进行隐私优先推理
+  - 需要 Venice AI 设置指南
 ---
-# Venice AI (Venice highlight)
+# Venice AI（Venice 重点推荐）
 
-**Venice** is our highlight Venice setup for privacy-first inference with optional anonymized access to proprietary models.
+**Venice** 是我们推荐的 Venice 隐私优先推理方案，可选通过匿名代理访问专有模型。
 
-Venice AI provides privacy-focused AI inference with support for uncensored models and access to major proprietary models through their anonymized proxy. All inference is private by default—no training on your data, no logging.
+Venice AI 提供隐私优先的 AI 推理，支持无审查模型，并通过匿名代理访问主流专有模型。所有推理默认私密，不训练你的数据，不记录日志。
 
-## Why Venice in Moltbot
+## 为什么在 Moltbot 中使用 Venice
 
-- **Private inference** for open-source models (no logging).
-- **Uncensored models** when you need them.
-- **Anonymized access** to proprietary models (Opus/GPT/Gemini) when quality matters.
-- OpenAI-compatible `/v1` endpoints.
+- **私密推理**：开源模型不记录日志。
+- **无审查模型**：在需要时可用。
+- **匿名访问**：在质量重要时访问专有模型（Opus/GPT/Gemini）。
+- OpenAI 兼容 `/v1` 端点。
 
-## Privacy Modes
+## 隐私模式
 
-Venice offers two privacy levels — understanding this is key to choosing your model:
+Venice 提供两种隐私等级，理解它们对选型至关重要：
 
-| Mode | Description | Models |
+| 模式 | 说明 | 模型 |
 |------|-------------|--------|
-| **Private** | Fully private. Prompts/responses are **never stored or logged**. Ephemeral. | Llama, Qwen, DeepSeek, Venice Uncensored, etc. |
-| **Anonymized** | Proxied through Venice with metadata stripped. The underlying provider (OpenAI, Anthropic) sees anonymized requests. | Claude, GPT, Gemini, Grok, Kimi, MiniMax |
+| **Private** | 完全私密。提示与回复**不存储不记录**，短暂存在。 | Llama、Qwen、DeepSeek、Venice Uncensored 等 |
+| **Anonymized** | 通过 Venice 代理并去除元数据。底层提供商（OpenAI、Anthropic）看到匿名请求。 | Claude、GPT、Gemini、Grok、Kimi、MiniMax |
 
-## Features
+## 特性
 
-- **Privacy-focused**: Choose between "private" (fully private) and "anonymized" (proxied) modes
-- **Uncensored models**: Access to models without content restrictions
-- **Major model access**: Use Claude, GPT-5.2, Gemini, Grok via Venice's anonymized proxy
-- **OpenAI-compatible API**: Standard `/v1` endpoints for easy integration
-- **Streaming**: ✅ Supported on all models
-- **Function calling**: ✅ Supported on select models (check model capabilities)
-- **Vision**: ✅ Supported on models with vision capability
-- **No hard rate limits**: Fair-use throttling may apply for extreme usage
+- **隐私优先**：在 “private”（完全私密）与 “anonymized”（匿名代理）之间选择
+- **无审查模型**：访问不带内容限制的模型
+- **主流模型访问**：通过匿名代理使用 Claude、GPT-5.2、Gemini、Grok
+- **OpenAI 兼容 API**：标准 `/v1` 端点便于集成
+- **Streaming**：✅ 全部模型支持
+- **Function calling**：✅ 部分模型支持（查看模型能力）
+- **Vision**：✅ 支持具备视觉能力的模型
+- **无硬性限流**：极端使用可能触发公平使用限速
 
-## Setup
+## 设置
 
-### 1. Get API Key
+### 1. 获取 API Key
 
-1. Sign up at [venice.ai](https://venice.ai)
-2. Go to **Settings → API Keys → Create new key**
-3. Copy your API key (format: `vapi_xxxxxxxxxxxx`)
+1. 在 [venice.ai](https://venice.ai) 注册
+2. 进入 **Settings → API Keys → Create new key**
+3. 复制 API key（格式：`vapi_xxxxxxxxxxxx`）
 
-### 2. Configure Moltbot
+### 2. 配置 Moltbot
 
-**Option A: Environment Variable**
+**选项 A：环境变量**
 
 ```bash
 export VENICE_API_KEY="vapi_xxxxxxxxxxxx"
 ```
 
-**Option B: Interactive Setup (Recommended)**
+**选项 B：交互式设置（推荐）**
 
 ```bash
 moltbot onboard --auth-choice venice-api-key
 ```
 
-This will:
-1. Prompt for your API key (or use existing `VENICE_API_KEY`)
-2. Show all available Venice models
-3. Let you pick your default model
-4. Configure the provider automatically
+该流程会：
+1. 提示输入 API key（或使用现有 `VENICE_API_KEY`）
+2. 展示所有可用 Venice 模型
+3. 让你选择默认模型
+4. 自动配置 provider
 
-**Option C: Non-interactive**
+**选项 C：非交互**
 
 ```bash
 moltbot onboard --non-interactive \
@@ -73,58 +73,58 @@ moltbot onboard --non-interactive \
   --venice-api-key "vapi_xxxxxxxxxxxx"
 ```
 
-### 3. Verify Setup
+### 3. 验证设置
 
 ```bash
 moltbot chat --model venice/llama-3.3-70b "Hello, are you working?"
 ```
 
-## Model Selection
+## 模型选择
 
-After setup, Moltbot shows all available Venice models. Pick based on your needs:
+设置完成后，Moltbot 会展示所有可用 Venice 模型。根据需求选择：
 
-- **Default (our pick)**: `venice/llama-3.3-70b` for private, balanced performance.
-- **Best overall quality**: `venice/claude-opus-45` for hard jobs (Opus remains the strongest).
-- **Privacy**: Choose "private" models for fully private inference.
-- **Capability**: Choose "anonymized" models to access Claude, GPT, Gemini via Venice's proxy.
+- **默认推荐**：`venice/llama-3.3-70b`，私密且性能均衡。
+- **综合最佳**：`venice/claude-opus-45`，适合难题（Opus 依旧最强）。
+- **隐私**：选择 “private” 模型获取完全私密推理。
+- **能力**：选择 “anonymized” 模型，通过 Venice 代理访问 Claude、GPT、Gemini。
 
-Change your default model anytime:
+随时切换默认模型：
 
 ```bash
 moltbot models set venice/claude-opus-45
 moltbot models set venice/llama-3.3-70b
 ```
 
-List all available models:
+列出可用模型：
 
 ```bash
 moltbot models list | grep venice
 ```
 
-## Configure via `moltbot configure`
+## 通过 `moltbot configure` 配置
 
-1. Run `moltbot configure`
-2. Select **Model/auth**
-3. Choose **Venice AI**
+1. 运行 `moltbot configure`
+2. 选择 **Model/auth**
+3. 选择 **Venice AI**
 
-## Which Model Should I Use?
+## 我该选哪个模型
 
-| Use Case | Recommended Model | Why |
+| 用例 | 推荐模型 | 原因 |
 |----------|-------------------|-----|
-| **General chat** | `llama-3.3-70b` | Good all-around, fully private |
-| **Best overall quality** | `claude-opus-45` | Opus remains the strongest for hard tasks |
-| **Privacy + Claude quality** | `claude-opus-45` | Best reasoning via anonymized proxy |
-| **Coding** | `qwen3-coder-480b-a35b-instruct` | Code-optimized, 262k context |
-| **Vision tasks** | `qwen3-vl-235b-a22b` | Best private vision model |
-| **Uncensored** | `venice-uncensored` | No content restrictions |
-| **Fast + cheap** | `qwen3-4b` | Lightweight, still capable |
-| **Complex reasoning** | `deepseek-v3.2` | Strong reasoning, private |
+| **日常聊天** | `llama-3.3-70b` | 综合表现好，完全私密 |
+| **综合最佳质量** | `claude-opus-45` | Opus 仍是难题最强 |
+| **隐私 + Claude 质量** | `claude-opus-45` | 匿名代理下的最佳推理 |
+| **编码** | `qwen3-coder-480b-a35b-instruct` | 代码优化，262k 上下文 |
+| **视觉任务** | `qwen3-vl-235b-a22b` | 最佳私密视觉模型 |
+| **无审查** | `venice-uncensored` | 无内容限制 |
+| **快且便宜** | `qwen3-4b` | 轻量但仍可用 |
+| **复杂推理** | `deepseek-v3.2` | 推理强，私密 |
 
-## Available Models (25 Total)
+## 可用模型（共 25 个）
 
-### Private Models (15) — Fully Private, No Logging
+### Private 模型（15 个）- 完全私密，无日志
 
-| Model ID | Name | Context (tokens) | Features |
+| Model ID | 名称 | 上下文（tokens） | 特性 |
 |----------|------|------------------|----------|
 | `llama-3.3-70b` | Llama 3.3 70B | 131k | General |
 | `llama-3.2-3b` | Llama 3.2 3B | 131k | Fast, lightweight |
@@ -134,17 +134,17 @@ moltbot models list | grep venice
 | `qwen3-coder-480b-a35b-instruct` | Qwen3 Coder 480B | 262k | Code |
 | `qwen3-next-80b` | Qwen3 Next 80B | 262k | General |
 | `qwen3-vl-235b-a22b` | Qwen3 VL 235B | 262k | Vision |
-| `qwen3-4b` | Venice Small (Qwen3 4B) | 32k | Fast, reasoning |
+| `qwen3-4b` | Venice Small（Qwen3 4B） | 32k | Fast, reasoning |
 | `deepseek-v3.2` | DeepSeek V3.2 | 163k | Reasoning |
 | `venice-uncensored` | Venice Uncensored | 32k | Uncensored |
-| `mistral-31-24b` | Venice Medium (Mistral) | 131k | Vision |
+| `mistral-31-24b` | Venice Medium（Mistral） | 131k | Vision |
 | `google-gemma-3-27b-it` | Gemma 3 27B Instruct | 202k | Vision |
 | `openai-gpt-oss-120b` | OpenAI GPT OSS 120B | 131k | General |
 | `zai-org-glm-4.7` | GLM 4.7 | 202k | Reasoning, multilingual |
 
-### Anonymized Models (10) — Via Venice Proxy
+### Anonymized 模型（10 个）- 经 Venice 代理
 
-| Model ID | Original | Context (tokens) | Features |
+| Model ID | 原始模型 | 上下文（tokens） | 特性 |
 |----------|----------|------------------|----------|
 | `claude-opus-45` | Claude Opus 4.5 | 202k | Reasoning, vision |
 | `claude-sonnet-45` | Claude Sonnet 4.5 | 202k | Reasoning, vision |
@@ -157,76 +157,76 @@ moltbot models list | grep venice
 | `kimi-k2-thinking` | Kimi K2 Thinking | 262k | Reasoning |
 | `minimax-m21` | MiniMax M2.1 | 202k | Reasoning |
 
-## Model Discovery
+## 模型发现
 
-Moltbot automatically discovers models from the Venice API when `VENICE_API_KEY` is set. If the API is unreachable, it falls back to a static catalog.
+当设置 `VENICE_API_KEY` 时，Moltbot 会从 Venice API 自动发现模型。若 API 不可达，会回退到静态目录。
 
-The `/models` endpoint is public (no auth needed for listing), but inference requires a valid API key.
+`/models` 端点是公开的（列出无需认证），但推理需要有效 API key。
 
-## Streaming & Tool Support
+## Streaming 与工具支持
 
-| Feature | Support |
+| 特性 | 支持 |
 |---------|---------|
-| **Streaming** | ✅ All models |
-| **Function calling** | ✅ Most models (check `supportsFunctionCalling` in API) |
-| **Vision/Images** | ✅ Models marked with "Vision" feature |
-| **JSON mode** | ✅ Supported via `response_format` |
+| **Streaming** | ✅ 全部模型 |
+| **Function calling** | ✅ 多数模型（查看 API 中的 `supportsFunctionCalling`） |
+| **Vision/Images** | ✅ 标注含 Vision 的模型 |
+| **JSON mode** | ✅ 通过 `response_format` 支持 |
 
-## Pricing
+## 定价
 
-Venice uses a credit-based system. Check [venice.ai/pricing](https://venice.ai/pricing) for current rates:
+Venice 使用积分体系。请查看 [venice.ai/pricing](https://venice.ai/pricing)：
 
-- **Private models**: Generally lower cost
-- **Anonymized models**: Similar to direct API pricing + small Venice fee
+- **Private 模型**：通常更低成本
+- **Anonymized 模型**：接近直连 API 定价 + 少量 Venice 费用
 
-## Comparison: Venice vs Direct API
+## 对比：Venice 与直连 API
 
-| Aspect | Venice (Anonymized) | Direct API |
+| 维度 | Venice（Anonymized） | 直连 API |
 |--------|---------------------|------------|
-| **Privacy** | Metadata stripped, anonymized | Your account linked |
-| **Latency** | +10-50ms (proxy) | Direct |
-| **Features** | Most features supported | Full features |
-| **Billing** | Venice credits | Provider billing |
+| **隐私** | 去元数据，匿名 | 账户关联 |
+| **延迟** | +10-50ms（代理） | 直连 |
+| **功能** | 支持大多数功能 | 全功能 |
+| **计费** | Venice 积分 | 提供商计费 |
 
-## Usage Examples
+## 使用示例
 
 ```bash
-# Use default private model
+# 使用默认私密模型
 moltbot chat --model venice/llama-3.3-70b
 
-# Use Claude via Venice (anonymized)
+# 通过 Venice 使用 Claude（匿名）
 moltbot chat --model venice/claude-opus-45
 
-# Use uncensored model
+# 使用无审查模型
 moltbot chat --model venice/venice-uncensored
 
-# Use vision model with image
+# 使用视觉模型
 moltbot chat --model venice/qwen3-vl-235b-a22b
 
-# Use coding model
+# 使用编码模型
 moltbot chat --model venice/qwen3-coder-480b-a35b-instruct
 ```
 
-## Troubleshooting
+## 故障排查
 
-### API key not recognized
+### API key 未识别
 
 ```bash
 echo $VENICE_API_KEY
 moltbot models list | grep venice
 ```
 
-Ensure the key starts with `vapi_`.
+确认 key 以 `vapi_` 开头。
 
-### Model not available
+### 模型不可用
 
-The Venice model catalog updates dynamically. Run `moltbot models list` to see currently available models. Some models may be temporarily offline.
+Venice 模型目录是动态更新的。运行 `moltbot models list` 查看当前可用模型。部分模型可能临时离线。
 
-### Connection issues
+### 连接问题
 
-Venice API is at `https://api.venice.ai/api/v1`. Ensure your network allows HTTPS connections.
+Venice API 为 `https://api.venice.ai/api/v1`。确认网络允许 HTTPS 连接。
 
-## Config file example
+## 配置文件示例
 
 ```json5
 {
@@ -256,7 +256,7 @@ Venice API is at `https://api.venice.ai/api/v1`. Ensure your network allows HTTP
 }
 ```
 
-## Links
+## 链接
 
 - [Venice AI](https://venice.ai)
 - [API Documentation](https://docs.venice.ai)

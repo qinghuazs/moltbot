@@ -1,30 +1,30 @@
 ---
-summary: "Use Anthropic Claude via API keys or setup-token in Moltbot"
+summary: "在 Moltbot 中通过 API key 或 setup-token 使用 Anthropic Claude"
 read_when:
-  - You want to use Anthropic models in Moltbot
-  - You want setup-token instead of API keys
+  - 想在 Moltbot 中使用 Anthropic 模型
+  - 想使用 setup-token 而不是 API key
 ---
-# Anthropic (Claude)
+# Anthropic（Claude）
 
-Anthropic builds the **Claude** model family and provides access via an API.
-In Moltbot you can authenticate with an API key or a **setup-token**.
+Anthropic 构建 **Claude** 模型家族，并通过 API 提供访问。
+在 Moltbot 中可用 API key 或 **setup-token** 认证。
 
-## Option A: Anthropic API key
+## 选项 A：Anthropic API key
 
-**Best for:** standard API access and usage-based billing.
-Create your API key in the Anthropic Console.
+**适合：**标准 API 访问与按量计费。
+在 Anthropic Console 创建 API key。
 
-### CLI setup
+### CLI 设置
 
 ```bash
 moltbot onboard
-# choose: Anthropic API key
+# 选择：Anthropic API key
 
-# or non-interactive
+# 或非交互
 moltbot onboard --anthropic-api-key "$ANTHROPIC_API_KEY"
 ```
 
-### Config snippet
+### 配置片段
 
 ```json5
 {
@@ -33,12 +33,12 @@ moltbot onboard --anthropic-api-key "$ANTHROPIC_API_KEY"
 }
 ```
 
-## Prompt caching (Anthropic API)
+## 提示缓存（Anthropic API）
 
-Moltbot does **not** override Anthropic’s default cache TTL unless you set it.
-This is **API-only**; subscription auth does not honor TTL settings.
+Moltbot **不会**覆盖 Anthropic 默认缓存 TTL，除非你显式设置。
+这是 **仅 API** 行为；订阅认证不支持 TTL 设置。
 
-To set the TTL per model, use `cacheControlTtl` in the model `params`:
+按模型设置 TTL，使用模型 `params` 中的 `cacheControlTtl`：
 
 ```json5
 {
@@ -46,7 +46,7 @@ To set the TTL per model, use `cacheControlTtl` in the model `params`:
     defaults: {
       models: {
         "anthropic/claude-opus-4-5": {
-          params: { cacheControlTtl: "5m" } // or "1h"
+          params: { cacheControlTtl: "5m" } // 或 "1h"
         }
       }
     }
@@ -54,41 +54,40 @@ To set the TTL per model, use `cacheControlTtl` in the model `params`:
 }
 ```
 
-Moltbot includes the `extended-cache-ttl-2025-04-11` beta flag for Anthropic API
-requests; keep it if you override provider headers (see [/gateway/configuration](/gateway/configuration)).
+Moltbot 在 Anthropic API 请求中包含 `extended-cache-ttl-2025-04-11` beta 标志；如果你覆盖 provider headers，请保留它（见 [/gateway/configuration](/gateway/configuration)）。
 
-## Option B: Claude setup-token
+## 选项 B：Claude setup-token
 
-**Best for:** using your Claude subscription.
+**适合：**使用 Claude 订阅。
 
-### Where to get a setup-token
+### 获取 setup-token
 
-Setup-tokens are created by the **Claude Code CLI**, not the Anthropic Console. You can run this on **any machine**:
+setup-token 由 **Claude Code CLI** 创建，不在 Anthropic Console。你可以在**任意机器**上运行：
 
 ```bash
 claude setup-token
 ```
 
-Paste the token into Moltbot (wizard: **Anthropic token (paste setup-token)**), or run it on the gateway host:
+将 token 粘贴到 Moltbot（向导中选择 **Anthropic token（粘贴 setup-token）**），或者在 gateway 主机上运行：
 
 ```bash
 moltbot models auth setup-token --provider anthropic
 ```
 
-If you generated the token on a different machine, paste it:
+如果 token 是在其它机器生成的，请粘贴：
 
 ```bash
 moltbot models auth paste-token --provider anthropic
 ```
 
-### CLI setup
+### CLI 设置
 
 ```bash
-# Paste a setup-token during onboarding
+# 在 onboarding 中粘贴 setup-token
 moltbot onboard --auth-choice setup-token
 ```
 
-### Config snippet
+### 配置片段
 
 ```json5
 {
@@ -96,31 +95,30 @@ moltbot onboard --auth-choice setup-token
 }
 ```
 
-## Notes
+## 说明
 
-- Generate the setup-token with `claude setup-token` and paste it, or run `moltbot models auth setup-token` on the gateway host.
-- If you see “OAuth token refresh failed …” on a Claude subscription, re-auth with a setup-token. See [/gateway/troubleshooting#oauth-token-refresh-failed-anthropic-claude-subscription](/gateway/troubleshooting#oauth-token-refresh-failed-anthropic-claude-subscription).
-- Auth details + reuse rules are in [/concepts/oauth](/concepts/oauth).
+- 使用 `claude setup-token` 生成并粘贴，或在 gateway 主机上运行 `moltbot models auth setup-token`。
+- 若 Claude 订阅出现 “OAuth token refresh failed …”，请用 setup-token 重新认证。见 [/gateway/troubleshooting#oauth-token-refresh-failed-anthropic-claude-subscription](/gateway/troubleshooting#oauth-token-refresh-failed-anthropic-claude-subscription)。
+- 认证细节与复用规则见 [/concepts/oauth](/concepts/oauth)。
 
-## Troubleshooting
+## 故障排查
 
-**401 errors / token suddenly invalid**
-- Claude subscription auth can expire or be revoked. Re-run `claude setup-token`
-  and paste it into the **gateway host**.
-- If the Claude CLI login lives on a different machine, use
-  `moltbot models auth paste-token --provider anthropic` on the gateway host.
+**401 错误或 token 突然失效**
+- Claude 订阅认证可能过期或被撤销。重新运行 `claude setup-token`
+  并在 **gateway 主机**粘贴。
+- 若 Claude CLI 登录在另一台机器上，请在 gateway 主机运行
+  `moltbot models auth paste-token --provider anthropic`。
 
-**No API key found for provider "anthropic"**
-- Auth is **per agent**. New agents don’t inherit the main agent’s keys.
-- Re-run onboarding for that agent, or paste a setup-token / API key on the
-  gateway host, then verify with `moltbot models status`.
+**未找到 provider "anthropic" 的 API key**
+- 认证是**按代理**的。新代理不会继承主代理的 key。
+- 为该代理重新 onboarding，或在 gateway 主机粘贴 setup-token 或 API key，然后用 `moltbot models status` 验证。
 
-**No credentials found for profile `anthropic:default`**
-- Run `moltbot models status` to see which auth profile is active.
-- Re-run onboarding, or paste a setup-token / API key for that profile.
+**未找到配置 `anthropic:default` 的凭据**
+- 运行 `moltbot models status` 查看当前生效的认证配置。
+- 重新 onboarding，或为该配置粘贴 setup-token 或 API key。
 
-**No available auth profile (all in cooldown/unavailable)**
-- Check `moltbot models status --json` for `auth.unusableProfiles`.
-- Add another Anthropic profile or wait for cooldown.
+**无可用认证配置（全部冷却或不可用）**
+- 使用 `moltbot models status --json` 查看 `auth.unusableProfiles`。
+- 添加另一个 Anthropic 配置或等待冷却结束。
 
-More: [/gateway/troubleshooting](/gateway/troubleshooting) and [/help/faq](/help/faq).
+更多：[/gateway/troubleshooting](/gateway/troubleshooting) 与 [/help/faq](/help/faq)。

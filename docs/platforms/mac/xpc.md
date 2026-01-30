@@ -1,28 +1,28 @@
 ---
-summary: "macOS IPC architecture for Moltbot app, gateway node transport, and PeekabooBridge"
+summary: "Moltbot macOS IPC 架构：应用、gateway 节点传输与 PeekabooBridge"
 read_when:
-  - Editing IPC contracts or menu bar app IPC
+  - 编辑 IPC 协议或菜单栏应用 IPC
 ---
-# Moltbot macOS IPC architecture
+# Moltbot macOS IPC 架构
 
-**Current model:** a local Unix socket connects the **node host service** to the **macOS app** for exec approvals + `system.run`. A `moltbot-mac` debug CLI exists for discovery/connect checks; agent actions still flow through the Gateway WebSocket and `node.invoke`. UI automation uses PeekabooBridge.
+**当前模型：**本地 Unix socket 将**节点主机服务**与**macOS 应用**连接，用于 exec 审批与 `system.run`。存在 `moltbot-mac` 调试 CLI 用于发现与连接检查；代理动作仍通过 Gateway WebSocket 与 `node.invoke` 流转。UI 自动化使用 PeekabooBridge。
 
-## Goals
-- Single GUI app instance that owns all TCC-facing work (notifications, screen recording, mic, speech, AppleScript).
-- A small surface for automation: Gateway + node commands, plus PeekabooBridge for UI automation.
-- Predictable permissions: always the same signed bundle ID, launched by launchd, so TCC grants stick.
+## 目标
+- 单实例 GUI 应用负责所有与 TCC 相关的工作（通知、屏幕录制、麦克风、语音、AppleScript）。
+- 小而稳定的自动化面：Gateway + 节点命令，再加 PeekabooBridge 进行 UI 自动化。
+- 可预测的权限：始终同一签名 bundle ID，由 launchd 启动，确保 TCC 授权稳定。
 
-## How it works
-### Gateway + node transport
-- The app runs the Gateway (local mode) and connects to it as a node.
-- Agent actions are performed via `node.invoke` (e.g. `system.run`, `system.notify`, `canvas.*`).
+## 工作方式
+### Gateway 与节点传输
+- 应用运行 Gateway（本地模式）并作为节点连接。
+- 代理动作通过 `node.invoke` 执行（如 `system.run`、`system.notify`、`canvas.*`）。
 
-### Node service + app IPC
-- A headless node host service connects to the Gateway WebSocket.
-- `system.run` requests are forwarded to the macOS app over a local Unix socket.
-- The app performs the exec in UI context, prompts if needed, and returns output.
+### 节点服务与应用 IPC
+- 无界面节点主机服务连接到 Gateway WebSocket。
+- `system.run` 请求通过本地 Unix socket 转发到 macOS 应用。
+- 应用在 UI 上下文执行命令，需要时提示授权并返回输出。
 
-Diagram (SCI):
+示意图（SCI）：
 ```
 Agent -> Gateway -> Node Service (WS)
                       |  IPC (UDS + token + HMAC + TTL)
@@ -30,22 +30,22 @@ Agent -> Gateway -> Node Service (WS)
                   Mac App (UI + TCC + system.run)
 ```
 
-### PeekabooBridge (UI automation)
-- UI automation uses a separate UNIX socket named `bridge.sock` and the PeekabooBridge JSON protocol.
-- Host preference order (client-side): Peekaboo.app → Claude.app → Moltbot.app → local execution.
-- Security: bridge hosts require an allowed TeamID; DEBUG-only same-UID escape hatch is guarded by `PEEKABOO_ALLOW_UNSIGNED_SOCKET_CLIENTS=1` (Peekaboo convention).
-- See: [PeekabooBridge usage](/platforms/mac/peekaboo) for details.
+### PeekabooBridge（UI 自动化）
+- UI 自动化使用名为 `bridge.sock` 的独立 UNIX socket 与 PeekabooBridge JSON 协议。
+- 主机优先顺序（客户端侧）：Peekaboo.app → Claude.app → Moltbot.app → 本地执行。
+- 安全：bridge 主机要求允许的 TeamID；仅 DEBUG 的同 UID 逃生口由 `PEEKABOO_ALLOW_UNSIGNED_SOCKET_CLIENTS=1` 守护（Peekaboo 约定）。
+- 详情见：[PeekabooBridge usage](/platforms/mac/peekaboo)。
 
-## Operational flows
-- Restart/rebuild: `SIGN_IDENTITY="Apple Development: <Developer Name> (<TEAMID>)" scripts/restart-mac.sh`
-  - Kills existing instances
-  - Swift build + package
-  - Writes/bootstraps/kickstarts the LaunchAgent
-- Single instance: app exits early if another instance with the same bundle ID is running.
+## 运维流程
+- 重启或重建：`SIGN_IDENTITY="Apple Development: <Developer Name> (<TEAMID>)" scripts/restart-mac.sh`
+  - 结束现有实例
+  - Swift 构建与打包
+  - 写入、bootstrap 与 kickstart LaunchAgent
+- 单实例：若已有相同 bundle ID 实例在运行，应用会提前退出。
 
-## Hardening notes
-- Prefer requiring a TeamID match for all privileged surfaces.
-- PeekabooBridge: `PEEKABOO_ALLOW_UNSIGNED_SOCKET_CLIENTS=1` (DEBUG-only) may allow same-UID callers for local development.
-- All communication remains local-only; no network sockets are exposed.
-- TCC prompts originate only from the GUI app bundle; keep the signed bundle ID stable across rebuilds.
-- IPC hardening: socket mode `0600`, token, peer-UID checks, HMAC challenge/response, short TTL.
+## 加固说明
+- 所有特权面优先要求 TeamID 匹配。
+- PeekabooBridge：`PEEKABOO_ALLOW_UNSIGNED_SOCKET_CLIENTS=1`（仅 DEBUG）可能允许同 UID 的本地调用。
+- 所有通信均为本地，未暴露网络 socket。
+- TCC 弹窗只应来自 GUI 应用 bundle；保持签名 bundle ID 稳定。
+- IPC 加固：socket 权限 `0600`、token、对端 UID 检查、HMAC challenge/response、短 TTL。

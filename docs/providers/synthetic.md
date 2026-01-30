@@ -1,30 +1,29 @@
 ---
-summary: "Use Synthetic's Anthropic-compatible API in Moltbot"
+summary: "在 Moltbot 中使用 Synthetic 的 Anthropic 兼容 API"
 read_when:
-  - You want to use Synthetic as a model provider
-  - You need a Synthetic API key or base URL setup
+  - 想将 Synthetic 作为模型提供商
+  - 需要 Synthetic API key 或 base URL 配置
 ---
 # Synthetic
 
-Synthetic exposes Anthropic-compatible endpoints. Moltbot registers it as the
-`synthetic` provider and uses the Anthropic Messages API.
+Synthetic 提供 Anthropic 兼容端点。Moltbot 将其注册为 `synthetic` provider，并使用 Anthropic Messages API。
 
-## Quick setup
+## 快速设置
 
-1) Set `SYNTHETIC_API_KEY` (or run the wizard below).
-2) Run onboarding:
+1) 设置 `SYNTHETIC_API_KEY`（或使用下方向导）。
+2) 运行 onboarding：
 
 ```bash
 moltbot onboard --auth-choice synthetic-api-key
 ```
 
-The default model is set to:
+默认模型设置为：
 
 ```
 synthetic/hf:MiniMaxAI/MiniMax-M2.1
 ```
 
-## Config example
+## 配置示例
 
 ```json5
 {
@@ -59,15 +58,14 @@ synthetic/hf:MiniMaxAI/MiniMax-M2.1
 }
 ```
 
-Note: Moltbot's Anthropic client appends `/v1` to the base URL, so use
-`https://api.synthetic.new/anthropic` (not `/anthropic/v1`). If Synthetic changes
-its base URL, override `models.providers.synthetic.baseUrl`.
+说明：Moltbot 的 Anthropic 客户端会在 base URL 后追加 `/v1`，因此请使用
+`https://api.synthetic.new/anthropic`（不要写 `/anthropic/v1`）。如果 Synthetic 变更 base URL，请覆盖 `models.providers.synthetic.baseUrl`。
 
-## Model catalog
+## 模型目录
 
-All models below use cost `0` (input/output/cache).
+下方模型的成本均为 0（输入、输出、缓存）。
 
-| Model ID | Context window | Max tokens | Reasoning | Input |
+| Model ID | 上下文窗口 | Max tokens | Reasoning | 输入 |
 | --- | --- | --- | --- | --- |
 | `hf:MiniMaxAI/MiniMax-M2.1` | 192000 | 65536 | false | text |
 | `hf:moonshotai/Kimi-K2-Thinking` | 256000 | 8192 | true | text |
@@ -89,9 +87,8 @@ All models below use cost `0` (input/output/cache).
 | `hf:deepseek-ai/DeepSeek-V3` | 128000 | 8192 | false | text |
 | `hf:Qwen/Qwen3-235B-A22B-Thinking-2507` | 256000 | 8192 | true | text |
 
-## Notes
+## 说明
 
-- Model refs use `synthetic/<modelId>`.
-- If you enable a model allowlist (`agents.defaults.models`), add every model you
-  plan to use.
-- See [Model providers](/concepts/model-providers) for provider rules.
+- 模型引用格式为 `synthetic/<modelId>`。
+- 如启用模型允许列表（`agents.defaults.models`），请加入你计划使用的全部模型。
+- 提供商规则见 [Model providers](/concepts/model-providers)。
