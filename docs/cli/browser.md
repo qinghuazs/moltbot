@@ -1,28 +1,28 @@
 ---
-summary: "CLI reference for `moltbot browser` (profiles, tabs, actions, extension relay)"
+summary: "`moltbot browser` 的 CLI 参考（profiles、tabs、动作、扩展中继）"
 read_when:
-  - You use `moltbot browser` and want examples for common tasks
-  - You want to control a browser running on another machine via a node host
-  - You want to use the Chrome extension relay (attach/detach via toolbar button)
+  - 使用 `moltbot browser` 并需要常见任务示例
+  - 想通过节点主机控制另一台机器上的浏览器
+  - 想使用 Chrome 扩展中继（通过工具栏按钮 attach/detach）
 ---
 
 # `moltbot browser`
 
-Manage Moltbot’s browser control server and run browser actions (tabs, snapshots, screenshots, navigation, clicks, typing).
+管理 Moltbot 的浏览器控制服务并执行浏览器动作（标签页、快照、截图、导航、点击、输入）。
 
-Related:
-- Browser tool + API: [Browser tool](/tools/browser)
-- Chrome extension relay: [Chrome extension](/tools/chrome-extension)
+相关：
+- 浏览器工具与 API：[Browser tool](/tools/browser)
+- Chrome 扩展中继：[Chrome extension](/tools/chrome-extension)
 
-## Common flags
+## 常用标志
 
-- `--url <gatewayWsUrl>`: Gateway WebSocket URL (defaults to config).
-- `--token <token>`: Gateway token (if required).
-- `--timeout <ms>`: request timeout (ms).
-- `--browser-profile <name>`: choose a browser profile (default from config).
-- `--json`: machine-readable output (where supported).
+- `--url <gatewayWsUrl>`：Gateway WebSocket URL（默认来自配置）。
+- `--token <token>`：Gateway token（如需要）。
+- `--timeout <ms>`：请求超时（毫秒）。
+- `--browser-profile <name>`：选择浏览器 profile（默认来自配置）。
+- `--json`：机器可读输出（支持时）。
 
-## Quick start (local)
+## 快速开始（本地）
 
 ```bash
 moltbot browser --browser-profile chrome tabs
@@ -33,9 +33,9 @@ moltbot browser --browser-profile clawd snapshot
 
 ## Profiles
 
-Profiles are named browser routing configs. In practice:
-- `clawd`: launches/attaches to a dedicated Moltbot-managed Chrome instance (isolated user data dir).
-- `chrome`: controls your existing Chrome tab(s) via the Chrome extension relay.
+Profiles 是命名的浏览器路由配置。实际中：
+- `clawd`：启动或附加到 Moltbot 管理的专用 Chrome 实例（独立 user data 目录）。
+- `chrome`：通过 Chrome 扩展中继控制你现有的 Chrome 标签页。
 
 ```bash
 moltbot browser profiles
@@ -43,7 +43,7 @@ moltbot browser create-profile --name work --color "#FF5A36"
 moltbot browser delete-profile --name work
 ```
 
-Use a specific profile:
+使用指定 profile：
 
 ```bash
 moltbot browser --browser-profile work tabs
@@ -60,19 +60,19 @@ moltbot browser close <targetId>
 
 ## Snapshot / screenshot / actions
 
-Snapshot:
+快照：
 
 ```bash
 moltbot browser snapshot
 ```
 
-Screenshot:
+截图：
 
 ```bash
 moltbot browser screenshot
 ```
 
-Navigate/click/type (ref-based UI automation):
+导航/点击/输入（基于 ref 的 UI 自动化）：
 
 ```bash
 moltbot browser navigate https://example.com
@@ -80,25 +80,25 @@ moltbot browser click <ref>
 moltbot browser type <ref> "hello"
 ```
 
-## Chrome extension relay (attach via toolbar button)
+## Chrome 扩展中继（通过工具栏按钮 attach）
 
-This mode lets the agent control an existing Chrome tab that you attach manually (it does not auto-attach).
+该模式允许代理控制你手动附加的现有 Chrome 标签页（不会自动附加）。
 
-Install the unpacked extension to a stable path:
+将未打包扩展安装到稳定路径：
 
 ```bash
 moltbot browser extension install
 moltbot browser extension path
 ```
 
-Then Chrome → `chrome://extensions` → enable “Developer mode” → “Load unpacked” → select the printed folder.
+然后 Chrome → `chrome://extensions` → 启用“开发者模式” → “加载已解压” → 选择打印的文件夹。
 
-Full guide: [Chrome extension](/tools/chrome-extension)
+完整指南：[Chrome extension](/tools/chrome-extension)
 
-## Remote browser control (node host proxy)
+## 远程浏览器控制（节点主机代理）
 
-If the Gateway runs on a different machine than the browser, run a **node host** on the machine that has Chrome/Brave/Edge/Chromium. The Gateway will proxy browser actions to that node (no separate browser control server required).
+如果 Gateway 与浏览器不在同一台机器上，请在有 Chrome/Brave/Edge/Chromium 的机器上运行 **节点主机**。Gateway 会将浏览器动作代理到该节点（无需单独的浏览器控制服务）。
 
-Use `gateway.nodes.browser.mode` to control auto-routing and `gateway.nodes.browser.node` to pin a specific node if multiple are connected.
+使用 `gateway.nodes.browser.mode` 控制自动路由，若连接了多个节点，可用 `gateway.nodes.browser.node` 固定到某个节点。
 
-Security + remote setup: [Browser tool](/tools/browser), [Remote access](/gateway/remote), [Tailscale](/gateway/tailscale), [Security](/gateway/security)
+安全与远程设置：[Browser tool](/tools/browser)、[Remote access](/gateway/remote)、[Tailscale](/gateway/tailscale)、[Security](/gateway/security)

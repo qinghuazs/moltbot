@@ -1,45 +1,40 @@
 ---
-summary: "Message flow, sessions, queueing, and reasoning visibility"
+summary: "消息流、会话、队列和推理可见性"
 read_when:
-  - Explaining how inbound messages become replies
-  - Clarifying sessions, queueing modes, or streaming behavior
-  - Documenting reasoning visibility and usage implications
+  - 解释入站消息如何变成回复
+  - 澄清会话、队列模式或流式传输行为
+  - 记录推理可见性和使用影响
 ---
-# Messages
+# 消息
 
-This page ties together how Moltbot handles inbound messages, sessions, queueing,
-streaming, and reasoning visibility.
+本页将 Moltbot 如何处理入站消息、会话、队列、流式传输和推理可见性联系在一起。
 
-## Message flow (high level)
+## 消息流（高层）
 
 ```
-Inbound message
-  -> routing/bindings -> session key
-  -> queue (if a run is active)
-  -> agent run (streaming + tools)
-  -> outbound replies (channel limits + chunking)
+入站消息
+  -> 路由/绑定 -> 会话键
+  -> 队列（如果运行活动）
+  -> 代理运行（流式传输 + 工具）
+  -> 出站回复（渠道限制 + 分块）
 ```
 
-Key knobs live in configuration:
-- `messages.*` for prefixes, queueing, and group behavior.
-- `agents.defaults.*` for block streaming and chunking defaults.
-- Channel overrides (`channels.whatsapp.*`, `channels.telegram.*`, etc.) for caps and streaming toggles.
+关键配置位于：
+- `messages.*` 用于前缀、队列和群组行为。
+- `agents.defaults.*` 用于块流式传输和分块默认值。
+- 渠道覆盖（`channels.whatsapp.*`、`channels.telegram.*` 等）用于上限和流式传输切换。
 
-See [Configuration](/gateway/configuration) for full schema.
+参见 [配置](/gateway/configuration) 获取完整架构。
 
-## Inbound dedupe
+## 入站去重
 
-Channels can redeliver the same message after reconnects. Moltbot keeps a
-short-lived cache keyed by channel/account/peer/session/message id so duplicate
-deliveries do not trigger another agent run.
+渠道可能在重新连接后重新投递相同消息。Moltbot 保持一个短期缓存，按渠道/账户/对等体/会话/消息 id 键控，以便重复投递不会触发另一个代理运行。
 
-## Inbound debouncing
+## 入站防抖
 
-Rapid consecutive messages from the **same sender** can be batched into a single
-agent turn via `messages.inbound`. Debouncing is scoped per channel + conversation
-and uses the most recent message for reply threading/IDs.
+来自**同一发送者**的快速连续消息可以通过 `messages.inbound` 批处理到单个代理轮次。防抖按渠道 + 对话范围，并使用最新消息进行回复线程/ID。
 
-Config (global default + per-channel overrides):
+配置（全局默认 + 每渠道覆盖）：
 ```json5
 {
   messages: {
@@ -55,89 +50,76 @@ Config (global default + per-channel overrides):
 }
 ```
 
-Notes:
-- Debounce applies to **text-only** messages; media/attachments flush immediately.
-- Control commands bypass debouncing so they remain standalone.
+注意：
+- 防抖适用于**纯文本**消息；媒体/附件立即刷新。
+- 控制命令绕过防抖，因此它们保持独立。
 
-## Sessions and devices
+## 会话和设备
 
-Sessions are owned by the gateway, not by clients.
-- Direct chats collapse into the agent main session key.
-- Groups/channels get their own session keys.
-- The session store and transcripts live on the gateway host.
+会话由网关拥有，而不是客户端。
+- 直接聊天折叠到代理主会话键。
+- 群组/频道获得自己的会话键。
+- 会话存储和记录位于网关主机上。
 
-Multiple devices/channels can map to the same session, but history is not fully
-synced back to every client. Recommendation: use one primary device for long
-conversations to avoid divergent context. The Control UI and TUI always show the
-gateway-backed session transcript, so they are the source of truth.
+多个设备/渠道可以映射到同一会话，但历史不会完全同步回每个客户端。建议：对长对话使用一个主设备以避免上下文分歧。控制 UI 和 TUI 始终显示网关支持的会话记录，因此它们是真实来源。
 
-Details: [Session management](/concepts/session).
+详情：[会话管理](/concepts/session)。
 
-## Inbound bodies and history context
+## 入站正文和历史上下文
 
-Moltbot separates the **prompt body** from the **command body**:
-- `Body`: prompt text sent to the agent. This may include channel envelopes and
-  optional history wrappers.
-- `CommandBody`: raw user text for directive/command parsing.
-- `RawBody`: legacy alias for `CommandBody` (kept for compatibility).
+Moltbot 将**提示正文**与**命令正文**分开：
+- `Body`：发送给代理的提示文本。这可能包括渠道信封和可选的历史包装器。
+- `CommandBody`：用于指令/命令解析的原始用户文本。
+- `RawBody`：`CommandBody` 的旧别名（保留以兼容）。
 
-When a channel supplies history, it uses a shared wrapper:
+当渠道提供历史时，它使用共享包装器：
 - `[Chat messages since your last reply - for context]`
 - `[Current message - respond to this]`
 
-For **non-direct chats** (groups/channels/rooms), the **current message body** is prefixed with the
-sender label (same style used for history entries). This keeps real-time and queued/history
-messages consistent in the agent prompt.
+对于**非直接聊天**（群组/频道/房间），**当前消息正文**以发送者标签为前缀（与历史条目使用的样式相同）。这使代理提示中的实时和排队/历史消息保持一致。
 
-History buffers are **pending-only**: they include group messages that did *not*
-trigger a run (for example, mention-gated messages) and **exclude** messages
-already in the session transcript.
+历史缓冲区是**仅待处理**的：它们包括*未*触发运行的群组消息（例如，提及门控消息）并**排除**已在会话记录中的消息。
 
-Directive stripping only applies to the **current message** section so history
-remains intact. Channels that wrap history should set `CommandBody` (or
-`RawBody`) to the original message text and keep `Body` as the combined prompt.
-History buffers are configurable via `messages.groupChat.historyLimit` (global
-default) and per-channel overrides like `channels.slack.historyLimit` or
-`channels.telegram.accounts.<id>.historyLimit` (set `0` to disable).
+指令剥离仅适用于**当前消息**部分，因此历史保持完整。包装历史的渠道应将 `CommandBody`（或 `RawBody`）设置为原始消息文本，并将 `Body` 保持为组合提示。
+历史缓冲区可通过 `messages.groupChat.historyLimit`（全局默认）和每渠道覆盖如 `channels.slack.historyLimit` 或 `channels.telegram.accounts.<id>.historyLimit` 配置（设置 `0` 禁用）。
 
-## Queueing and followups
+## 队列和后续
 
-If a run is already active, inbound messages can be queued, steered into the
-current run, or collected for a followup turn.
+如果运行已经活动，入站消息可以排队、引导到当前运行或收集用于后续轮次。
 
-- Configure via `messages.queue` (and `messages.queue.byChannel`).
-- Modes: `interrupt`, `steer`, `followup`, `collect`, plus backlog variants.
+- 通过 `messages.queue`（和 `messages.queue.byChannel`）配置。
+- 模式：`interrupt`、`steer`、`followup`、`collect`，加上 backlog 变体。
 
-Details: [Queueing](/concepts/queue).
+详情：[队列](/concepts/queue)。
 
-## Streaming, chunking, and batching
+## 流式传输、分块和批处理
 
-Block streaming sends partial replies as the model produces text blocks.
-Chunking respects channel text limits and avoids splitting fenced code.
+块流式传输在模型生成文本块时发送部分回复。
+分块遵循渠道文本限制并避免分割围栏代码。
 
-Key settings:
-- `agents.defaults.blockStreamingDefault` (`on|off`, default off)
-- `agents.defaults.blockStreamingBreak` (`text_end|message_end`)
-- `agents.defaults.blockStreamingChunk` (`minChars|maxChars|breakPreference`)
-- `agents.defaults.blockStreamingCoalesce` (idle-based batching)
-- `agents.defaults.humanDelay` (human-like pause between block replies)
-- Channel overrides: `*.blockStreaming` and `*.blockStreamingCoalesce` (non-Telegram channels require explicit `*.blockStreaming: true`)
+关键设置：
+- `agents.defaults.blockStreamingDefault`（`on|off`，默认关闭）
+- `agents.defaults.blockStreamingBreak`（`text_end|message_end`）
+- `agents.defaults.blockStreamingChunk`（`minChars|maxChars|breakPreference`）
+- `agents.defaults.blockStreamingCoalesce`（基于空闲的批处理）
+- `agents.defaults.humanDelay`（块回复之间的类人暂停）
+- 渠道覆盖：`*.blockStreaming` 和 `*.blockStreamingCoalesce`（非 Telegram 渠道需要显式 `*.blockStreaming: true`）
 
-Details: [Streaming + chunking](/concepts/streaming).
+详情：[流式传输 + 分块](/concepts/streaming)。
 
-## Reasoning visibility and tokens
+## 推理可见性和令牌
 
-Moltbot can expose or hide model reasoning:
-- `/reasoning on|off|stream` controls visibility.
-- Reasoning content still counts toward token usage when produced by the model.
-- Telegram supports reasoning stream into the draft bubble.
+Moltbot 可以显示或隐藏模型推理：
+- `/reasoning on|off|stream` 控制可见性。
+- 当模型生成推理内容时，它仍计入令牌使用。
+- Telegram 支持将推理流式传输到草稿气泡。
 
-Details: [Thinking + reasoning directives](/tools/thinking) and [Token use](/token-use).
+详情：[思考 + 推理指令](/tools/thinking) 和 [令牌使用](/token-use)。
 
-## Prefixes, threading, and replies
+## 前缀、线程和回复
 
-Outbound message formatting is centralized in `messages`:
-- `messages.responsePrefix` (outbound prefix) and `channels.whatsapp.messagePrefix` (WhatsApp inbound prefix)
-- Reply threading via `replyToMode` and per-channel defaults
+出站消息格式集中在 `messages` 中：
+- `messages.responsePrefix`（出站前缀）和 `channels.whatsapp.messagePrefix`（WhatsApp 入站前缀）
+- 通过 `replyToMode` 和每渠道默认值进行回复线程
 
-Details: [Configuration](/gateway/configuration#messages) and channel docs.
+详情：[配置](/gateway/configuration#messages) 和渠道文档。

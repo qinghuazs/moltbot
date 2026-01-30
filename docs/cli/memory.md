@@ -1,20 +1,20 @@
 ---
-summary: "CLI reference for `moltbot memory` (status/index/search)"
+summary: "`moltbot memory` 的 CLI 参考（status/index/search）"
 read_when:
-  - You want to index or search semantic memory
-  - You’re debugging memory availability or indexing
+  - 想索引或搜索语义记忆
+  - 正在排查记忆可用性或索引问题
 ---
 
 # `moltbot memory`
 
-Manage semantic memory indexing and search.
-Provided by the active memory plugin (default: `memory-core`; set `plugins.slots.memory = "none"` to disable).
+管理语义记忆索引与搜索。
+由当前启用的记忆插件提供（默认：`memory-core`；设置 `plugins.slots.memory = "none"` 可禁用）。
 
-Related:
-- Memory concept: [Memory](/concepts/memory)
- - Plugins: [Plugins](/plugins)
+相关：
+- 记忆概念：[Memory](/concepts/memory)
+- 插件：[Plugins](/plugins)
 
-## Examples
+## 示例
 
 ```bash
 moltbot memory status
@@ -28,15 +28,15 @@ moltbot memory status --agent main
 moltbot memory index --agent main --verbose
 ```
 
-## Options
+## 选项
 
-Common:
+通用：
 
-- `--agent <id>`: scope to a single agent (default: all configured agents).
-- `--verbose`: emit detailed logs during probes and indexing.
+- `--agent <id>`：限定到单个代理（默认：所有已配置代理）。
+- `--verbose`：在探测与索引期间输出详细日志。
 
-Notes:
-- `memory status --deep` probes vector + embedding availability.
-- `memory status --deep --index` runs a reindex if the store is dirty.
-- `memory index --verbose` prints per-phase details (provider, model, sources, batch activity).
-- `memory status` includes any extra paths configured via `memorySearch.extraPaths`.
+说明：
+- `memory status --deep` 探测向量库与嵌入可用性。
+- `memory status --deep --index` 在存储脏时执行重新索引。
+- `memory index --verbose` 打印每个阶段的细节（提供商、模型、来源、批处理）。
+- `memory status` 包含通过 `memorySearch.extraPaths` 配置的额外路径。

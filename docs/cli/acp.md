@@ -1,77 +1,76 @@
 ---
-summary: "Run the ACP bridge for IDE integrations"
+summary: "运行 ACP 桥接以集成 IDE"
 read_when:
-  - Setting up ACP-based IDE integrations
-  - Debugging ACP session routing to the Gateway
+  - 设置基于 ACP 的 IDE 集成
+  - 调试 ACP 会话到 Gateway 的路由
 ---
 
 # acp
 
-Run the ACP (Agent Client Protocol) bridge that talks to a Moltbot Gateway.
+运行 ACP（Agent Client Protocol）桥接，与 Moltbot Gateway 通信。
 
-This command speaks ACP over stdio for IDEs and forwards prompts to the Gateway
-over WebSocket. It keeps ACP sessions mapped to Gateway session keys.
+该命令通过 stdio 与 IDE 讲 ACP，并通过 WebSocket 将提示转发到 Gateway。
+它会将 ACP 会话映射到 Gateway 会话 key。
 
-## Usage
+## 用法
 
 ```bash
 moltbot acp
 
-# Remote Gateway
+# 远程 Gateway
 moltbot acp --url wss://gateway-host:18789 --token <token>
 
-# Attach to an existing session key
+# 绑定到现有会话 key
 moltbot acp --session agent:main:main
 
-# Attach by label (must already exist)
+# 通过标签绑定（必须已存在）
 moltbot acp --session-label "support inbox"
 
-# Reset the session key before the first prompt
+# 在首条提示前重置会话 key
 moltbot acp --session agent:main:main --reset-session
 ```
 
-## ACP client (debug)
+## ACP 客户端（调试）
 
-Use the built-in ACP client to sanity-check the bridge without an IDE.
-It spawns the ACP bridge and lets you type prompts interactively.
+使用内置 ACP 客户端在不依赖 IDE 的情况下验证桥接。
+它会启动 ACP 桥接，并允许你交互式输入提示。
 
 ```bash
 moltbot acp client
 
-# Point the spawned bridge at a remote Gateway
+# 将启动的桥接指向远程 Gateway
 moltbot acp client --server-args --url wss://gateway-host:18789 --token <token>
 
-# Override the server command (default: moltbot)
+# 覆盖 server 命令（默认：moltbot）
 moltbot acp client --server "node" --server-args moltbot.mjs acp --url ws://127.0.0.1:19001
 ```
 
-## How to use this
+## 如何使用
 
-Use ACP when an IDE (or other client) speaks Agent Client Protocol and you want
-it to drive a Moltbot Gateway session.
+当 IDE（或其它客户端）支持 Agent Client Protocol 且你希望它驱动 Moltbot Gateway 会话时使用 ACP。
 
-1. Ensure the Gateway is running (local or remote).
-2. Configure the Gateway target (config or flags).
-3. Point your IDE to run `moltbot acp` over stdio.
+1. 确保 Gateway 正在运行（本地或远程）。
+2. 配置 Gateway 目标（配置或标志）。
+3. 让 IDE 通过 stdio 运行 `moltbot acp`。
 
-Example config (persisted):
+示例配置（持久化）：
 
 ```bash
 moltbot config set gateway.remote.url wss://gateway-host:18789
 moltbot config set gateway.remote.token <token>
 ```
 
-Example direct run (no config write):
+示例直接运行（不写配置）：
 
 ```bash
 moltbot acp --url wss://gateway-host:18789 --token <token>
 ```
 
-## Selecting agents
+## 选择代理
 
-ACP does not pick agents directly. It routes by the Gateway session key.
+ACP 不直接选择代理，它按 Gateway 会话 key 路由。
 
-Use agent-scoped session keys to target a specific agent:
+使用带代理范围的会话 key 来锁定特定代理：
 
 ```bash
 moltbot acp --session agent:main:main
@@ -79,13 +78,12 @@ moltbot acp --session agent:design:main
 moltbot acp --session agent:qa:bug-123
 ```
 
-Each ACP session maps to a single Gateway session key. One agent can have many
-sessions; ACP defaults to an isolated `acp:<uuid>` session unless you override
-the key or label.
+每个 ACP 会话映射到一个 Gateway 会话 key。一个代理可以有多个会话；
+除非覆盖 key 或 label，ACP 默认使用隔离的 `acp:<uuid>` 会话。
 
-## Zed editor setup
+## Zed 编辑器配置
 
-Add a custom ACP agent in `~/.config/zed/settings.json` (or use Zed’s Settings UI):
+在 `~/.config/zed/settings.json` 中添加自定义 ACP agent（或使用 Zed Settings UI）：
 
 ```json
 {
@@ -100,7 +98,7 @@ Add a custom ACP agent in `~/.config/zed/settings.json` (or use Zed’s Settings
 }
 ```
 
-To target a specific Gateway or agent:
+要指向特定 Gateway 或代理：
 
 ```json
 {
@@ -120,18 +118,18 @@ To target a specific Gateway or agent:
 }
 ```
 
-In Zed, open the Agent panel and select “Moltbot ACP” to start a thread.
+在 Zed 中打开 Agent 面板并选择 “Moltbot ACP” 开始对话。
 
-## Session mapping
+## 会话映射
 
-By default, ACP sessions get an isolated Gateway session key with an `acp:` prefix.
-To reuse a known session, pass a session key or label:
+默认情况下，ACP 会话会获得带 `acp:` 前缀的隔离 Gateway 会话 key。
+如需复用已知会话，传入会话 key 或 label：
 
-- `--session <key>`: use a specific Gateway session key.
-- `--session-label <label>`: resolve an existing session by label.
-- `--reset-session`: mint a fresh session id for that key (same key, new transcript).
+- `--session <key>`：使用指定 Gateway 会话 key。
+- `--session-label <label>`：通过 label 解析现有会话。
+- `--reset-session`：为该 key 生成新的会话 id（同 key，新记录）。
 
-If your ACP client supports metadata, you can override per session:
+如果 ACP 客户端支持元数据，可按会话覆盖：
 
 ```json
 {
@@ -143,24 +141,24 @@ If your ACP client supports metadata, you can override per session:
 }
 ```
 
-Learn more about session keys at [/concepts/session](/concepts/session).
+会话 key 详情见 [/concepts/session](/concepts/session)。
 
-## Options
+## 选项
 
-- `--url <url>`: Gateway WebSocket URL (defaults to gateway.remote.url when configured).
-- `--token <token>`: Gateway auth token.
-- `--password <password>`: Gateway auth password.
-- `--session <key>`: default session key.
-- `--session-label <label>`: default session label to resolve.
-- `--require-existing`: fail if the session key/label does not exist.
-- `--reset-session`: reset the session key before first use.
-- `--no-prefix-cwd`: do not prefix prompts with the working directory.
-- `--verbose, -v`: verbose logging to stderr.
+- `--url <url>`：Gateway WebSocket URL（若已配置则默认 `gateway.remote.url`）。
+- `--token <token>`：Gateway 认证 token。
+- `--password <password>`：Gateway 认证密码。
+- `--session <key>`：默认会话 key。
+- `--session-label <label>`：默认会话 label（解析现有会话）。
+- `--require-existing`：会话 key 或 label 不存在则失败。
+- `--reset-session`：首次使用前重置会话 key。
+- `--no-prefix-cwd`：不要在提示前添加工作目录前缀。
+- `--verbose, -v`：stderr 详细日志。
 
-### `acp client` options
+### `acp client` 选项
 
-- `--cwd <dir>`: working directory for the ACP session.
-- `--server <command>`: ACP server command (default: `moltbot`).
-- `--server-args <args...>`: extra arguments passed to the ACP server.
-- `--server-verbose`: enable verbose logging on the ACP server.
-- `--verbose, -v`: verbose client logging.
+- `--cwd <dir>`：ACP 会话的工作目录。
+- `--server <command>`：ACP server 命令（默认：`moltbot`）。
+- `--server-args <args...>`：传给 ACP server 的额外参数。
+- `--server-verbose`：开启 ACP server 的详细日志。
+- `--verbose, -v`：客户端详细日志。

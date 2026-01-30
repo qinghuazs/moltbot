@@ -1,18 +1,18 @@
 ---
-summary: "CLI reference for `moltbot agent` (send one agent turn via the Gateway)"
+summary: "`moltbot agent` 的 CLI 参考（通过 Gateway 发送一次代理轮次）"
 read_when:
-  - You want to run one agent turn from scripts (optionally deliver reply)
+  - 想从脚本运行一次代理轮次（可选投递回复）
 ---
 
 # `moltbot agent`
 
-Run an agent turn via the Gateway (use `--local` for embedded).
-Use `--agent <id>` to target a configured agent directly.
+通过 Gateway 运行一次代理轮次（`--local` 使用内嵌模式）。
+使用 `--agent <id>` 可直接指定已配置的代理。
 
-Related:
-- Agent send tool: [Agent send](/tools/agent-send)
+相关：
+- Agent send 工具：[Agent send](/tools/agent-send)
 
-## Examples
+## 示例
 
 ```bash
 moltbot agent --to +15555550123 --message "status update" --deliver

@@ -1,17 +1,16 @@
 ---
-summary: "CLI reference for `moltbot system` (system events, heartbeat, presence)"
+summary: "`moltbot system` CLI 参考（系统事件、心跳、存在状态）"
 read_when:
-  - You want to enqueue a system event without creating a cron job
-  - You need to enable or disable heartbeats
-  - You want to inspect system presence entries
+  - 您想在不创建 cron 任务的情况下排队系统事件
+  - 您需要启用或禁用心跳
+  - 您想检查系统存在状态条目
 ---
 
 # `moltbot system`
 
-System-level helpers for the Gateway: enqueue system events, control heartbeats,
-and view presence.
+网关的系统级助手：排队系统事件、控制心跳和查看存在状态。
 
-## Common commands
+## 常用命令
 
 ```bash
 moltbot system event --text "Check for urgent follow-ups" --mode now
@@ -22,34 +21,31 @@ moltbot system presence
 
 ## `system event`
 
-Enqueue a system event on the **main** session. The next heartbeat will inject
-it as a `System:` line in the prompt. Use `--mode now` to trigger the heartbeat
-immediately; `next-heartbeat` waits for the next scheduled tick.
+在**主**会话上排队系统事件。下一次心跳会将其作为 `System:` 行注入到提示中。使用 `--mode now` 立即触发心跳；`next-heartbeat` 等待下一个计划的时刻。
 
-Flags:
-- `--text <text>`: required system event text.
-- `--mode <mode>`: `now` or `next-heartbeat` (default).
-- `--json`: machine-readable output.
+参数：
+- `--text <text>`：必需的系统事件文本。
+- `--mode <mode>`：`now` 或 `next-heartbeat`（默认）。
+- `--json`：机器可读输出。
 
 ## `system heartbeat last|enable|disable`
 
-Heartbeat controls:
-- `last`: show the last heartbeat event.
-- `enable`: turn heartbeats back on (use this if they were disabled).
-- `disable`: pause heartbeats.
+心跳控制：
+- `last`：显示上次心跳事件。
+- `enable`：重新开启心跳（如果已禁用则使用此命令）。
+- `disable`：暂停心跳。
 
-Flags:
-- `--json`: machine-readable output.
+参数：
+- `--json`：机器可读输出。
 
 ## `system presence`
 
-List the current system presence entries the Gateway knows about (nodes,
-instances, and similar status lines).
+列出网关知道的当前系统存在状态条目（节点、实例和类似状态行）。
 
-Flags:
-- `--json`: machine-readable output.
+参数：
+- `--json`：机器可读输出。
 
-## Notes
+## 说明
 
-- Requires a running Gateway reachable by your current config (local or remote).
-- System events are ephemeral and not persisted across restarts.
+- 需要当前配置可访问的运行中网关（本地或远程）。
+- 系统事件是临时的，不会在重启后持久化。

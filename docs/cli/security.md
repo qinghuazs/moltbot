@@ -1,18 +1,18 @@
 ---
-summary: "CLI reference for `moltbot security` (audit and fix common security footguns)"
+summary: "`moltbot security` CLI 参考（审计和修复常见安全问题）"
 read_when:
-  - You want to run a quick security audit on config/state
-  - You want to apply safe “fix” suggestions (chmod, tighten defaults)
+  - 您想对配置/状态运行快速安全审计
+  - 您想应用安全的"修复"建议（chmod、收紧默认值）
 ---
 
 # `moltbot security`
 
-Security tools (audit + optional fixes).
+安全工具（审计 + 可选修复）。
 
-Related:
-- Security guide: [Security](/gateway/security)
+相关：
+- 安全指南：[安全](/gateway/security)
 
-## Audit
+## 审计
 
 ```bash
 moltbot security audit
@@ -20,5 +20,5 @@ moltbot security audit --deep
 moltbot security audit --fix
 ```
 
-The audit warns when multiple DM senders share the main session and recommends `session.dmScope="per-channel-peer"` (or `per-account-channel-peer` for multi-account channels) for shared inboxes.
-It also warns when small models (`<=300B`) are used without sandboxing and with web/browser tools enabled.
+当多个私聊发送者共享主会话时，审计会发出警告，并建议对共享收件箱使用 `session.dmScope="per-channel-peer"`（或对多账户频道使用 `per-account-channel-peer`）。
+当使用小型模型（`<=300B`）且未启用沙盒并启用了 web/browser 工具时，它也会发出警告。

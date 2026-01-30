@@ -1,47 +1,41 @@
 ---
-summary: "How Moltbot memory works (workspace files + automatic memory flush)"
+summary: "Moltbot 记忆的工作原理（工作区文件 + 自动记忆刷新）"
 read_when:
-  - You want the memory file layout and workflow
-  - You want to tune the automatic pre-compaction memory flush
+  - 您想了解记忆文件布局和工作流程
+  - 您想调整自动压缩前记忆刷新
 ---
-# Memory
+# 记忆
 
-Moltbot memory is **plain Markdown in the agent workspace**. The files are the
-source of truth; the model only "remembers" what gets written to disk.
+Moltbot 记忆是**代理工作区中的纯 Markdown**。文件是真实来源；模型只"记住"写入磁盘的内容。
 
-Memory search tools are provided by the active memory plugin (default:
-`memory-core`). Disable memory plugins with `plugins.slots.memory = "none"`.
+记忆搜索工具由活动记忆插件提供（默认：`memory-core`）。使用 `plugins.slots.memory = "none"` 禁用记忆插件。
 
-## Memory files (Markdown)
+## 记忆文件（Markdown）
 
-The default workspace layout uses two memory layers:
+默认工作区布局使用两个记忆层：
 
 - `memory/YYYY-MM-DD.md`
-  - Daily log (append-only).
-  - Read today + yesterday at session start.
-- `MEMORY.md` (optional)
-  - Curated long-term memory.
-  - **Only load in the main, private session** (never in group contexts).
+  - 每日日志（仅追加）。
+  - 会话开始时读取今天 + 昨天。
+- `MEMORY.md`（可选）
+  - 精选的长期记忆。
+  - **仅在主私人会话中加载**（永不在群组上下文中）。
 
-These files live under the workspace (`agents.defaults.workspace`, default
-`~/clawd`). See [Agent workspace](/concepts/agent-workspace) for the full layout.
+这些文件位于工作区下（`agents.defaults.workspace`，默认 `~/clawd`）。参见 [代理工作区](/concepts/agent-workspace) 获取完整布局。
 
-## When to write memory
+## 何时写入记忆
 
-- Decisions, preferences, and durable facts go to `MEMORY.md`.
-- Day-to-day notes and running context go to `memory/YYYY-MM-DD.md`.
-- If someone says "remember this," write it down (do not keep it in RAM).
-- This area is still evolving. It helps to remind the model to store memories; it will know what to do.
-- If you want something to stick, **ask the bot to write it** into memory.
+- 决策、偏好和持久事实写入 `MEMORY.md`。
+- 日常笔记和运行上下文写入 `memory/YYYY-MM-DD.md`。
+- 如果有人说"记住这个"，就写下来（不要保存在 RAM 中）。
+- 这个领域仍在发展中。提醒模型存储记忆会有帮助；它会知道该怎么做。
+- 如果您想让某些内容持久化，**请让机器人将其写入**记忆。
 
-## Automatic memory flush (pre-compaction ping)
+## 自动记忆刷新（压缩前 ping）
 
-When a session is **close to auto-compaction**, Moltbot triggers a **silent,
-agentic turn** that reminds the model to write durable memory **before** the
-context is compacted. The default prompts explicitly say the model *may reply*,
-but usually `NO_REPLY` is the correct response so the user never sees this turn.
+当会话**接近自动压缩**时，Moltbot 触发一个**静默代理轮次**，提醒模型在上下文被压缩**之前**写入持久记忆。默认提示明确说明模型*可以回复*，但通常 `NO_REPLY` 是正确的响应，因此用户永远不会看到这个轮次。
 
-This is controlled by `agents.defaults.compaction.memoryFlush`:
+这由 `agents.defaults.compaction.memoryFlush` 控制：
 
 ```json5
 {
@@ -61,46 +55,35 @@ This is controlled by `agents.defaults.compaction.memoryFlush`:
 }
 ```
 
-Details:
-- **Soft threshold**: flush triggers when the session token estimate crosses
-  `contextWindow - reserveTokensFloor - softThresholdTokens`.
-- **Silent** by default: prompts include `NO_REPLY` so nothing is delivered.
-- **Two prompts**: a user prompt plus a system prompt append the reminder.
-- **One flush per compaction cycle** (tracked in `sessions.json`).
-- **Workspace must be writable**: if the session runs sandboxed with
-  `workspaceAccess: "ro"` or `"none"`, the flush is skipped.
+详情：
+- **软阈值**：当会话令牌估计超过 `contextWindow - reserveTokensFloor - softThresholdTokens` 时触发刷新。
+- **默认静默**：提示包含 `NO_REPLY`，因此不会发送任何内容。
+- **两个提示**：用户提示加上系统提示附加提醒。
+- **每压缩周期一次刷新**（在 `sessions.json` 中跟踪）。
+- **工作区必须可写**：如果会话以 `workspaceAccess: "ro"` 或 `"none"` 沙箱运行，则跳过刷新。
 
-For the full compaction lifecycle, see
-[Session management + compaction](/reference/session-management-compaction).
+有关完整压缩生命周期，请参见 [会话管理 + 压缩](/reference/session-management-compaction)。
 
-## Vector memory search
+## 向量记忆搜索
 
-Moltbot can build a small vector index over `MEMORY.md` and `memory/*.md` (plus
-any extra directories or files you opt in) so semantic queries can find related
-notes even when wording differs.
+Moltbot 可以在 `MEMORY.md` 和 `memory/*.md`（以及您选择加入的任何额外目录或文件）上构建小型向量索引，以便语义查询可以找到相关笔记，即使措辞不同。
 
-Defaults:
-- Enabled by default.
-- Watches memory files for changes (debounced).
-- Uses remote embeddings by default. If `memorySearch.provider` is not set, Moltbot auto-selects:
-  1. `local` if a `memorySearch.local.modelPath` is configured and the file exists.
-  2. `openai` if an OpenAI key can be resolved.
-  3. `gemini` if a Gemini key can be resolved.
-  4. Otherwise memory search stays disabled until configured.
-- Local mode uses node-llama-cpp and may require `pnpm approve-builds`.
-- Uses sqlite-vec (when available) to accelerate vector search inside SQLite.
+默认值：
+- 默认启用。
+- 监视记忆文件的更改（防抖）。
+- 默认使用远程嵌入。如果未设置 `memorySearch.provider`，Moltbot 自动选择：
+  1. 如果配置了 `memorySearch.local.modelPath` 且文件存在，则使用 `local`。
+  2. 如果可以解析 OpenAI 密钥，则使用 `openai`。
+  3. 如果可以解析 Gemini 密钥，则使用 `gemini`。
+  4. 否则记忆搜索保持禁用直到配置。
+- 本地模式使用 node-llama-cpp，可能需要 `pnpm approve-builds`。
+- 使用 sqlite-vec（可用时）加速 SQLite 内的向量搜索。
 
-Remote embeddings **require** an API key for the embedding provider. Moltbot
-resolves keys from auth profiles, `models.providers.*.apiKey`, or environment
-variables. Codex OAuth only covers chat/completions and does **not** satisfy
-embeddings for memory search. For Gemini, use `GEMINI_API_KEY` or
-`models.providers.google.apiKey`. When using a custom OpenAI-compatible endpoint,
-set `memorySearch.remote.apiKey` (and optional `memorySearch.remote.headers`).
+远程嵌入**需要**嵌入提供商的 API 密钥。Moltbot 从认证配置文件、`models.providers.*.apiKey` 或环境变量解析密钥。Codex OAuth 仅涵盖聊天/完成，**不**满足记忆搜索的嵌入需求。对于 Gemini，使用 `GEMINI_API_KEY` 或 `models.providers.google.apiKey`。使用自定义 OpenAI 兼容端点时，设置 `memorySearch.remote.apiKey`（和可选的 `memorySearch.remote.headers`）。
 
-### Additional memory paths
+### 额外记忆路径
 
-If you want to index Markdown files outside the default workspace layout, add
-explicit paths:
+如果您想索引默认工作区布局之外的 Markdown 文件，请添加显式路径：
 
 ```json5
 agents: {
@@ -112,15 +95,15 @@ agents: {
 }
 ```
 
-Notes:
-- Paths can be absolute or workspace-relative.
-- Directories are scanned recursively for `.md` files.
-- Only Markdown files are indexed.
-- Symlinks are ignored (files or directories).
+注意：
+- 路径可以是绝对路径或工作区相对路径。
+- 目录递归扫描 `.md` 文件。
+- 仅索引 Markdown 文件。
+- 忽略符号链接（文件或目录）。
 
-### Gemini embeddings (native)
+### Gemini 嵌入（原生）
 
-Set the provider to `gemini` to use the Gemini embeddings API directly:
+将提供商设置为 `gemini` 以直接使用 Gemini 嵌入 API：
 
 ```json5
 agents: {
@@ -136,13 +119,12 @@ agents: {
 }
 ```
 
-Notes:
-- `remote.baseUrl` is optional (defaults to the Gemini API base URL).
-- `remote.headers` lets you add extra headers if needed.
-- Default model: `gemini-embedding-001`.
+注意：
+- `remote.baseUrl` 是可选的（默认为 Gemini API 基础 URL）。
+- `remote.headers` 允许您在需要时添加额外标头。
+- 默认模型：`gemini-embedding-001`。
 
-If you want to use a **custom OpenAI-compatible endpoint** (OpenRouter, vLLM, or a proxy),
-you can use the `remote` configuration with the OpenAI provider:
+如果您想使用**自定义 OpenAI 兼容端点**（OpenRouter、vLLM 或代理），可以使用 OpenAI 提供商的 `remote` 配置：
 
 ```json5
 agents: {
@@ -160,28 +142,27 @@ agents: {
 }
 ```
 
-If you don't want to set an API key, use `memorySearch.provider = "local"` or set
-`memorySearch.fallback = "none"`.
+如果您不想设置 API 密钥，请使用 `memorySearch.provider = "local"` 或设置 `memorySearch.fallback = "none"`。
 
-Fallbacks:
-- `memorySearch.fallback` can be `openai`, `gemini`, `local`, or `none`.
-- The fallback provider is only used when the primary embedding provider fails.
+回退：
+- `memorySearch.fallback` 可以是 `openai`、`gemini`、`local` 或 `none`。
+- 回退提供商仅在主嵌入提供商失败时使用。
 
-Batch indexing (OpenAI + Gemini):
-- Enabled by default for OpenAI and Gemini embeddings. Set `agents.defaults.memorySearch.remote.batch.enabled = false` to disable.
-- Default behavior waits for batch completion; tune `remote.batch.wait`, `remote.batch.pollIntervalMs`, and `remote.batch.timeoutMinutes` if needed.
-- Set `remote.batch.concurrency` to control how many batch jobs we submit in parallel (default: 2).
-- Batch mode applies when `memorySearch.provider = "openai"` or `"gemini"` and uses the corresponding API key.
-- Gemini batch jobs use the async embeddings batch endpoint and require Gemini Batch API availability.
+批量索引（OpenAI + Gemini）：
+- OpenAI 和 Gemini 嵌入默认启用。设置 `agents.defaults.memorySearch.remote.batch.enabled = false` 禁用。
+- 默认行为等待批处理完成；如需调整 `remote.batch.wait`、`remote.batch.pollIntervalMs` 和 `remote.batch.timeoutMinutes`。
+- 设置 `remote.batch.concurrency` 控制我们并行提交多少批处理作业（默认：2）。
+- 当 `memorySearch.provider = "openai"` 或 `"gemini"` 时应用批处理模式，并使用相应的 API 密钥。
+- Gemini 批处理作业使用异步嵌入批处理端点，需要 Gemini Batch API 可用性。
 
-Why OpenAI batch is fast + cheap:
-- For large backfills, OpenAI is typically the fastest option we support because we can submit many embedding requests in a single batch job and let OpenAI process them asynchronously.
-- OpenAI offers discounted pricing for Batch API workloads, so large indexing runs are usually cheaper than sending the same requests synchronously.
-- See the OpenAI Batch API docs and pricing for details:
+为什么 OpenAI 批处理快速且便宜：
+- 对于大型回填，OpenAI 通常是我们支持的最快选项，因为我们可以在单个批处理作业中提交许多嵌入请求，让 OpenAI 异步处理它们。
+- OpenAI 为 Batch API 工作负载提供折扣定价，因此大型索引运行通常比同步发送相同请求更便宜。
+- 参见 OpenAI Batch API 文档和定价了解详情：
   - https://platform.openai.com/docs/api-reference/batch
   - https://platform.openai.com/pricing
 
-Config example:
+配置示例：
 
 ```json5
 agents: {
@@ -199,75 +180,73 @@ agents: {
 }
 ```
 
-Tools:
-- `memory_search` — returns snippets with file + line ranges.
-- `memory_get` — read memory file content by path.
+工具：
+- `memory_search` — 返回带有文件 + 行范围的片段。
+- `memory_get` — 按路径读取记忆文件内容。
 
-Local mode:
-- Set `agents.defaults.memorySearch.provider = "local"`.
-- Provide `agents.defaults.memorySearch.local.modelPath` (GGUF or `hf:` URI).
-- Optional: set `agents.defaults.memorySearch.fallback = "none"` to avoid remote fallback.
+本地模式：
+- 设置 `agents.defaults.memorySearch.provider = "local"`。
+- 提供 `agents.defaults.memorySearch.local.modelPath`（GGUF 或 `hf:` URI）。
+- 可选：设置 `agents.defaults.memorySearch.fallback = "none"` 避免远程回退。
 
-### How the memory tools work
+### 记忆工具的工作原理
 
-- `memory_search` semantically searches Markdown chunks (~400 token target, 80-token overlap) from `MEMORY.md` + `memory/**/*.md`. It returns snippet text (capped ~700 chars), file path, line range, score, provider/model, and whether we fell back from local → remote embeddings. No full file payload is returned.
-- `memory_get` reads a specific memory Markdown file (workspace-relative), optionally from a starting line and for N lines. Paths outside `MEMORY.md` / `memory/` are allowed only when explicitly listed in `memorySearch.extraPaths`.
-- Both tools are enabled only when `memorySearch.enabled` resolves true for the agent.
+- `memory_search` 语义搜索来自 `MEMORY.md` + `memory/**/*.md` 的 Markdown 块（约 400 令牌目标，80 令牌重叠）。它返回片段文本（上限约 700 字符）、文件路径、行范围、分数、提供商/模型，以及我们是否从本地回退到远程嵌入。不返回完整文件负载。
+- `memory_get` 读取特定记忆 Markdown 文件（工作区相对），可选从起始行开始读取 N 行。仅当在 `memorySearch.extraPaths` 中明确列出时，才允许 `MEMORY.md` / `memory/` 之外的路径。
+- 仅当代理的 `memorySearch.enabled` 解析为 true 时，两个工具才启用。
 
-### What gets indexed (and when)
+### 索引内容（及时机）
 
-- File type: Markdown only (`MEMORY.md`, `memory/**/*.md`, plus any `.md` files under `memorySearch.extraPaths`).
-- Index storage: per-agent SQLite at `~/.clawdbot/memory/<agentId>.sqlite` (configurable via `agents.defaults.memorySearch.store.path`, supports `{agentId}` token).
-- Freshness: watcher on `MEMORY.md`, `memory/`, and `memorySearch.extraPaths` marks the index dirty (debounce 1.5s). Sync is scheduled on session start, on search, or on an interval and runs asynchronously. Session transcripts use delta thresholds to trigger background sync.
-- Reindex triggers: the index stores the embedding **provider/model + endpoint fingerprint + chunking params**. If any of those change, Moltbot automatically resets and reindexes the entire store.
+- 文件类型：仅 Markdown（`MEMORY.md`、`memory/**/*.md`，以及 `memorySearch.extraPaths` 下的任何 `.md` 文件）。
+- 索引存储：每代理 SQLite 位于 `~/.clawdbot/memory/<agentId>.sqlite`（可通过 `agents.defaults.memorySearch.store.path` 配置，支持 `{agentId}` 令牌）。
+- 新鲜度：监视器在 `MEMORY.md`、`memory/` 和 `memorySearch.extraPaths` 上标记索引为脏（防抖 1.5 秒）。同步在会话开始时、搜索时或按间隔调度并异步运行。会话记录使用增量阈值触发后台同步。
+- 重新索引触发器：索引存储嵌入**提供商/模型 + 端点指纹 + 分块参数**。如果其中任何一个更改，Moltbot 自动重置并重新索引整个存储。
 
-### Hybrid search (BM25 + vector)
+### 混合搜索（BM25 + 向量）
 
-When enabled, Moltbot combines:
-- **Vector similarity** (semantic match, wording can differ)
-- **BM25 keyword relevance** (exact tokens like IDs, env vars, code symbols)
+启用时，Moltbot 结合：
+- **向量相似度**（语义匹配，措辞可以不同）
+- **BM25 关键词相关性**（精确令牌如 ID、环境变量、代码符号）
 
-If full-text search is unavailable on your platform, Moltbot falls back to vector-only search.
+如果您的平台上全文搜索不可用，Moltbot 回退到仅向量搜索。
 
-#### Why hybrid?
+#### 为什么使用混合？
 
-Vector search is great at “this means the same thing”:
-- “Mac Studio gateway host” vs “the machine running the gateway”
-- “debounce file updates” vs “avoid indexing on every write”
+向量搜索擅长"这意味着同一件事"：
+- "Mac Studio 网关主机" vs "运行网关的机器"
+- "防抖文件更新" vs "避免每次写入时索引"
 
-But it can be weak at exact, high-signal tokens:
-- IDs (`a828e60`, `b3b9895a…`)
-- code symbols (`memorySearch.query.hybrid`)
-- error strings (“sqlite-vec unavailable”)
+但它在精确、高信号令牌上可能较弱：
+- ID（`a828e60`、`b3b9895a…`）
+- 代码符号（`memorySearch.query.hybrid`）
+- 错误字符串（"sqlite-vec unavailable"）
 
-BM25 (full-text) is the opposite: strong at exact tokens, weaker at paraphrases.
-Hybrid search is the pragmatic middle ground: **use both retrieval signals** so you get
-good results for both “natural language” queries and “needle in a haystack” queries.
+BM25（全文）相反：擅长精确令牌，较弱于释义。
+混合搜索是务实的中间地带：**使用两种检索信号**，这样您可以获得"自然语言"查询和"大海捞针"查询的良好结果。
 
-#### How we merge results (the current design)
+#### 我们如何合并结果（当前设计）
 
-Implementation sketch:
+实现草图：
 
-1) Retrieve a candidate pool from both sides:
-- **Vector**: top `maxResults * candidateMultiplier` by cosine similarity.
-- **BM25**: top `maxResults * candidateMultiplier` by FTS5 BM25 rank (lower is better).
+1) 从两侧检索候选池：
+- **向量**：按余弦相似度取前 `maxResults * candidateMultiplier`。
+- **BM25**：按 FTS5 BM25 排名取前 `maxResults * candidateMultiplier`（越低越好）。
 
-2) Convert BM25 rank into a 0..1-ish score:
+2) 将 BM25 排名转换为 0..1 分数：
 - `textScore = 1 / (1 + max(0, bm25Rank))`
 
-3) Union candidates by chunk id and compute a weighted score:
+3) 按块 id 合并候选并计算加权分数：
 - `finalScore = vectorWeight * vectorScore + textWeight * textScore`
 
-Notes:
-- `vectorWeight` + `textWeight` is normalized to 1.0 in config resolution, so weights behave as percentages.
-- If embeddings are unavailable (or the provider returns a zero-vector), we still run BM25 and return keyword matches.
-- If FTS5 can’t be created, we keep vector-only search (no hard failure).
+注意：
+- `vectorWeight` + `textWeight` 在配置解析中规范化为 1.0，因此权重表现为百分比。
+- 如果嵌入不可用（或提供商返回零向量），我们仍运行 BM25 并返回关键词匹配。
+- 如果无法创建 FTS5，我们保持仅向量搜索（无硬失败）。
 
-This isn’t “IR-theory perfect”, but it’s simple, fast, and tends to improve recall/precision on real notes.
-If we want to get fancier later, common next steps are Reciprocal Rank Fusion (RRF) or score normalization
-(min/max or z-score) before mixing.
+这不是"IR 理论完美"，但它简单、快速，并且倾向于提高真实笔记的召回率/精确度。
+如果我们以后想更花哨，常见的下一步是倒数排名融合（RRF）或分数规范化（最小/最大或 z 分数）然后混合。
 
-Config:
+配置：
 
 ```json5
 agents: {
@@ -286,11 +265,11 @@ agents: {
 }
 ```
 
-### Embedding cache
+### 嵌入缓存
 
-Moltbot can cache **chunk embeddings** in SQLite so reindexing and frequent updates (especially session transcripts) don't re-embed unchanged text.
+Moltbot 可以在 SQLite 中缓存**块嵌入**，这样重新索引和频繁更新（特别是会话记录）不会重新嵌入未更改的文本。
 
-Config:
+配置：
 
 ```json5
 agents: {
@@ -305,10 +284,10 @@ agents: {
 }
 ```
 
-### Session memory search (experimental)
+### 会话记忆搜索（实验性）
 
-You can optionally index **session transcripts** and surface them via `memory_search`.
-This is gated behind an experimental flag.
+您可以选择索引**会话记录**并通过 `memory_search` 显示它们。
+这在实验性标志后面。
 
 ```json5
 agents: {
@@ -321,15 +300,15 @@ agents: {
 }
 ```
 
-Notes:
-- Session indexing is **opt-in** (off by default).
-- Session updates are debounced and **indexed asynchronously** once they cross delta thresholds (best-effort).
-- `memory_search` never blocks on indexing; results can be slightly stale until background sync finishes.
-- Results still include snippets only; `memory_get` remains limited to memory files.
-- Session indexing is isolated per agent (only that agent’s session logs are indexed).
-- Session logs live on disk (`~/.clawdbot/agents/<agentId>/sessions/*.jsonl`). Any process/user with filesystem access can read them, so treat disk access as the trust boundary. For stricter isolation, run agents under separate OS users or hosts.
+注意：
+- 会话索引是**选择加入**的（默认关闭）。
+- 会话更新被防抖并在超过增量阈值后**异步索引**（尽力而为）。
+- `memory_search` 永不阻塞索引；结果可能略微过时，直到后台同步完成。
+- 结果仍仅包含片段；`memory_get` 仍限于记忆文件。
+- 会话索引按代理隔离（仅索引该代理的会话日志）。
+- 会话日志存储在磁盘上（`~/.clawdbot/agents/<agentId>/sessions/*.jsonl`）。任何具有文件系统访问权限的进程/用户都可以读取它们，因此将磁盘访问视为信任边界。对于更严格的隔离，在单独的 OS 用户或主机下运行代理。
 
-Delta thresholds (defaults shown):
+增量阈值（显示默认值）：
 
 ```json5
 agents: {
@@ -338,7 +317,7 @@ agents: {
       sync: {
         sessions: {
           deltaBytes: 100000,   // ~100 KB
-          deltaMessages: 50     // JSONL lines
+          deltaMessages: 50     // JSONL 行
         }
       }
     }
@@ -346,13 +325,11 @@ agents: {
 }
 ```
 
-### SQLite vector acceleration (sqlite-vec)
+### SQLite 向量加速（sqlite-vec）
 
-When the sqlite-vec extension is available, Moltbot stores embeddings in a
-SQLite virtual table (`vec0`) and performs vector distance queries in the
-database. This keeps search fast without loading every embedding into JS.
+当 sqlite-vec 扩展可用时，Moltbot 将嵌入存储在 SQLite 虚拟表（`vec0`）中，并在数据库中执行向量距离查询。这使搜索保持快速，而无需将每个嵌入加载到 JS 中。
 
-Configuration (optional):
+配置（可选）：
 
 ```json5
 agents: {
@@ -369,22 +346,19 @@ agents: {
 }
 ```
 
-Notes:
-- `enabled` defaults to true; when disabled, search falls back to in-process
-  cosine similarity over stored embeddings.
-- If the sqlite-vec extension is missing or fails to load, Moltbot logs the
-  error and continues with the JS fallback (no vector table).
-- `extensionPath` overrides the bundled sqlite-vec path (useful for custom builds
-  or non-standard install locations).
+注意：
+- `enabled` 默认为 true；禁用时，搜索回退到存储嵌入上的进程内余弦相似度。
+- 如果 sqlite-vec 扩展缺失或加载失败，Moltbot 记录错误并继续使用 JS 回退（无向量表）。
+- `extensionPath` 覆盖捆绑的 sqlite-vec 路径（对自定义构建或非标准安装位置有用）。
 
-### Local embedding auto-download
+### 本地嵌入自动下载
 
-- Default local embedding model: `hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf` (~0.6 GB).
-- When `memorySearch.provider = "local"`, `node-llama-cpp` resolves `modelPath`; if the GGUF is missing it **auto-downloads** to the cache (or `local.modelCacheDir` if set), then loads it. Downloads resume on retry.
-- Native build requirement: run `pnpm approve-builds`, pick `node-llama-cpp`, then `pnpm rebuild node-llama-cpp`.
-- Fallback: if local setup fails and `memorySearch.fallback = "openai"`, we automatically switch to remote embeddings (`openai/text-embedding-3-small` unless overridden) and record the reason.
+- 默认本地嵌入模型：`hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf`（约 0.6 GB）。
+- 当 `memorySearch.provider = "local"` 时，`node-llama-cpp` 解析 `modelPath`；如果 GGUF 缺失，它会**自动下载**到缓存（或 `local.modelCacheDir` 如果设置），然后加载它。下载在重试时恢复。
+- 原生构建要求：运行 `pnpm approve-builds`，选择 `node-llama-cpp`，然后 `pnpm rebuild node-llama-cpp`。
+- 回退：如果本地设置失败且 `memorySearch.fallback = "openai"`，我们自动切换到远程嵌入（`openai/text-embedding-3-small` 除非覆盖）并记录原因。
 
-### Custom OpenAI-compatible endpoint example
+### 自定义 OpenAI 兼容端点示例
 
 ```json5
 agents: {
@@ -405,6 +379,6 @@ agents: {
 }
 ```
 
-Notes:
-- `remote.*` takes precedence over `models.providers.openai.*`.
-- `remote.headers` merge with OpenAI headers; remote wins on key conflicts. Omit `remote.headers` to use the OpenAI defaults.
+注意：
+- `remote.*` 优先于 `models.providers.openai.*`。
+- `remote.headers` 与 OpenAI 标头合并；键冲突时 remote 获胜。省略 `remote.headers` 使用 OpenAI 默认值。

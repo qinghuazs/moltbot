@@ -1,30 +1,30 @@
 ---
-summary: "Usage tracking surfaces and credential requirements"
+summary: "用量追踪界面和凭证要求"
 read_when:
-  - You are wiring provider usage/quota surfaces
-  - You need to explain usage tracking behavior or auth requirements
+  - 你正在接入提供商用量/配额界面
+  - 你需要解释用量追踪行为或认证要求
 ---
-# Usage tracking
+# 用量追踪
 
-## What it is
-- Pulls provider usage/quota directly from their usage endpoints.
-- No estimated costs; only the provider-reported windows.
+## 功能说明
+- 直接从提供商的用量端点拉取用量/配额数据。
+- 不提供估算成本；仅显示提供商报告的时间窗口。
 
-## Where it shows up
-- `/status` in chats: emoji‑rich status card with session tokens + estimated cost (API key only). Provider usage shows for the **current model provider** when available.
-- `/usage off|tokens|full` in chats: per-response usage footer (OAuth shows tokens only).
-- `/usage cost` in chats: local cost summary aggregated from Moltbot session logs.
-- CLI: `moltbot status --usage` prints a full per-provider breakdown.
-- CLI: `moltbot channels list` prints the same usage snapshot alongside provider config (use `--no-usage` to skip).
-- macOS menu bar: “Usage” section under Context (only if available).
+## 显示位置
+- 聊天中的 `/status`：带表情符号的状态卡片，显示会话 token 数 + 估算成本（仅 API 密钥）。当可用时，显示**当前模型提供商**的用量。
+- 聊天中的 `/usage off|tokens|full`：每次响应的用量页脚（OAuth 仅显示 token 数）。
+- 聊天中的 `/usage cost`：从 Moltbot 会话日志汇总的本地成本摘要。
+- CLI：`moltbot status --usage` 打印完整的按提供商分类的明细。
+- CLI：`moltbot channels list` 在提供商配置旁打印相同的用量快照（使用 `--no-usage` 跳过）。
+- macOS 菜单栏：上下文下的"用量"部分（仅在可用时显示）。
 
-## Providers + credentials
-- **Anthropic (Claude)**: OAuth tokens in auth profiles.
-- **GitHub Copilot**: OAuth tokens in auth profiles.
-- **Gemini CLI**: OAuth tokens in auth profiles.
-- **Antigravity**: OAuth tokens in auth profiles.
-- **OpenAI Codex**: OAuth tokens in auth profiles (accountId used when present).
-- **MiniMax**: API key (coding plan key; `MINIMAX_CODE_PLAN_KEY` or `MINIMAX_API_KEY`); uses the 5‑hour coding plan window.
-- **z.ai**: API key via env/config/auth store.
+## 提供商 + 凭证
+- **Anthropic (Claude)**：认证配置文件中的 OAuth 令牌。
+- **GitHub Copilot**：认证配置文件中的 OAuth 令牌。
+- **Gemini CLI**：认证配置文件中的 OAuth 令牌。
+- **Antigravity**：认证配置文件中的 OAuth 令牌。
+- **OpenAI Codex**：认证配置文件中的 OAuth 令牌（存在时使用 accountId）。
+- **MiniMax**：API 密钥（编程计划密钥；`MINIMAX_CODE_PLAN_KEY` 或 `MINIMAX_API_KEY`）；使用 5 小时编程计划窗口。
+- **z.ai**：通过环境变量/配置/认证存储的 API 密钥。
 
-Usage is hidden if no matching OAuth/API credentials exist.
+如果没有匹配的 OAuth/API 凭证，用量将被隐藏。

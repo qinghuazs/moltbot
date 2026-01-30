@@ -1,18 +1,18 @@
 ---
-summary: "CLI reference for `moltbot logs` (tail gateway logs via RPC)"
+summary: "`moltbot logs` 的 CLI 参考（通过 RPC 跟随 gateway 日志）"
 read_when:
-  - You need to tail Gateway logs remotely (without SSH)
-  - You want JSON log lines for tooling
+  - 需要远程跟随 Gateway 日志（无需 SSH）
+  - 想获取用于工具的 JSON 日志行
 ---
 
 # `moltbot logs`
 
-Tail Gateway file logs over RPC (works in remote mode).
+通过 RPC 跟随 Gateway 文件日志（支持远程模式）。
 
-Related:
-- Logging overview: [Logging](/logging)
+相关：
+- 日志概览：[Logging](/logging)
 
-## Examples
+## 示例
 
 ```bash
 moltbot logs
@@ -20,4 +20,3 @@ moltbot logs --follow
 moltbot logs --json
 moltbot logs --limit 500
 ```
-

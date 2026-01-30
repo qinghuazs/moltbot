@@ -1,18 +1,18 @@
 ---
-summary: "CLI reference for `moltbot voicecall` (voice-call plugin command surface)"
+summary: "`moltbot voicecall` CLI 参考（语音通话插件命令界面）"
 read_when:
-  - You use the voice-call plugin and want the CLI entry points
-  - You want quick examples for `voicecall call|continue|status|tail|expose`
+  - 您使用语音通话插件并想要 CLI 入口点
+  - 您想要 `voicecall call|continue|status|tail|expose` 的快速示例
 ---
 
 # `moltbot voicecall`
 
-`voicecall` is a plugin-provided command. It only appears if the voice-call plugin is installed and enabled.
+`voicecall` 是插件提供的命令。只有在安装并启用语音通话插件时才会出现。
 
-Primary doc:
-- Voice-call plugin: [Voice Call](/plugins/voice-call)
+主要文档：
+- 语音通话插件：[语音通话](/plugins/voice-call)
 
-## Common commands
+## 常用命令
 
 ```bash
 moltbot voicecall status --call-id <id>
@@ -21,7 +21,7 @@ moltbot voicecall continue --call-id <id> --message "Any questions?"
 moltbot voicecall end --call-id <id>
 ```
 
-## Exposing webhooks (Tailscale)
+## 暴露 webhooks（Tailscale）
 
 ```bash
 moltbot voicecall expose --mode serve
@@ -29,5 +29,4 @@ moltbot voicecall expose --mode funnel
 moltbot voicecall unexpose
 ```
 
-Security note: only expose the webhook endpoint to networks you trust. Prefer Tailscale Serve over Funnel when possible.
-
+安全说明：仅将 webhook 端点暴露给您信任的网络。尽可能优先使用 Tailscale Serve 而不是 Funnel。

@@ -1,49 +1,49 @@
 ---
-summary: "CLI reference for `moltbot directory` (self, peers, groups)"
+summary: "`moltbot directory` CLI 参考（self、peers、groups）"
 read_when:
-  - You want to look up contacts/groups/self ids for a channel
-  - You are developing a channel directory adapter
+  - 您想查找频道的联系人/群组/自身 ID
+  - 您正在开发频道目录适配器
 ---
 
 # `moltbot directory`
 
-Directory lookups for channels that support it (contacts/peers, groups, and “me”).
+支持目录功能的频道的目录查询（联系人/peers、群组和"我"）。
 
-## Common flags
-- `--channel <name>`: channel id/alias (required when multiple channels are configured; auto when only one is configured)
-- `--account <id>`: account id (default: channel default)
-- `--json`: output JSON
+## 通用参数
+- `--channel <name>`：频道 id/别名（配置多个频道时必需；只配置一个时自动选择）
+- `--account <id>`：账户 id（默认：频道默认值）
+- `--json`：输出 JSON
 
-## Notes
-- `directory` is meant to help you find IDs you can paste into other commands (especially `moltbot message send --target ...`).
-- For many channels, results are config-backed (allowlists / configured groups) rather than a live provider directory.
-- Default output is `id` (and sometimes `name`) separated by a tab; use `--json` for scripting.
+## 说明
+- `directory` 旨在帮助您找到可以粘贴到其他命令中的 ID（特别是 `moltbot message send --target ...`）。
+- 对于许多频道，结果是基于配置的（允许列表/已配置的群组），而不是实时的提供商目录。
+- 默认输出是用制表符分隔的 `id`（有时还有 `name`）；使用 `--json` 进行脚本处理。
 
-## Using results with `message send`
+## 与 `message send` 配合使用
 
 ```bash
 moltbot directory peers list --channel slack --query "U0"
 moltbot message send --channel slack --target user:U012ABCDEF --message "hello"
 ```
 
-## ID formats (by channel)
+## ID 格式（按频道）
 
-- WhatsApp: `+15551234567` (DM), `1234567890-1234567890@g.us` (group)
-- Telegram: `@username` or numeric chat id; groups are numeric ids
-- Slack: `user:U…` and `channel:C…`
-- Discord: `user:<id>` and `channel:<id>`
-- Matrix (plugin): `user:@user:server`, `room:!roomId:server`, or `#alias:server`
-- Microsoft Teams (plugin): `user:<id>` and `conversation:<id>`
-- Zalo (plugin): user id (Bot API)
-- Zalo Personal / `zalouser` (plugin): thread id (DM/group) from `zca` (`me`, `friend list`, `group list`)
+- WhatsApp：`+15551234567`（私聊），`1234567890-1234567890@g.us`（群组）
+- Telegram：`@username` 或数字聊天 id；群组是数字 id
+- Slack：`user:U…` 和 `channel:C…`
+- Discord：`user:<id>` 和 `channel:<id>`
+- Matrix（插件）：`user:@user:server`、`room:!roomId:server` 或 `#alias:server`
+- Microsoft Teams（插件）：`user:<id>` 和 `conversation:<id>`
+- Zalo（插件）：用户 id（Bot API）
+- Zalo Personal / `zalouser`（插件）：来自 `zca` 的线程 id（私聊/群组）（`me`、`friend list`、`group list`）
 
-## Self (“me”)
+## Self（"我"）
 
 ```bash
 moltbot directory self --channel zalouser
 ```
 
-## Peers (contacts/users)
+## Peers（联系人/用户）
 
 ```bash
 moltbot directory peers list --channel zalouser
@@ -51,7 +51,7 @@ moltbot directory peers list --channel zalouser --query "name"
 moltbot directory peers list --channel zalouser --limit 50
 ```
 
-## Groups
+## 群组
 
 ```bash
 moltbot directory groups list --channel zalouser

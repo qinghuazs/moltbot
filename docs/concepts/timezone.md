@@ -1,31 +1,31 @@
 ---
-summary: "Timezone handling for agents, envelopes, and prompts"
+summary: "代理、信封和提示的时区处理"
 read_when:
-  - You need to understand how timestamps are normalized for the model
-  - Configuring the user timezone for system prompts
+  - 您需要了解时间戳如何为模型规范化
+  - 为系统提示配置用户时区
 ---
 
-# Timezones
+# 时区
 
-Moltbot standardizes timestamps so the model sees a **single reference time**.
+Moltbot 标准化时间戳，以便模型看到**单一参考时间**。
 
-## Message envelopes (local by default)
+## 消息信封（默认本地）
 
-Inbound messages are wrapped in an envelope like:
+入站消息被包装在如下信封中：
 
 ```
-[Provider ... 2026-01-05 16:26 PST] message text
+[Provider ... 2026-01-05 16:26 PST] 消息文本
 ```
 
-The timestamp in the envelope is **host-local by default**, with minutes precision.
+信封中的时间戳**默认为主机本地**，精确到分钟。
 
-You can override this with:
+您可以通过以下方式覆盖：
 
 ```json5
 {
   agents: {
     defaults: {
-      envelopeTimezone: "local", // "utc" | "local" | "user" | IANA timezone
+      envelopeTimezone: "local", // "utc" | "local" | "user" | IANA 时区
       envelopeTimestamp: "on", // "on" | "off"
       envelopeElapsed: "on" // "on" | "off"
     }
@@ -33,46 +33,45 @@ You can override this with:
 }
 ```
 
-- `envelopeTimezone: "utc"` uses UTC.
-- `envelopeTimezone: "user"` uses `agents.defaults.userTimezone` (falls back to host timezone).
-- Use an explicit IANA timezone (e.g., `"Europe/Vienna"`) for a fixed offset.
-- `envelopeTimestamp: "off"` removes absolute timestamps from envelope headers.
-- `envelopeElapsed: "off"` removes elapsed time suffixes (the `+2m` style).
+- `envelopeTimezone: "utc"` 使用 UTC。
+- `envelopeTimezone: "user"` 使用 `agents.defaults.userTimezone`（回退到主机时区）。
+- 使用显式 IANA 时区（例如 `"Europe/Vienna"`）获得固定偏移。
+- `envelopeTimestamp: "off"` 从信封标头中移除绝对时间戳。
+- `envelopeElapsed: "off"` 移除经过时间后缀（`+2m` 样式）。
 
-### Examples
+### 示例
 
-**Local (default):**
-
-```
-[Signal Alice +1555 2026-01-18 00:19 PST] hello
-```
-
-**Fixed timezone:**
+**本地（默认）：**
 
 ```
-[Signal Alice +1555 2026-01-18 06:19 GMT+1] hello
+[Signal Alice +1555 2026-01-18 00:19 PST] 你好
 ```
 
-**Elapsed time:**
+**固定时区：**
 
 ```
-[Signal Alice +1555 +2m 2026-01-18T05:19Z] follow-up
+[Signal Alice +1555 2026-01-18 06:19 GMT+1] 你好
 ```
 
-## Tool payloads (raw provider data + normalized fields)
+**经过时间：**
 
-Tool calls (`channels.discord.readMessages`, `channels.slack.readMessages`, etc.) return **raw provider timestamps**.
-We also attach normalized fields for consistency:
+```
+[Signal Alice +1555 +2m 2026-01-18T05:19Z] 后续
+```
 
-- `timestampMs` (UTC epoch milliseconds)
-- `timestampUtc` (ISO 8601 UTC string)
+## 工具负载（原始提供商数据 + 规范化字段）
 
-Raw provider fields are preserved.
+工具调用（`channels.discord.readMessages`、`channels.slack.readMessages` 等）返回**原始提供商时间戳**。
+我们还附加规范化字段以保持一致性：
 
-## User timezone for the system prompt
+- `timestampMs`（UTC 纪元毫秒）
+- `timestampUtc`（ISO 8601 UTC 字符串）
 
-Set `agents.defaults.userTimezone` to tell the model the user's local time zone. If it is
-unset, Moltbot resolves the **host timezone at runtime** (no config write).
+原始提供商字段被保留。
+
+## 系统提示的用户时区
+
+设置 `agents.defaults.userTimezone` 告诉模型用户的本地时区。如果未设置，Moltbot 在**运行时解析主机时区**（无配置写入）。
 
 ```json5
 {
@@ -80,10 +79,10 @@ unset, Moltbot resolves the **host timezone at runtime** (no config write).
 }
 ```
 
-The system prompt includes:
-- `Current Date & Time` section with local time and timezone
-- `Time format: 12-hour` or `24-hour`
+系统提示包括：
+- `Current Date & Time` 部分，包含本地时间和时区
+- `Time format: 12-hour` 或 `24-hour`
 
-You can control the prompt format with `agents.defaults.timeFormat` (`auto` | `12` | `24`).
+您可以使用 `agents.defaults.timeFormat`（`auto` | `12` | `24`）控制提示格式。
 
-See [Date & Time](/date-time) for the full behavior and examples.
+参见 [日期和时间](/date-time) 获取完整行为和示例。

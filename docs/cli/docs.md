@@ -1,15 +1,14 @@
 ---
-summary: "CLI reference for `moltbot docs` (search the live docs index)"
+summary: "`moltbot docs` CLI 参考（搜索实时文档索引）"
 read_when:
-  - You want to search the live Moltbot docs from the terminal
+  - 您想从终端搜索实时 Moltbot 文档
 ---
 
 # `moltbot docs`
 
-Search the live docs index.
+搜索实时文档索引。
 
 ```bash
 moltbot docs browser extension
 moltbot docs sandbox allowHostControl
 ```
-

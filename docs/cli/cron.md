@@ -1,28 +1,28 @@
 ---
-summary: "CLI reference for `moltbot cron` (schedule and run background jobs)"
+summary: "`moltbot cron` CLI 参考（调度和运行后台任务）"
 read_when:
-  - You want scheduled jobs and wakeups
-  - You’re debugging cron execution and logs
+  - 您想要调度任务和唤醒
+  - 您正在调试 cron 执行和日志
 ---
 
 # `moltbot cron`
 
-Manage cron jobs for the Gateway scheduler.
+管理网关调度器的 cron 任务。
 
-Related:
-- Cron jobs: [Cron jobs](/automation/cron-jobs)
+相关：
+- Cron 任务：[Cron 任务](/automation/cron-jobs)
 
-Tip: run `moltbot cron --help` for the full command surface.
+提示：运行 `moltbot cron --help` 查看完整的命令界面。
 
-## Common edits
+## 常用编辑
 
-Update delivery settings without changing the message:
+更新投递设置而不更改消息：
 
 ```bash
 moltbot cron edit <job-id> --deliver --channel telegram --to "123456789"
 ```
 
-Disable delivery for an isolated job:
+为单独的任务禁用投递：
 
 ```bash
 moltbot cron edit <job-id> --no-deliver

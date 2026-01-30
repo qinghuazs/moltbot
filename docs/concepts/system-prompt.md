@@ -1,51 +1,51 @@
 ---
-summary: "What the Moltbot system prompt contains and how it is assembled"
+summary: "Moltbot 系统提示词的内容及其组装方式"
 read_when:
-  - Editing system prompt text, tools list, or time/heartbeat sections
-  - Changing workspace bootstrap or skills injection behavior
+  - 编辑系统提示词文本、工具列表或时间/心跳部分
+  - 更改工作区引导或技能注入行为
 ---
-# System Prompt
+# 系统提示词
 
-Moltbot builds a custom system prompt for every agent run. The prompt is **Moltbot-owned** and does not use the p-coding-agent default prompt.
+Moltbot 为每次代理运行构建自定义系统提示词。该提示词由 **Moltbot 拥有**，不使用 p-coding-agent 的默认提示词。
 
-The prompt is assembled by Moltbot and injected into each agent run.
+提示词由 Moltbot 组装并注入到每次代理运行中。
 
-## Structure
+## 结构
 
-The prompt is intentionally compact and uses fixed sections:
+提示词设计紧凑，使用固定的部分：
 
-- **Tooling**: current tool list + short descriptions.
-- **Skills** (when available): tells the model how to load skill instructions on demand.
-- **Moltbot Self-Update**: how to run `config.apply` and `update.run`.
-- **Workspace**: working directory (`agents.defaults.workspace`).
-- **Documentation**: local path to Moltbot docs (repo or npm package) and when to read them.
-- **Workspace Files (injected)**: indicates bootstrap files are included below.
-- **Sandbox** (when enabled): indicates sandboxed runtime, sandbox paths, and whether elevated exec is available.
-- **Current Date & Time**: user-local time, timezone, and time format.
-- **Reply Tags**: optional reply tag syntax for supported providers.
-- **Heartbeats**: heartbeat prompt and ack behavior.
-- **Runtime**: host, OS, node, model, repo root (when detected), thinking level (one line).
-- **Reasoning**: current visibility level + /reasoning toggle hint.
+- **工具**：当前工具列表 + 简短描述。
+- **技能**（可用时）：告诉模型如何按需加载技能指令。
+- **Moltbot 自更新**：如何运行 `config.apply` 和 `update.run`。
+- **工作区**：工作目录（`agents.defaults.workspace`）。
+- **文档**：Moltbot 文档的本地路径（仓库或 npm 包）以及何时阅读它们。
+- **工作区文件（注入）**：表示引导文件包含在下方。
+- **沙箱**（启用时）：表示沙箱运行时、沙箱路径以及是否可用提权执行。
+- **当前日期和时间**：用户本地时间、时区和时间格式。
+- **回复标签**：支持的提供商的可选回复标签语法。
+- **心跳**：心跳提示和确认行为。
+- **运行时**：主机、操作系统、node、模型、仓库根目录（检测到时）、思考级别（一行）。
+- **推理**：当前可见性级别 + /reasoning 切换提示。
 
-## Prompt modes
+## 提示词模式
 
-Moltbot can render smaller system prompts for sub-agents. The runtime sets a
-`promptMode` for each run (not a user-facing config):
+Moltbot 可以为子代理渲染更小的系统提示词。运行时为每次运行设置
+`promptMode`（不是面向用户的配置）：
 
-- `full` (default): includes all sections above.
-- `minimal`: used for sub-agents; omits **Skills**, **Memory Recall**, **Moltbot
-  Self-Update**, **Model Aliases**, **User Identity**, **Reply Tags**,
-  **Messaging**, **Silent Replies**, and **Heartbeats**. Tooling, Workspace,
-  Sandbox, Current Date & Time (when known), Runtime, and injected context stay
-  available.
-- `none`: returns only the base identity line.
+- `full`（默认）：包含上述所有部分。
+- `minimal`：用于子代理；省略**技能**、**记忆召回**、**Moltbot
+  自更新**、**模型别名**、**用户身份**、**回复标签**、
+  **消息传递**、**静默回复**和**心跳**。工具、工作区、
+  沙箱、当前日期和时间（已知时）、运行时和注入的上下文仍然
+  可用。
+- `none`：仅返回基本身份行。
 
-When `promptMode=minimal`, extra injected prompts are labeled **Subagent
-Context** instead of **Group Chat Context**.
+当 `promptMode=minimal` 时，额外注入的提示词标记为**子代理
+上下文**而不是**群聊上下文**。
 
-## Workspace bootstrap injection
+## 工作区引导注入
 
-Bootstrap files are trimmed and appended under **Project Context** so the model sees identity and profile context without needing explicit reads:
+引导文件被裁剪并附加在**项目上下文**下，这样模型无需显式读取即可看到身份和配置文件上下文：
 
 - `AGENTS.md`
 - `SOUL.md`
@@ -53,40 +53,38 @@ Bootstrap files are trimmed and appended under **Project Context** so the model 
 - `IDENTITY.md`
 - `USER.md`
 - `HEARTBEAT.md`
-- `BOOTSTRAP.md` (only on brand-new workspaces)
+- `BOOTSTRAP.md`（仅在全新工作区上）
 
-Large files are truncated with a marker. The max per-file size is controlled by
-`agents.defaults.bootstrapMaxChars` (default: 20000). Missing files inject a
-short missing-file marker.
+大文件会被截断并带有标记。每个文件的最大大小由
+`agents.defaults.bootstrapMaxChars` 控制（默认：20000）。缺失的文件会注入一个
+简短的缺失文件标记。
 
-Internal hooks can intercept this step via `agent:bootstrap` to mutate or replace
-the injected bootstrap files (for example swapping `SOUL.md` for an alternate persona).
+内部钩子可以通过 `agent:bootstrap` 拦截此步骤，以修改或替换
+注入的引导文件（例如将 `SOUL.md` 替换为替代人格）。
 
-To inspect how much each injected file contributes (raw vs injected, truncation, plus tool schema overhead), use `/context list` or `/context detail`. See [Context](/concepts/context).
+要检查每个注入文件的贡献量（原始 vs 注入、截断，加上工具模式开销），使用 `/context list` 或 `/context detail`。参见[上下文](/concepts/context)。
 
-## Time handling
+## 时间处理
 
-The system prompt includes a dedicated **Current Date & Time** section when the
-user timezone is known. To keep the prompt cache-stable, it now only includes
-the **time zone** (no dynamic clock or time format).
+当用户时区已知时，系统提示词包含专门的**当前日期和时间**部分。为了保持提示词缓存稳定，现在只包含
+**时区**（没有动态时钟或时间格式）。
 
-Use `session_status` when the agent needs the current time; the status card
-includes a timestamp line.
+当代理需要当前时间时，使用 `session_status`；状态卡片
+包含时间戳行。
 
-Configure with:
+配置方式：
 
 - `agents.defaults.userTimezone`
-- `agents.defaults.timeFormat` (`auto` | `12` | `24`)
+- `agents.defaults.timeFormat`（`auto` | `12` | `24`）
 
-See [Date & Time](/date-time) for full behavior details.
+完整行为详情参见[日期和时间](/date-time)。
 
-## Skills
+## 技能
 
-When eligible skills exist, Moltbot injects a compact **available skills list**
-(`formatSkillsForPrompt`) that includes the **file path** for each skill. The
-prompt instructs the model to use `read` to load the SKILL.md at the listed
-location (workspace, managed, or bundled). If no skills are eligible, the
-Skills section is omitted.
+当存在符合条件的技能时，Moltbot 注入一个紧凑的**可用技能列表**
+（`formatSkillsForPrompt`），其中包含每个技能的**文件路径**。
+提示词指示模型使用 `read` 加载列出位置（工作区、托管或捆绑）的 SKILL.md。如果没有符合条件的技能，则省略
+技能部分。
 
 ```
 <available_skills>
@@ -98,13 +96,13 @@ Skills section is omitted.
 </available_skills>
 ```
 
-This keeps the base prompt small while still enabling targeted skill usage.
+这使基本提示词保持较小，同时仍然支持有针对性的技能使用。
 
-## Documentation
+## 文档
 
-When available, the system prompt includes a **Documentation** section that points to the
-local Moltbot docs directory (either `docs/` in the repo workspace or the bundled npm
-package docs) and also notes the public mirror, source repo, community Discord, and
-ClawdHub (https://clawdhub.com) for skills discovery. The prompt instructs the model to consult local docs first
-for Moltbot behavior, commands, configuration, or architecture, and to run
-`moltbot status` itself when possible (asking the user only when it lacks access).
+当可用时，系统提示词包含一个**文档**部分，指向
+本地 Moltbot 文档目录（仓库工作区中的 `docs/` 或捆绑的 npm
+包文档），还注明公共镜像、源仓库、社区 Discord 和
+ClawdHub (https://clawdhub.com) 用于技能发现。提示词指示模型首先查阅本地文档
+了解 Moltbot 行为、命令、配置或架构，并在可能时自行运行
+`moltbot status`（仅在无法访问时才询问用户）。

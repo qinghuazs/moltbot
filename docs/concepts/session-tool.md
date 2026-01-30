@@ -1,103 +1,103 @@
 ---
-summary: "Agent session tools for listing sessions, fetching history, and sending cross-session messages"
+summary: "用于列出会话、获取历史记录和发送跨会话消息的代理会话工具"
 read_when:
-  - Adding or modifying session tools
+  - 添加或修改会话工具
 ---
 
-# Session Tools
+# 会话工具
 
-Goal: small, hard-to-misuse tool set so agents can list sessions, fetch history, and send to another session.
+目标：小型、难以误用的工具集，让代理可以列出会话、获取历史记录并向另一个会话发送消息。
 
-## Tool Names
+## 工具名称
 - `sessions_list`
 - `sessions_history`
 - `sessions_send`
 - `sessions_spawn`
 
-## Key Model
-- Main direct chat bucket is always the literal key `"main"` (resolved to the current agent’s main key).
-- Group chats use `agent:<agentId>:<channel>:group:<id>` or `agent:<agentId>:<channel>:channel:<id>` (pass the full key).
-- Cron jobs use `cron:<job.id>`.
-- Hooks use `hook:<uuid>` unless explicitly set.
-- Node sessions use `node-<nodeId>` unless explicitly set.
+## 键模型
+- 主直接聊天桶始终是字面键 `"main"`（解析为当前代理的主键）。
+- 群聊使用 `agent:<agentId>:<channel>:group:<id>` 或 `agent:<agentId>:<channel>:channel:<id>`（传递完整键）。
+- 定时任务使用 `cron:<job.id>`。
+- 钩子使用 `hook:<uuid>`，除非显式设置。
+- 节点会话使用 `node-<nodeId>`，除非显式设置。
 
-`global` and `unknown` are reserved values and are never listed. If `session.scope = "global"`, we alias it to `main` for all tools so callers never see `global`.
+`global` 和 `unknown` 是保留值，永远不会被列出。如果 `session.scope = "global"`，我们将其别名为 `main` 用于所有工具，这样调用者永远不会看到 `global`。
 
 ## sessions_list
-List sessions as an array of rows.
+将会话列为行数组。
 
-Parameters:
-- `kinds?: string[]` filter: any of `"main" | "group" | "cron" | "hook" | "node" | "other"`
-- `limit?: number` max rows (default: server default, clamp e.g. 200)
-- `activeMinutes?: number` only sessions updated within N minutes
-- `messageLimit?: number` 0 = no messages (default 0); >0 = include last N messages
+参数：
+- `kinds?: string[]` 过滤器：`"main" | "group" | "cron" | "hook" | "node" | "other"` 中的任意值
+- `limit?: number` 最大行数（默认：服务器默认值，限制例如 200）
+- `activeMinutes?: number` 仅在 N 分钟内更新的会话
+- `messageLimit?: number` 0 = 无消息（默认 0）；>0 = 包含最后 N 条消息
 
-Behavior:
-- `messageLimit > 0` fetches `chat.history` per session and includes the last N messages.
-- Tool results are filtered out in list output; use `sessions_history` for tool messages.
-- When running in a **sandboxed** agent session, session tools default to **spawned-only visibility** (see below).
+行为：
+- `messageLimit > 0` 为每个会话获取 `chat.history` 并包含最后 N 条消息。
+- 工具结果在列表输出中被过滤；使用 `sessions_history` 获取工具消息。
+- 在**沙箱**代理会话中运行时，会话工具默认为**仅派生可见性**（见下文）。
 
-Row shape (JSON):
-- `key`: session key (string)
-- `kind`: `main | group | cron | hook | node | other`
-- `channel`: `whatsapp | telegram | discord | signal | imessage | webchat | internal | unknown`
-- `displayName` (group display label if available)
-- `updatedAt` (ms)
+行结构（JSON）：
+- `key`：会话键（字符串）
+- `kind`：`main | group | cron | hook | node | other`
+- `channel`：`whatsapp | telegram | discord | signal | imessage | webchat | internal | unknown`
+- `displayName`（群组显示标签，如果可用）
+- `updatedAt`（毫秒）
 - `sessionId`
-- `model`, `contextTokens`, `totalTokens`
-- `thinkingLevel`, `verboseLevel`, `systemSent`, `abortedLastRun`
-- `sendPolicy` (session override if set)
-- `lastChannel`, `lastTo`
-- `deliveryContext` (normalized `{ channel, to, accountId }` when available)
-- `transcriptPath` (best-effort path derived from store dir + sessionId)
-- `messages?` (only when `messageLimit > 0`)
+- `model`、`contextTokens`、`totalTokens`
+- `thinkingLevel`、`verboseLevel`、`systemSent`、`abortedLastRun`
+- `sendPolicy`（会话覆盖，如果设置）
+- `lastChannel`、`lastTo`
+- `deliveryContext`（规范化的 `{ channel, to, accountId }`，当可用时）
+- `transcriptPath`（从存储目录 + sessionId 派生的尽力路径）
+- `messages?`（仅当 `messageLimit > 0` 时）
 
 ## sessions_history
-Fetch transcript for one session.
+获取一个会话的记录。
 
-Parameters:
-- `sessionKey` (required; accepts session key or `sessionId` from `sessions_list`)
-- `limit?: number` max messages (server clamps)
-- `includeTools?: boolean` (default false)
+参数：
+- `sessionKey`（必需；接受会话键或来自 `sessions_list` 的 `sessionId`）
+- `limit?: number` 最大消息数（服务器限制）
+- `includeTools?: boolean`（默认 false）
 
-Behavior:
-- `includeTools=false` filters `role: "toolResult"` messages.
-- Returns messages array in the raw transcript format.
-- When given a `sessionId`, Moltbot resolves it to the corresponding session key (missing ids error).
+行为：
+- `includeTools=false` 过滤 `role: "toolResult"` 消息。
+- 以原始记录格式返回消息数组。
+- 当给定 `sessionId` 时，Moltbot 将其解析为相应的会话键（缺失的 id 会报错）。
 
 ## sessions_send
-Send a message into another session.
+向另一个会话发送消息。
 
-Parameters:
-- `sessionKey` (required; accepts session key or `sessionId` from `sessions_list`)
-- `message` (required)
-- `timeoutSeconds?: number` (default >0; 0 = fire-and-forget)
+参数：
+- `sessionKey`（必需；接受会话键或来自 `sessions_list` 的 `sessionId`）
+- `message`（必需）
+- `timeoutSeconds?: number`（默认 >0；0 = 即发即忘）
 
-Behavior:
-- `timeoutSeconds = 0`: enqueue and return `{ runId, status: "accepted" }`.
-- `timeoutSeconds > 0`: wait up to N seconds for completion, then return `{ runId, status: "ok", reply }`.
-- If wait times out: `{ runId, status: "timeout", error }`. Run continues; call `sessions_history` later.
-- If the run fails: `{ runId, status: "error", error }`.
-- Announce delivery runs after the primary run completes and is best-effort; `status: "ok"` does not guarantee the announce was delivered.
-- Waits via gateway `agent.wait` (server-side) so reconnects don't drop the wait.
-- Agent-to-agent message context is injected for the primary run.
-- After the primary run completes, Moltbot runs a **reply-back loop**:
-  - Round 2+ alternates between requester and target agents.
-  - Reply exactly `REPLY_SKIP` to stop the ping‑pong.
-  - Max turns is `session.agentToAgent.maxPingPongTurns` (0–5, default 5).
-- Once the loop ends, Moltbot runs the **agent‑to‑agent announce step** (target agent only):
-  - Reply exactly `ANNOUNCE_SKIP` to stay silent.
-  - Any other reply is sent to the target channel.
-  - Announce step includes the original request + round‑1 reply + latest ping‑pong reply.
+行为：
+- `timeoutSeconds = 0`：入队并返回 `{ runId, status: "accepted" }`。
+- `timeoutSeconds > 0`：等待最多 N 秒完成，然后返回 `{ runId, status: "ok", reply }`。
+- 如果等待超时：`{ runId, status: "timeout", error }`。运行继续；稍后调用 `sessions_history`。
+- 如果运行失败：`{ runId, status: "error", error }`。
+- 通知投递在主运行完成后运行，是尽力而为的；`status: "ok"` 不保证通知已投递。
+- 通过网关 `agent.wait`（服务器端）等待，因此重连不会丢失等待。
+- 为主运行注入代理到代理的消息上下文。
+- 主运行完成后，Moltbot 运行**回复循环**：
+  - 第 2 轮及以后在请求者和目标代理之间交替。
+  - 精确回复 `REPLY_SKIP` 以停止乒乓。
+  - 最大轮数是 `session.agentToAgent.maxPingPongTurns`（0-5，默认 5）。
+- 循环结束后，Moltbot 运行**代理到代理通知步骤**（仅目标代理）：
+  - 精确回复 `ANNOUNCE_SKIP` 以保持静默。
+  - 任何其他回复都会发送到目标频道。
+  - 通知步骤包含原始请求 + 第 1 轮回复 + 最新乒乓回复。
 
-## Channel Field
-- For groups, `channel` is the channel recorded on the session entry.
-- For direct chats, `channel` maps from `lastChannel`.
-- For cron/hook/node, `channel` is `internal`.
-- If missing, `channel` is `unknown`.
+## 频道字段
+- 对于群组，`channel` 是会话条目上记录的频道。
+- 对于直接聊天，`channel` 从 `lastChannel` 映射。
+- 对于 cron/hook/node，`channel` 是 `internal`。
+- 如果缺失，`channel` 是 `unknown`。
 
-## Security / Send Policy
-Policy-based blocking by channel/chat type (not per session id).
+## 安全 / 发送策略
+基于策略的按频道/聊天类型阻止（不是按会话 id）。
 
 ```json
 {
@@ -115,55 +115,55 @@ Policy-based blocking by channel/chat type (not per session id).
 }
 ```
 
-Runtime override (per session entry):
-- `sendPolicy: "allow" | "deny"` (unset = inherit config)
-- Settable via `sessions.patch` or owner-only `/send on|off|inherit` (standalone message).
+运行时覆盖（每个会话条目）：
+- `sendPolicy: "allow" | "deny"`（未设置 = 继承配置）
+- 可通过 `sessions.patch` 或仅所有者的 `/send on|off|inherit`（独立消息）设置。
 
-Enforcement points:
-- `chat.send` / `agent` (gateway)
-- auto-reply delivery logic
+执行点：
+- `chat.send` / `agent`（网关）
+- 自动回复投递逻辑
 
 ## sessions_spawn
-Spawn a sub-agent run in an isolated session and announce the result back to the requester chat channel.
+在隔离会话中派生子代理运行，并将结果通知回请求者聊天频道。
 
-Parameters:
-- `task` (required)
-- `label?` (optional; used for logs/UI)
-- `agentId?` (optional; spawn under another agent id if allowed)
-- `model?` (optional; overrides the sub-agent model; invalid values error)
-- `runTimeoutSeconds?` (default 0; when set, aborts the sub-agent run after N seconds)
-- `cleanup?` (`delete|keep`, default `keep`)
+参数：
+- `task`（必需）
+- `label?`（可选；用于日志/UI）
+- `agentId?`（可选；如果允许，在另一个代理 id 下派生）
+- `model?`（可选；覆盖子代理模型；无效值会报错）
+- `runTimeoutSeconds?`（默认 0；设置时，在 N 秒后中止子代理运行）
+- `cleanup?`（`delete|keep`，默认 `keep`）
 
-Allowlist:
-- `agents.list[].subagents.allowAgents`: list of agent ids allowed via `agentId` (`["*"]` to allow any). Default: only the requester agent.
+允许列表：
+- `agents.list[].subagents.allowAgents`：通过 `agentId` 允许的代理 id 列表（`["*"]` 允许任何）。默认：仅请求者代理。
 
-Discovery:
-- Use `agents_list` to discover which agent ids are allowed for `sessions_spawn`.
+发现：
+- 使用 `agents_list` 发现哪些代理 id 允许用于 `sessions_spawn`。
 
-Behavior:
-- Starts a new `agent:<agentId>:subagent:<uuid>` session with `deliver: false`.
-- Sub-agents default to the full tool set **minus session tools** (configurable via `tools.subagents.tools`).
-- Sub-agents are not allowed to call `sessions_spawn` (no sub-agent → sub-agent spawning).
-- Always non-blocking: returns `{ status: "accepted", runId, childSessionKey }` immediately.
-- After completion, Moltbot runs a sub-agent **announce step** and posts the result to the requester chat channel.
-- Reply exactly `ANNOUNCE_SKIP` during the announce step to stay silent.
-- Announce replies are normalized to `Status`/`Result`/`Notes`; `Status` comes from runtime outcome (not model text).
-- Sub-agent sessions are auto-archived after `agents.defaults.subagents.archiveAfterMinutes` (default: 60).
-- Announce replies include a stats line (runtime, tokens, sessionKey/sessionId, transcript path, and optional cost).
+行为：
+- 启动一个新的 `agent:<agentId>:subagent:<uuid>` 会话，`deliver: false`。
+- 子代理默认使用完整工具集**减去会话工具**（可通过 `tools.subagents.tools` 配置）。
+- 子代理不允许调用 `sessions_spawn`（没有子代理 -> 子代理派生）。
+- 始终非阻塞：立即返回 `{ status: "accepted", runId, childSessionKey }`。
+- 完成后，Moltbot 运行子代理**通知步骤**并将结果发布到请求者聊天频道。
+- 在通知步骤中精确回复 `ANNOUNCE_SKIP` 以保持静默。
+- 通知回复规范化为 `Status`/`Result`/`Notes`；`Status` 来自运行时结果（不是模型文本）。
+- 子代理会话在 `agents.defaults.subagents.archiveAfterMinutes`（默认：60）后自动归档。
+- 通知回复包含统计行（运行时间、token 数、sessionKey/sessionId、记录路径和可选成本）。
 
-## Sandbox Session Visibility
+## 沙箱会话可见性
 
-Sandboxed sessions can use session tools, but by default they only see sessions they spawned via `sessions_spawn`.
+沙箱会话可以使用会话工具，但默认情况下它们只能看到通过 `sessions_spawn` 派生的会话。
 
-Config:
+配置：
 
 ```json5
 {
   agents: {
     defaults: {
       sandbox: {
-        // default: "spawned"
-        sessionToolsVisibility: "spawned" // or "all"
+        // 默认："spawned"
+        sessionToolsVisibility: "spawned" // 或 "all"
       }
     }
   }
