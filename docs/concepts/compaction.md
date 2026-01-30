@@ -1,49 +1,48 @@
 ---
-summary: "Context window + compaction: how Moltbot keeps sessions under model limits"
+summary: "上下文窗口 + 压缩：Moltbot 如何保持会话在模型限制内"
 read_when:
-  - You want to understand auto-compaction and /compact
-  - You are debugging long sessions hitting context limits
+  - 您想了解自动压缩和 /compact
+  - 您正在调试长会话达到上下文限制
 ---
-# Context Window & Compaction
+# 上下文窗口与压缩
 
-Every model has a **context window** (max tokens it can see). Long-running chats accumulate messages and tool results; once the window is tight, Moltbot **compacts** older history to stay within limits.
+每个模型都有一个**上下文窗口**（它能看到的最大令牌数）。长时间运行的聊天会累积消息和工具结果；一旦窗口紧张，Moltbot 会**压缩**较旧的历史以保持在限制内。
 
-## What compaction is
-Compaction **summarizes older conversation** into a compact summary entry and keeps recent messages intact. The summary is stored in the session history, so future requests use:
-- The compaction summary
-- Recent messages after the compaction point
+## 什么是压缩
+压缩将**较旧的对话总结**为一个紧凑的摘要条目，并保持最近的消息完整。摘要存储在会话历史中，因此未来的请求使用：
+- 压缩摘要
+- 压缩点之后的最近消息
 
-Compaction **persists** in the session’s JSONL history.
+压缩**持久化**在会话的 JSONL 历史中。
 
-## Configuration
-See [Compaction config & modes](/concepts/compaction) for the `agents.defaults.compaction` settings.
+## 配置
+参见 [压缩配置和模式](/concepts/compaction) 了解 `agents.defaults.compaction` 设置。
 
-## Auto-compaction (default on)
-When a session nears or exceeds the model’s context window, Moltbot triggers auto-compaction and may retry the original request using the compacted context.
+## 自动压缩（默认开启）
+当会话接近或超过模型的上下文窗口时，Moltbot 触发自动压缩，并可能使用压缩后的上下文重试原始请求。
 
-You’ll see:
-- `🧹 Auto-compaction complete` in verbose mode
-- `/status` showing `🧹 Compactions: <count>`
+您会看到：
+- 详细模式下的 `🧹 Auto-compaction complete`
+- `/status` 显示 `🧹 Compactions: <count>`
 
-Before compaction, Moltbot can run a **silent memory flush** turn to store
-durable notes to disk. See [Memory](/concepts/memory) for details and config.
+在压缩之前，Moltbot 可以运行**静默记忆刷新**轮次，将持久笔记存储到磁盘。详情和配置参见 [记忆](/concepts/memory)。
 
-## Manual compaction
-Use `/compact` (optionally with instructions) to force a compaction pass:
+## 手动压缩
+使用 `/compact`（可选带指令）强制执行压缩：
 ```
 /compact Focus on decisions and open questions
 ```
 
-## Context window source
-Context window is model-specific. Moltbot uses the model definition from the configured provider catalog to determine limits.
+## 上下文窗口来源
+上下文窗口是特定于模型的。Moltbot 使用来自已配置提供商目录的模型定义来确定限制。
 
-## Compaction vs pruning
-- **Compaction**: summarises and **persists** in JSONL.
-- **Session pruning**: trims old **tool results** only, **in-memory**, per request.
+## 压缩 vs 修剪
+- **压缩**：总结并**持久化**到 JSONL。
+- **会话修剪**：仅修剪旧的**工具结果**，**在内存中**，每个请求。
 
-See [/concepts/session-pruning](/concepts/session-pruning) for pruning details.
+参见 [/concepts/session-pruning](/concepts/session-pruning) 了解修剪详情。
 
-## Tips
-- Use `/compact` when sessions feel stale or context is bloated.
-- Large tool outputs are already truncated; pruning can further reduce tool-result buildup.
-- If you need a fresh slate, `/new` or `/reset` starts a new session id.
+## 提示
+- 当会话感觉陈旧或上下文膨胀时使用 `/compact`。
+- 大型工具输出已经被截断；修剪可以进一步减少工具结果的累积。
+- 如果您需要全新开始，`/new` 或 `/reset` 会启动新的会话 id。
