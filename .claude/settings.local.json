@@ -4,7 +4,8 @@
       "Bash(comm:*)",
       "Bash(wc:*)",
       "Bash(ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   }
 }
