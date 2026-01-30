@@ -1,31 +1,31 @@
 ---
-summary: "How Moltbot vendors Apple device model identifiers for friendly names in the macOS app."
+summary: "macOS 应用中 Apple 设备型号标识的友好名称映射"
 read_when:
-  - Updating device model identifier mappings or NOTICE/license files
-  - Changing how Instances UI displays device names
+  - 更新设备型号映射或 NOTICE/许可证文件
+  - 修改 Instances UI 的设备名称显示
 ---
 
-# Device model database (friendly names)
+# 设备型号数据库（友好名称）
 
-The macOS companion app shows friendly Apple device model names in the **Instances** UI by mapping Apple model identifiers (e.g. `iPad16,6`, `Mac16,6`) to human-readable names.
+macOS 配套应用会在 **Instances** UI 中展示友好的 Apple 设备型号名称，通过将 Apple 设备型号标识（例如 `iPad16,6`、`Mac16,6`）映射到人类可读名称实现。
 
-The mapping is vendored as JSON under:
+映射以 JSON 形式内置于：
 
 - `apps/macos/Sources/Moltbot/Resources/DeviceModels/`
 
-## Data source
+## 数据来源
 
-We currently vendor the mapping from the MIT-licensed repository:
+目前我们从 MIT 许可的仓库内置映射：
 
 - `kyle-seongwoo-jun/apple-device-identifiers`
 
-To keep builds deterministic, the JSON files are pinned to specific upstream commits (recorded in `apps/macos/Sources/Moltbot/Resources/DeviceModels/NOTICE.md`).
+为确保构建可复现，JSON 文件固定到特定上游提交（记录在 `apps/macos/Sources/Moltbot/Resources/DeviceModels/NOTICE.md`）。
 
-## Updating the database
+## 更新数据库
 
-1. Pick the upstream commits you want to pin to (one for iOS, one for macOS).
-2. Update the commit hashes in `apps/macos/Sources/Moltbot/Resources/DeviceModels/NOTICE.md`.
-3. Re-download the JSON files, pinned to those commits:
+1. 选择要固定的上游提交（iOS 一个，macOS 一个）。
+2. 更新 `apps/macos/Sources/Moltbot/Resources/DeviceModels/NOTICE.md` 中的提交哈希。
+3. 重新下载 JSON 文件并固定到这些提交：
 
 ```bash
 IOS_COMMIT="<commit sha for ios-device-identifiers.json>"
@@ -38,8 +38,8 @@ curl -fsSL "https://raw.githubusercontent.com/kyle-seongwoo-jun/apple-device-ide
   -o apps/macos/Sources/Moltbot/Resources/DeviceModels/mac-device-identifiers.json
 ```
 
-4. Ensure `apps/macos/Sources/Moltbot/Resources/DeviceModels/LICENSE.apple-device-identifiers.txt` still matches upstream (replace it if the upstream license changes).
-5. Verify the macOS app builds cleanly (no warnings):
+4. 确保 `apps/macos/Sources/Moltbot/Resources/DeviceModels/LICENSE.apple-device-identifiers.txt` 仍与上游一致（如上游许可证有变更请替换）。
+5. 验证 macOS 应用可正常构建（无警告）：
 
 ```bash
 swift build --package-path apps/macos

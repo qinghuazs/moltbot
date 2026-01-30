@@ -1,23 +1,23 @@
 ---
-summary: "Deep dive: session store + transcripts, lifecycle, and (auto)compaction internals"
+summary: "深入：会话存储、转录、生命周期与自动压缩内部机制"
 read_when:
-  - You need to debug session ids, transcript JSONL, or sessions.json fields
-  - You are changing auto-compaction behavior or adding “pre-compaction” housekeeping
-  - You want to implement memory flushes or silent system turns
+  - 需要排查 session id、转录 JSONL 或 sessions.json 字段
+  - 修改自动压缩行为或添加压缩前清理
+  - 实现记忆刷写或静默系统回合
 ---
-# Session Management & Compaction (Deep Dive)
+# 会话管理与压缩（深入）
 
-This document explains how Moltbot manages sessions end-to-end:
+本文解释 Moltbot 如何端到端管理会话：
 
-- **Session routing** (how inbound messages map to a `sessionKey`)
-- **Session store** (`sessions.json`) and what it tracks
-- **Transcript persistence** (`*.jsonl`) and its structure
-- **Transcript hygiene** (provider-specific fixups before runs)
-- **Context limits** (context window vs tracked tokens)
-- **Compaction** (manual + auto-compaction) and where to hook pre-compaction work
-- **Silent housekeeping** (e.g. memory writes that shouldn’t produce user-visible output)
+- **会话路由**（入站消息如何映射到 `sessionKey`）
+- **会话存储**（`sessions.json`）及其跟踪内容
+- **转录持久化**（`*.jsonl`）及其结构
+- **转录卫生**（运行前的 provider 修复）
+- **上下文限制**（上下文窗口与跟踪 token）
+- **压缩**（手动与自动）及压缩前清理挂点
+- **静默维护**（例如不应对用户可见的记忆写入）
 
-If you want a higher-level overview first, start with:
+如果想先看高层概览，可从这里开始：
 - [/concepts/session](/concepts/session)
 - [/concepts/compaction](/concepts/compaction)
 - [/concepts/session-pruning](/concepts/session-pruning)
@@ -25,164 +25,164 @@ If you want a higher-level overview first, start with:
 
 ---
 
-## Source of truth: the Gateway
+## 真值来源：Gateway
 
-Moltbot is designed around a single **Gateway process** that owns session state.
+Moltbot 以单一 **Gateway 进程**为中心来管理会话状态。
 
-- UIs (macOS app, web Control UI, TUI) should query the Gateway for session lists and token counts.
-- In remote mode, session files are on the remote host; “checking your local Mac files” won’t reflect what the Gateway is using.
-
----
-
-## Two persistence layers
-
-Moltbot persists sessions in two layers:
-
-1) **Session store (`sessions.json`)**
-   - Key/value map: `sessionKey -> SessionEntry`
-   - Small, mutable, safe to edit (or delete entries)
-   - Tracks session metadata (current session id, last activity, toggles, token counters, etc.)
-
-2) **Transcript (`<sessionId>.jsonl`)**
-   - Append-only transcript with tree structure (entries have `id` + `parentId`)
-   - Stores the actual conversation + tool calls + compaction summaries
-   - Used to rebuild the model context for future turns
+- UI（macOS app、Web Control UI、TUI）应从 Gateway 查询会话列表与 token 计数。
+- 在远程模式下，会话文件位于远程主机；检查本地 Mac 文件无法反映 Gateway 实际使用情况。
 
 ---
 
-## On-disk locations
+## 两层持久化
 
-Per agent, on the Gateway host:
+Moltbot 通过两层持久化会话：
 
-- Store: `~/.clawdbot/agents/<agentId>/sessions/sessions.json`
-- Transcripts: `~/.clawdbot/agents/<agentId>/sessions/<sessionId>.jsonl`
-  - Telegram topic sessions: `.../<sessionId>-topic-<threadId>.jsonl`
+1) **会话存储（`sessions.json`）**
+   - key/value 映射：`sessionKey -> SessionEntry`
+   - 小而可变，允许编辑（或删除条目）
+   - 跟踪会话元数据（当前 session id、最后活动、开关、token 计数等）
 
-Moltbot resolves these via `src/config/sessions.ts`.
-
----
-
-## Session keys (`sessionKey`)
-
-A `sessionKey` identifies *which conversation bucket* you’re in (routing + isolation).
-
-Common patterns:
-
-- Main/direct chat (per agent): `agent:<agentId>:<mainKey>` (default `main`)
-- Group: `agent:<agentId>:<channel>:group:<id>`
-- Room/channel (Discord/Slack): `agent:<agentId>:<channel>:channel:<id>` or `...:room:<id>`
-- Cron: `cron:<job.id>`
-- Webhook: `hook:<uuid>` (unless overridden)
-
-The canonical rules are documented at [/concepts/session](/concepts/session).
+2) **转录（`<sessionId>.jsonl`）**
+   - 追加式转录，树结构（条目包含 `id` + `parentId`）
+   - 存储真实对话、工具调用与压缩摘要
+   - 用于重建后续轮次的模型上下文
 
 ---
 
-## Session ids (`sessionId`)
+## 磁盘路径
 
-Each `sessionKey` points at a current `sessionId` (the transcript file that continues the conversation).
+按代理，在 Gateway 主机上：
 
-Rules of thumb:
-- **Reset** (`/new`, `/reset`) creates a new `sessionId` for that `sessionKey`.
-- **Daily reset** (default 4:00 AM local time on the gateway host) creates a new `sessionId` on the next message after the reset boundary.
-- **Idle expiry** (`session.reset.idleMinutes` or legacy `session.idleMinutes`) creates a new `sessionId` when a message arrives after the idle window. When daily + idle are both configured, whichever expires first wins.
+- 存储：`~/.clawdbot/agents/<agentId>/sessions/sessions.json`
+- 转录：`~/.clawdbot/agents/<agentId>/sessions/<sessionId>.jsonl`
+  - Telegram 主题会话：`.../<sessionId>-topic-<threadId>.jsonl`
 
-Implementation detail: the decision happens in `initSessionState()` in `src/auto-reply/reply/session.ts`.
-
----
-
-## Session store schema (`sessions.json`)
-
-The store’s value type is `SessionEntry` in `src/config/sessions.ts`.
-
-Key fields (not exhaustive):
-
-- `sessionId`: current transcript id (filename is derived from this unless `sessionFile` is set)
-- `updatedAt`: last activity timestamp
-- `sessionFile`: optional explicit transcript path override
-- `chatType`: `direct | group | room` (helps UIs and send policy)
-- `provider`, `subject`, `room`, `space`, `displayName`: metadata for group/channel labeling
-- Toggles:
-  - `thinkingLevel`, `verboseLevel`, `reasoningLevel`, `elevatedLevel`
-  - `sendPolicy` (per-session override)
-- Model selection:
-  - `providerOverride`, `modelOverride`, `authProfileOverride`
-- Token counters (best-effort / provider-dependent):
-  - `inputTokens`, `outputTokens`, `totalTokens`, `contextTokens`
-- `compactionCount`: how often auto-compaction completed for this session key
-- `memoryFlushAt`: timestamp for the last pre-compaction memory flush
-- `memoryFlushCompactionCount`: compaction count when the last flush ran
-
-The store is safe to edit, but the Gateway is the authority: it may rewrite or rehydrate entries as sessions run.
+Moltbot 通过 `src/config/sessions.ts` 解析这些路径。
 
 ---
 
-## Transcript structure (`*.jsonl`)
+## 会话 key（`sessionKey`）
 
-Transcripts are managed by `@mariozechner/pi-coding-agent`’s `SessionManager`.
+`sessionKey` 用于标识你所在的**对话桶**（路由与隔离）。
 
-The file is JSONL:
-- First line: session header (`type: "session"`, includes `id`, `cwd`, `timestamp`, optional `parentSession`)
-- Then: session entries with `id` + `parentId` (tree)
+常见模式：
 
-Notable entry types:
-- `message`: user/assistant/toolResult messages
-- `custom_message`: extension-injected messages that *do* enter model context (can be hidden from UI)
-- `custom`: extension state that does *not* enter model context
-- `compaction`: persisted compaction summary with `firstKeptEntryId` and `tokensBefore`
-- `branch_summary`: persisted summary when navigating a tree branch
+- 主会话或私聊（每代理）：`agent:<agentId>:<mainKey>`（默认 `main`）
+- 群聊：`agent:<agentId>:<channel>:group:<id>`
+- 房间或频道（Discord/Slack）：`agent:<agentId>:<channel>:channel:<id>` 或 `...:room:<id>`
+- Cron：`cron:<job.id>`
+- Webhook：`hook:<uuid>`（除非覆盖）
 
-Moltbot intentionally does **not** “fix up” transcripts; the Gateway uses `SessionManager` to read/write them.
+规范规则见 [/concepts/session](/concepts/session)。
 
 ---
 
-## Context windows vs tracked tokens
+## 会话 id（`sessionId`）
 
-Two different concepts matter:
+每个 `sessionKey` 指向一个当前 `sessionId`（该转录文件继续对话）。
 
-1) **Model context window**: hard cap per model (tokens visible to the model)
-2) **Session store counters**: rolling stats written into `sessions.json` (used for /status and dashboards)
+经验法则：
+- **重置**（`/new`、`/reset`）为该 `sessionKey` 创建新的 `sessionId`。
+- **每日重置**（默认在 Gateway 主机本地时间 04:00）会在边界后第一条消息创建新的 `sessionId`。
+- **空闲过期**（`session.reset.idleMinutes` 或旧的 `session.idleMinutes`）会在空闲窗后新消息到达时创建新的 `sessionId`。当每日与空闲同时配置时，以先到期者为准。
 
-If you’re tuning limits:
-- The context window comes from the model catalog (and can be overridden via config).
-- `contextTokens` in the store is a runtime estimate/reporting value; don’t treat it as a strict guarantee.
-
-For more, see [/token-use](/token-use).
+实现细节：决策发生在 `src/auto-reply/reply/session.ts` 的 `initSessionState()`。
 
 ---
 
-## Compaction: what it is
+## 会话存储结构（`sessions.json`）
 
-Compaction summarizes older conversation into a persisted `compaction` entry in the transcript and keeps recent messages intact.
+存储值类型为 `src/config/sessions.ts` 中的 `SessionEntry`。
 
-After compaction, future turns see:
-- The compaction summary
-- Messages after `firstKeptEntryId`
+关键字段（非完整）：
 
-Compaction is **persistent** (unlike session pruning). See [/concepts/session-pruning](/concepts/session-pruning).
+- `sessionId`：当前转录 id（文件名从中推导，除非设置 `sessionFile`）
+- `updatedAt`：最后活动时间戳
+- `sessionFile`：可选的显式转录路径覆盖
+- `chatType`：`direct | group | room`（帮助 UI 与发送策略）
+- `provider`、`subject`、`room`、`space`、`displayName`：群或频道的标签元数据
+- 开关：
+  - `thinkingLevel`、`verboseLevel`、`reasoningLevel`、`elevatedLevel`
+  - `sendPolicy`（按会话覆盖）
+- 模型选择：
+  - `providerOverride`、`modelOverride`、`authProfileOverride`
+- Token 计数（尽力而为，依赖 provider）：
+  - `inputTokens`、`outputTokens`、`totalTokens`、`contextTokens`
+- `compactionCount`：该 sessionKey 自动压缩完成次数
+- `memoryFlushAt`：上次压缩前记忆刷写时间戳
+- `memoryFlushCompactionCount`：上次刷写时的压缩计数
+
+存储可编辑，但 Gateway 是权威：它可能在会话运行时重写或重建条目。
 
 ---
 
-## When auto-compaction happens (Pi runtime)
+## 转录结构（`*.jsonl`）
 
-In the embedded Pi agent, auto-compaction triggers in two cases:
+转录由 `@mariozechner/pi-coding-agent` 的 `SessionManager` 管理。
 
-1) **Overflow recovery**: the model returns a context overflow error → compact → retry.
-2) **Threshold maintenance**: after a successful turn, when:
+文件为 JSONL：
+- 第一行：会话头（`type: "session"`，包含 `id`、`cwd`、`timestamp`、可选 `parentSession`）
+- 之后：包含 `id` 与 `parentId` 的会话条目（树结构）
+
+重要条目类型：
+- `message`：user 或 assistant 或 toolResult
+- `custom_message`：扩展注入且**进入**模型上下文的消息（可在 UI 中隐藏）
+- `custom`：扩展状态，**不进入**模型上下文
+- `compaction`：持久化压缩摘要，包含 `firstKeptEntryId` 与 `tokensBefore`
+- `branch_summary`：树分支导航时的持久化摘要
+
+Moltbot 有意**不**修正转录；Gateway 使用 `SessionManager` 读写。
+
+---
+
+## 上下文窗口与跟踪 token
+
+两个不同概念：
+
+1) **模型上下文窗口**：每模型的硬上限（模型可见 token）
+2) **会话存储计数**：写入 `sessions.json` 的滚动统计（用于 `/status` 与仪表盘）
+
+调参时注意：
+- 上下文窗口来自模型目录（可通过配置覆盖）。
+- 存储中的 `contextTokens` 是运行时估算或报告值，不应当作严格保证。
+
+更多见 [/token-use](/token-use)。
+
+---
+
+## 压缩是什么
+
+压缩会将较旧的对话总结为转录中的持久化 `compaction` 条目，并保留近期消息。
+
+压缩后，后续轮次会看到：
+- 压缩摘要
+- `firstKeptEntryId` 之后的消息
+
+压缩是**持久化**的（不同于会话裁剪）。见 [/concepts/session-pruning](/concepts/session-pruning)。
+
+---
+
+## 自动压缩触发时机（Pi 运行时）
+
+嵌入式 Pi agent 中，自动压缩在两种情况下触发：
+
+1) **溢出恢复**：模型返回上下文溢出错误 -> 压缩 -> 重试。
+2) **阈值维护**：成功一轮后，当满足：
 
 `contextTokens > contextWindow - reserveTokens`
 
-Where:
-- `contextWindow` is the model’s context window
-- `reserveTokens` is headroom reserved for prompts + the next model output
+其中：
+- `contextWindow` 为模型上下文窗口
+- `reserveTokens` 为提示与下一次模型输出预留空间
 
-These are Pi runtime semantics (Moltbot consumes the events, but Pi decides when to compact).
+这些属于 Pi 运行时语义（Moltbot 消费事件，但由 Pi 决定何时压缩）。
 
 ---
 
-## Compaction settings (`reserveTokens`, `keepRecentTokens`)
+## 压缩设置（`reserveTokens` 与 `keepRecentTokens`）
 
-Pi’s compaction settings live in Pi settings:
+Pi 的压缩设置位于 Pi settings：
 
 ```json5
 {
@@ -194,80 +194,76 @@ Pi’s compaction settings live in Pi settings:
 }
 ```
 
-Moltbot also enforces a safety floor for embedded runs:
+Moltbot 还会为嵌入式运行设置安全下限：
 
-- If `compaction.reserveTokens < reserveTokensFloor`, Moltbot bumps it.
-- Default floor is `20000` tokens.
-- Set `agents.defaults.compaction.reserveTokensFloor: 0` to disable the floor.
-- If it’s already higher, Moltbot leaves it alone.
+- 若 `compaction.reserveTokens < reserveTokensFloor`，Moltbot 会提高它。
+- 默认下限为 `20000` tokens。
+- 设置 `agents.defaults.compaction.reserveTokensFloor: 0` 可禁用下限。
+- 如果已高于下限，Moltbot 不会改动。
 
-Why: leave enough headroom for multi-turn “housekeeping” (like memory writes) before compaction becomes unavoidable.
+原因：为多轮“维护性任务”（如记忆写入）保留足够空间，避免压缩不可避免。
 
-Implementation: `ensurePiCompactionReserveTokens()` in `src/agents/pi-settings.ts`
-(called from `src/agents/pi-embedded-runner.ts`).
-
----
-
-## User-visible surfaces
-
-You can observe compaction and session state via:
-
-- `/status` (in any chat session)
-- `moltbot status` (CLI)
-- `moltbot sessions` / `sessions --json`
-- Verbose mode: `🧹 Auto-compaction complete` + compaction count
+实现：`ensurePiCompactionReserveTokens()` 在 `src/agents/pi-settings.ts`
+（由 `src/agents/pi-embedded-runner.ts` 调用）。
 
 ---
 
-## Silent housekeeping (`NO_REPLY`)
+## 用户可见面
 
-Moltbot supports “silent” turns for background tasks where the user should not see intermediate output.
+你可以通过以下方式观察压缩与会话状态：
 
-Convention:
-- The assistant starts its output with `NO_REPLY` to indicate “do not deliver a reply to the user”.
-- Moltbot strips/suppresses this in the delivery layer.
-
-As of `2026.1.10`, Moltbot also suppresses **draft/typing streaming** when a partial chunk begins with `NO_REPLY`, so silent operations don’t leak partial output mid-turn.
-
----
-
-## Pre-compaction “memory flush” (implemented)
-
-Goal: before auto-compaction happens, run a silent agentic turn that writes durable
-state to disk (e.g. `memory/YYYY-MM-DD.md` in the agent workspace) so compaction can’t
-erase critical context.
-
-Moltbot uses the **pre-threshold flush** approach:
-
-1) Monitor session context usage.
-2) When it crosses a “soft threshold” (below Pi’s compaction threshold), run a silent
-   “write memory now” directive to the agent.
-3) Use `NO_REPLY` so the user sees nothing.
-
-Config (`agents.defaults.compaction.memoryFlush`):
-- `enabled` (default: `true`)
-- `softThresholdTokens` (default: `4000`)
-- `prompt` (user message for the flush turn)
-- `systemPrompt` (extra system prompt appended for the flush turn)
-
-Notes:
-- The default prompt/system prompt include a `NO_REPLY` hint to suppress delivery.
-- The flush runs once per compaction cycle (tracked in `sessions.json`).
-- The flush runs only for embedded Pi sessions (CLI backends skip it).
-- The flush is skipped when the session workspace is read-only (`workspaceAccess: "ro"` or `"none"`).
-- See [Memory](/concepts/memory) for the workspace file layout and write patterns.
-
-Pi also exposes a `session_before_compact` hook in the extension API, but Moltbot’s
-flush logic lives on the Gateway side today.
+- `/status`（任意聊天会话）
+- `moltbot status`（CLI）
+- `moltbot sessions` 或 `sessions --json`
+- Verbose 模式：`🧹 Auto-compaction complete` + 压缩计数
 
 ---
 
-## Troubleshooting checklist
+## 静默维护（`NO_REPLY`）
 
-- Session key wrong? Start with [/concepts/session](/concepts/session) and confirm the `sessionKey` in `/status`.
-- Store vs transcript mismatch? Confirm the Gateway host and the store path from `moltbot status`.
-- Compaction spam? Check:
-  - model context window (too small)
-  - compaction settings (`reserveTokens` too high for the model window can cause earlier compaction)
-  - tool-result bloat: enable/tune session pruning
-- Silent turns leaking? Confirm the reply starts with `NO_REPLY` (exact token) and you’re on a build that includes the streaming suppression fix.
+Moltbot 支持用于后台任务的“静默”回合，用户不应看到中间输出。
+
+约定：
+- assistant 输出以 `NO_REPLY` 开头，表示“不向用户投递回复”。
+- Moltbot 在投递层剥离或抑制该标记。
+
+自 `2026.1.10` 起，若 partial chunk 以 `NO_REPLY` 开头，Moltbot 也会抑制**草稿或输入指示流**，避免静默操作在回合中泄露输出。
+
+---
+
+## 压缩前记忆刷写（已实现）
+
+目标：在自动压缩之前运行一次静默代理回合，把重要状态写入磁盘（例如工作区 `memory/YYYY-MM-DD.md`），避免压缩丢失关键上下文。
+
+Moltbot 使用**预阈值刷写**方案：
+
+1) 监控会话上下文用量。
+2) 当超过“软阈值”（低于 Pi 压缩阈值）时，运行一次静默的“立即写记忆”指令。
+3) 使用 `NO_REPLY` 让用户无感知。
+
+配置（`agents.defaults.compaction.memoryFlush`）：
+- `enabled`（默认：`true`）
+- `softThresholdTokens`（默认：`4000`）
+- `prompt`（刷写回合的用户消息）
+- `systemPrompt`（附加到刷写回合的系统提示词）
+
+说明：
+- 默认 prompt/system prompt 包含 `NO_REPLY` 提示以抑制投递。
+- 每个压缩周期仅运行一次（记录在 `sessions.json`）。
+- 仅对嵌入式 Pi 会话运行（CLI 后端跳过）。
+- 当会话工作区只读时跳过（`workspaceAccess: "ro"` 或 `"none"`）。
+- 工作区文件布局与写入模式见 [Memory](/concepts/memory)。
+
+Pi 的扩展 API 提供 `session_before_compact` hook，但 Moltbot 的刷写逻辑目前在 Gateway 侧。
+
+---
+
+## 故障排查清单
+
+- session key 错误？先看 [/concepts/session](/concepts/session)，并在 `/status` 中确认 `sessionKey`。
+- 存储与转录不匹配？确认 Gateway 主机，以及 `moltbot status` 显示的存储路径。
+- 压缩过于频繁？检查：
+  - 模型上下文窗口是否过小
+  - 压缩设置（`reserveTokens` 过高会提前触发）
+  - 工具结果膨胀：启用或调整会话裁剪
+- 静默回合泄露？确认回复以 `NO_REPLY`（完全匹配）开头，并且构建版本包含流式抑制修复。

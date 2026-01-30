@@ -1,41 +1,41 @@
 ---
-summary: "VPS hosting hub for Moltbot (Oracle/Fly/Hetzner/GCP/exe.dev)"
+summary: "Moltbot 的 VPS 托管总览（Oracle/Fly/Hetzner/GCP/exe.dev）"
 read_when:
-  - You want to run the Gateway in the cloud
-  - You need a quick map of VPS/hosting guides
+  - 你想在云端运行 Gateway
+  - 你需要一张 VPS/托管指南的快速地图
 ---
-# VPS hosting
+# VPS 托管
 
-This hub links to the supported VPS/hosting guides and explains how cloud
-deployments work at a high level.
+这个总览页会链接到支持的 VPS/托管指南，并在高层说明云端
+部署的工作方式。
 
-## Pick a provider
+## 选择提供商
 
-- **Railway** (one‑click + browser setup): [Railway](/railway)
-- **Northflank** (one‑click + browser setup): [Northflank](/northflank)
-- **Oracle Cloud (Always Free)**: [Oracle](/platforms/oracle) — $0/month (Always Free, ARM; capacity/signup can be finicky)
-- **Fly.io**: [Fly.io](/platforms/fly)
-- **Hetzner (Docker)**: [Hetzner](/platforms/hetzner)
-- **GCP (Compute Engine)**: [GCP](/platforms/gcp)
-- **exe.dev** (VM + HTTPS proxy): [exe.dev](/platforms/exe-dev)
-- **AWS (EC2/Lightsail/free tier)**: works well too. Video guide:
+- **Railway**（一键部署 + 浏览器配置）：[Railway](/railway)
+- **Northflank**（一键部署 + 浏览器配置）：[Northflank](/northflank)
+- **Oracle Cloud（Always Free）**：[Oracle](/platforms/oracle) — $0/月（Always Free，ARM；容量/注册可能比较挑剔）
+- **Fly.io**：[Fly.io](/platforms/fly)
+- **Hetzner（Docker）**：[Hetzner](/platforms/hetzner)
+- **GCP（Compute Engine）**：[GCP](/platforms/gcp)
+- **exe.dev**（VM + HTTPS 代理）：[exe.dev](/platforms/exe-dev)
+- **AWS（EC2/Lightsail/免费额度）**：同样很好用。视频指南：
   https://x.com/techfrenAJ/status/2014934471095812547
 
-## How cloud setups work
+## 云端部署如何工作
 
-- The **Gateway runs on the VPS** and owns state + workspace.
-- You connect from your laptop/phone via the **Control UI** or **Tailscale/SSH**.
-- Treat the VPS as the source of truth and **back up** the state + workspace.
-- Secure default: keep the Gateway on loopback and access it via SSH tunnel or Tailscale Serve.
-  If you bind to `lan`/`tailnet`, require `gateway.auth.token` or `gateway.auth.password`.
+- **Gateway 运行在 VPS 上**，并持有状态与工作区。
+- 你通过 **Control UI** 或 **Tailscale/SSH** 从笔记本/手机连接。
+- 把 VPS 当作事实来源，并 **备份** 状态与工作区。
+- 安全默认：让 Gateway 只监听 loopback，并通过 SSH 隧道或 Tailscale Serve 访问。
+  如果绑定到 `lan`/`tailnet`，要求配置 `gateway.auth.token` 或 `gateway.auth.password`。
 
-Remote access: [Gateway remote](/gateway/remote)  
-Platforms hub: [Platforms](/platforms)
+远程访问：[Gateway remote](/gateway/remote)  
+平台总览：[Platforms](/platforms)
 
-## Using nodes with a VPS
+## 在 VPS 上使用节点
 
-You can keep the Gateway in the cloud and pair **nodes** on your local devices
-(Mac/iOS/Android/headless). Nodes provide local screen/camera/canvas and `system.run`
-capabilities while the Gateway stays in the cloud.
+你可以把 Gateway 放在云端，并在本地设备上配对 **节点**
+（Mac/iOS/Android/headless）。节点提供本地屏幕/摄像头/画布以及 `system.run`
+能力，同时 Gateway 仍留在云端。
 
-Docs: [Nodes](/nodes), [Nodes CLI](/cli/nodes)
+文档：[Nodes](/nodes), [Nodes CLI](/cli/nodes)

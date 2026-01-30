@@ -1,96 +1,94 @@
 ---
-summary: "Step-by-step release checklist for npm + macOS app"
+summary: "npm 与 macOS 应用的发布清单（逐步）"
 read_when:
-  - Cutting a new npm release
-  - Cutting a new macOS app release
-  - Verifying metadata before publishing
+  - 切一个新的 npm 版本
+  - 切一个新的 macOS 应用版本
+  - 发布前验证元数据
 ---
 
-# Release Checklist (npm + macOS)
+# 发布清单（npm 与 macOS）
 
-Use `pnpm` (Node 22+) from the repo root. Keep the working tree clean before tagging/publishing.
+在仓库根目录使用 `pnpm`（Node 22+）。打 tag 或发布前保持工作树干净。
 
-## Operator trigger
-When the operator says “release”, immediately do this preflight (no extra questions unless blocked):
-- Read this doc and `docs/platforms/mac/release.md`.
-- Load env from `~/.profile` and confirm `SPARKLE_PRIVATE_KEY_FILE` + App Store Connect vars are set (SPARKLE_PRIVATE_KEY_FILE should live in `~/.profile`).
-- Use Sparkle keys from `~/Library/CloudStorage/Dropbox/Backup/Sparkle` if needed.
+## 操作员触发
+当操作员说“release”时，立即执行以下预检（除非被阻断，不要额外提问）：
+- 阅读本文档与 `docs/platforms/mac/release.md`。
+- 从 `~/.profile` 加载环境变量并确认 `SPARKLE_PRIVATE_KEY_FILE` 与 App Store Connect 变量已设置（`SPARKLE_PRIVATE_KEY_FILE` 应位于 `~/.profile`）。
+- 如需使用 Sparkle key，从 `~/Library/CloudStorage/Dropbox/Backup/Sparkle` 获取。
 
-1) **Version & metadata**
-- [ ] Bump `package.json` version (e.g., `2026.1.27-beta.1`).
-- [ ] Run `pnpm plugins:sync` to align extension package versions + changelogs.
-- [ ] Update CLI/version strings: [`src/cli/program.ts`](https://github.com/moltbot/moltbot/blob/main/src/cli/program.ts) and the Baileys user agent in [`src/provider-web.ts`](https://github.com/moltbot/moltbot/blob/main/src/provider-web.ts).
-- [ ] Confirm package metadata (name, description, repository, keywords, license) and `bin` map points to [`moltbot.mjs`](https://github.com/moltbot/moltbot/blob/main/moltbot.mjs) for `moltbot`.
-- [ ] If dependencies changed, run `pnpm install` so `pnpm-lock.yaml` is current.
+1) **版本与元数据**
+- [ ] 提升 `package.json` 版本（例如 `2026.1.27-beta.1`）。
+- [ ] 运行 `pnpm plugins:sync` 同步扩展包版本与变更日志。
+- [ ] 更新 CLI 与版本字符串：[`src/cli/program.ts`](https://github.com/moltbot/moltbot/blob/main/src/cli/program.ts) 以及 [`src/provider-web.ts`](https://github.com/moltbot/moltbot/blob/main/src/provider-web.ts) 中的 Baileys 用户代理。
+- [ ] 确认包元数据（name、description、repository、keywords、license）以及 `bin` 指向 [`moltbot.mjs`](https://github.com/moltbot/moltbot/blob/main/moltbot.mjs)。
+- [ ] 若依赖变更，运行 `pnpm install` 更新 `pnpm-lock.yaml`。
 
-2) **Build & artifacts**
-- [ ] If A2UI inputs changed, run `pnpm canvas:a2ui:bundle` and commit any updated [`src/canvas-host/a2ui/a2ui.bundle.js`](https://github.com/moltbot/moltbot/blob/main/src/canvas-host/a2ui/a2ui.bundle.js).
-- [ ] `pnpm run build` (regenerates `dist/`).
-- [ ] Verify npm package `files` includes all required `dist/*` folders (notably `dist/node-host/**` and `dist/acp/**` for headless node + ACP CLI).
-- [ ] Confirm `dist/build-info.json` exists and includes the expected `commit` hash (CLI banner uses this for npm installs).
-- [ ] Optional: `npm pack --pack-destination /tmp` after the build; inspect the tarball contents and keep it handy for the GitHub release (do **not** commit it).
+2) **构建与产物**
+- [ ] 若 A2UI 输入变更，运行 `pnpm canvas:a2ui:bundle` 并提交更新的 [`src/canvas-host/a2ui/a2ui.bundle.js`](https://github.com/moltbot/moltbot/blob/main/src/canvas-host/a2ui/a2ui.bundle.js)。
+- [ ] `pnpm run build`（生成 `dist/`）。
+- [ ] 验证 npm 包的 `files` 覆盖必要 `dist/*` 目录（尤其 `dist/node-host/**` 与 `dist/acp/**` 用于无界面节点与 ACP CLI）。
+- [ ] 确认 `dist/build-info.json` 存在且包含预期 `commit` hash（npm 安装时 CLI banner 使用）。
+- [ ] 可选：构建后运行 `npm pack --pack-destination /tmp` 并检查 tarball 内容，可用于 GitHub release（**不要**提交）。
 
-3) **Changelog & docs**
-- [ ] Update `CHANGELOG.md` with user-facing highlights (create the file if missing); keep entries strictly descending by version.
-- [ ] Ensure README examples/flags match current CLI behavior (notably new commands or options).
+3) **变更日志与文档**
+- [ ] 更新 `CHANGELOG.md` 的用户可见要点（若缺失则创建）；条目按版本严格降序。
+- [ ] 确保 README 示例或标志与当前 CLI 行为一致（尤其新命令或选项）。
 
-4) **Validation**
+4) **验证**
 - [ ] `pnpm lint`
-- [ ] `pnpm test` (or `pnpm test:coverage` if you need coverage output)
-- [ ] `pnpm run build` (last sanity check after tests)
-- [ ] `pnpm release:check` (verifies npm pack contents)
-- [ ] `CLAWDBOT_INSTALL_SMOKE_SKIP_NONROOT=1 pnpm test:install:smoke` (Docker install smoke test, fast path; required before release)
-  - If the immediate previous npm release is known broken, set `CLAWDBOT_INSTALL_SMOKE_PREVIOUS=<last-good-version>` or `CLAWDBOT_INSTALL_SMOKE_SKIP_PREVIOUS=1` for the preinstall step.
-- [ ] (Optional) Full installer smoke (adds non-root + CLI coverage): `pnpm test:install:smoke`
-- [ ] (Optional) Installer E2E (Docker, runs `curl -fsSL https://molt.bot/install.sh | bash`, onboards, then runs real tool calls):
-  - `pnpm test:install:e2e:openai` (requires `OPENAI_API_KEY`)
-  - `pnpm test:install:e2e:anthropic` (requires `ANTHROPIC_API_KEY`)
-  - `pnpm test:install:e2e` (requires both keys; runs both providers)
-- [ ] (Optional) Spot-check the web gateway if your changes affect send/receive paths.
+- [ ] `pnpm test`（或需要覆盖率时 `pnpm test:coverage`）
+- [ ] `pnpm run build`（测试后最后一次 sanity check）
+- [ ] `pnpm release:check`（验证 npm pack 内容）
+- [ ] `CLAWDBOT_INSTALL_SMOKE_SKIP_NONROOT=1 pnpm test:install:smoke`（Docker 安装冒烟测试，快速路径；发布前必做）
+  - 若上一版本 npm 已知损坏，可设 `CLAWDBOT_INSTALL_SMOKE_PREVIOUS=<last-good-version>` 或 `CLAWDBOT_INSTALL_SMOKE_SKIP_PREVIOUS=1` 用于预安装步骤。
+- [ ]（可选）完整安装冒烟（包含非 root + CLI 覆盖）：`pnpm test:install:smoke`
+- [ ]（可选）安装 E2E（Docker，运行 `curl -fsSL https://molt.bot/install.sh | bash`，完成 onboarding，再运行真实工具调用）：
+  - `pnpm test:install:e2e:openai`（需要 `OPENAI_API_KEY`）
+  - `pnpm test:install:e2e:anthropic`（需要 `ANTHROPIC_API_KEY`）
+  - `pnpm test:install:e2e`（需要两者，运行两个 provider）
+- [ ]（可选）若变更影响发送或接收，抽查 web gateway。
 
-5) **macOS app (Sparkle)**
-- [ ] Build + sign the macOS app, then zip it for distribution.
-- [ ] Generate the Sparkle appcast (HTML notes via [`scripts/make_appcast.sh`](https://github.com/moltbot/moltbot/blob/main/scripts/make_appcast.sh)) and update `appcast.xml`.
-- [ ] Keep the app zip (and optional dSYM zip) ready to attach to the GitHub release.
-- [ ] Follow [macOS release](/platforms/mac/release) for the exact commands and required env vars.
-  - `APP_BUILD` must be numeric + monotonic (no `-beta`) so Sparkle compares versions correctly.
-  - If notarizing, use the `moltbot-notary` keychain profile created from App Store Connect API env vars (see [macOS release](/platforms/mac/release)).
+5) **macOS 应用（Sparkle）**
+- [ ] 构建并签名 macOS 应用，然后打 zip 发布。
+- [ ] 生成 Sparkle appcast（HTML notes 通过 [`scripts/make_appcast.sh`](https://github.com/moltbot/moltbot/blob/main/scripts/make_appcast.sh)）并更新 `appcast.xml`。
+- [ ] 准备好 app zip（以及可选 dSYM zip）以附加到 GitHub release。
+- [ ] 按 [macOS release](/platforms/mac/release) 的命令与环境变量执行。
+  - `APP_BUILD` 必须是数值且单调递增（不要 `-beta`），以便 Sparkle 正确比较版本。
+  - 若做公证，使用由 App Store Connect API 环境变量创建的 `moltbot-notary` keychain profile（见 [macOS release](/platforms/mac/release)）。
 
-6) **Publish (npm)**
-- [ ] Confirm git status is clean; commit and push as needed.
-- [ ] `npm login` (verify 2FA) if needed.
-- [ ] `npm publish --access public` (use `--tag beta` for pre-releases).
-- [ ] Verify the registry: `npm view moltbot version`, `npm view moltbot dist-tags`, and `npx -y moltbot@X.Y.Z --version` (or `--help`).
+6) **发布（npm）**
+- [ ] 确认 git 状态干净；按需提交与推送。
+- [ ] 如需，执行 `npm login`（确认 2FA）。
+- [ ] `npm publish --access public`（预发布使用 `--tag beta`）。
+- [ ] 校验 registry：`npm view moltbot version`、`npm view moltbot dist-tags`、以及 `npx -y moltbot@X.Y.Z --version`（或 `--help`）。
 
-### Troubleshooting (notes from 2.0.0-beta2 release)
-- **npm pack/publish hangs or produces huge tarball**: the macOS app bundle in `dist/Moltbot.app` (and release zips) get swept into the package. Fix by whitelisting publish contents via `package.json` `files` (include dist subdirs, docs, skills; exclude app bundles). Confirm with `npm pack --dry-run` that `dist/Moltbot.app` is not listed.
-- **npm auth web loop for dist-tags**: use legacy auth to get an OTP prompt:
+### 排查（2.0.0-beta2 发布记录）
+- **npm pack 或 publish 卡住或生成巨大 tarball**：`dist/Moltbot.app`（以及发布 zip）被打包进 npm。通过 `package.json` 的 `files` 白名单修复（包含 dist 子目录、docs、skills；排除 app bundle）。使用 `npm pack --dry-run` 确认 `dist/Moltbot.app` 不在列表中。
+- **npm dist-tag 的认证网页循环**：使用 legacy 认证获取 OTP 提示：
   - `NPM_CONFIG_AUTH_TYPE=legacy npm dist-tag add moltbot@X.Y.Z latest`
-- **`npx` verification fails with `ECOMPROMISED: Lock compromised`**: retry with a fresh cache:
+- **`npx` 验证失败，提示 `ECOMPROMISED: Lock compromised`**：用新缓存重试：
   - `NPM_CONFIG_CACHE=/tmp/npm-cache-$(date +%s) npx -y moltbot@X.Y.Z --version`
-- **Tag needs repointing after a late fix**: force-update and push the tag, then ensure the GitHub release assets still match:
+- **后续修复需要重新指向 tag**：强制更新并推送 tag，然后确保 GitHub release 资产一致：
   - `git tag -f vX.Y.Z && git push -f origin vX.Y.Z`
 
-7) **GitHub release + appcast**
-- [ ] Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z` (or `git push --tags`).
-- [ ] Create/refresh the GitHub release for `vX.Y.Z` with **title `moltbot X.Y.Z`** (not just the tag); body should include the **full** changelog section for that version (Highlights + Changes + Fixes), inline (no bare links), and **must not repeat the title inside the body**.
-- [ ] Attach artifacts: `npm pack` tarball (optional), `Moltbot-X.Y.Z.zip`, and `Moltbot-X.Y.Z.dSYM.zip` (if generated).
-- [ ] Commit the updated `appcast.xml` and push it (Sparkle feeds from main).
-- [ ] From a clean temp directory (no `package.json`), run `npx -y moltbot@X.Y.Z send --help` to confirm install/CLI entrypoints work.
-- [ ] Announce/share release notes.
+7) **GitHub release 与 appcast**
+- [ ] 打 tag 并推送：`git tag vX.Y.Z && git push origin vX.Y.Z`（或 `git push --tags`）。
+- [ ] 创建或更新 `vX.Y.Z` 的 GitHub release，**标题使用 `moltbot X.Y.Z`**（不仅是 tag）；正文包含该版本**完整**变更日志（Highlights + Changes + Fixes），内联呈现（不要只放链接），且**正文不得重复标题**。
+- [ ] 附加产物：`npm pack` tarball（可选）、`Moltbot-X.Y.Z.zip`、`Moltbot-X.Y.Z.dSYM.zip`（如生成）。
+- [ ] 提交更新后的 `appcast.xml` 并推送（Sparkle 从 main 获取）。
+- [ ] 在干净的临时目录（无 `package.json`）运行 `npx -y moltbot@X.Y.Z send --help` 以确认安装与 CLI 入口正常。
+- [ ] 宣布或分享发布说明。
 
-## Plugin publish scope (npm)
+## 插件发布范围（npm）
 
-We only publish **existing npm plugins** under the `@moltbot/*` scope. Bundled
-plugins that are not on npm stay **disk-tree only** (still shipped in
-`extensions/**`).
+我们只发布 `@moltbot/*` 范围内**已有的 npm 插件**。未发布到 npm 的内置插件保持**仅磁盘树**（仍位于 `extensions/**`）。
 
-Process to derive the list:
-1) `npm search @moltbot --json` and capture the package names.
-2) Compare with `extensions/*/package.json` names.
-3) Publish only the **intersection** (already on npm).
+获取列表的流程：
+1) `npm search @moltbot --json` 并记录包名。
+2) 与 `extensions/*/package.json` 名称对比。
+3) 仅发布交集（已在 npm 上的）。
 
-Current npm plugin list (update as needed):
+当前 npm 插件列表（按需更新）：
 - @moltbot/bluebubbles
 - @moltbot/diagnostics-otel
 - @moltbot/discord
@@ -103,5 +101,4 @@ Current npm plugin list (update as needed):
 - @moltbot/zalo
 - @moltbot/zalouser
 
-Release notes must also call out **new optional bundled plugins** that are **not
-on by default** (example: `tlon`).
+发布说明还必须提及**新增的可选内置插件**且**默认不启用**（例如 `tlon`）。

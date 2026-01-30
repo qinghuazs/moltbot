@@ -1,100 +1,100 @@
 ---
-summary: "Refactor plan: exec host routing, node approvals, and headless runner"
+summary: "重构计划：exec 主机路由、节点审批与无界面执行器"
 read_when:
-  - Designing exec host routing or exec approvals
-  - Implementing node runner + UI IPC
-  - Adding exec host security modes and slash commands
+  - 设计 exec 主机路由或 exec 审批
+  - 实现节点执行器与 UI IPC
+  - 添加 exec 主机安全模式与斜杠命令
 ---
 
-# Exec host refactor plan
+# Exec 主机重构计划
 
-## Goals
-- Add `exec.host` + `exec.security` to route execution across **sandbox**, **gateway**, and **node**.
-- Keep defaults **safe**: no cross-host execution unless explicitly enabled.
-- Split execution into a **headless runner service** with optional UI (macOS app) via local IPC.
-- Provide **per-agent** policy, allowlist, ask mode, and node binding.
-- Support **ask modes** that work *with* or *without* allowlists.
-- Cross-platform: Unix socket + token auth (macOS/Linux/Windows parity).
+## 目标
+- 添加 `exec.host` + `exec.security`，在 **sandbox**、**gateway** 与 **node** 之间路由执行。
+- 默认 **安全**：未显式启用时不跨主机执行。
+- 将执行拆分为**无界面执行服务**，并通过本地 IPC（macOS app）可选 UI。
+- 提供**按代理**的策略、允许列表、询问模式与节点绑定。
+- 支持**询问模式**，可与或不与允许列表配合。
+- 跨平台：Unix socket + token 认证（macOS/Linux/Windows 对齐）。
 
-## Non-goals
-- No legacy allowlist migration or legacy schema support.
-- No PTY/streaming for node exec (aggregated output only).
-- No new network layer beyond the existing Bridge + Gateway.
+## 非目标
+- 不做旧允许列表迁移或旧 schema 兼容。
+- 节点 exec 不提供 PTY 或流式输出（仅聚合输出）。
+- 不新增网络层，继续使用现有 Bridge + Gateway。
 
-## Decisions (locked)
-- **Config keys:** `exec.host` + `exec.security` (per-agent override allowed).
-- **Elevation:** keep `/elevated` as an alias for gateway full access.
-- **Ask default:** `on-miss`.
-- **Approvals store:** `~/.clawdbot/exec-approvals.json` (JSON, no legacy migration).
-- **Runner:** headless system service; UI app hosts a Unix socket for approvals.
-- **Node identity:** use existing `nodeId`.
-- **Socket auth:** Unix socket + token (cross-platform); split later if needed.
-- **Node host state:** `~/.clawdbot/node.json` (node id + pairing token).
-- **macOS exec host:** run `system.run` inside the macOS app; node host service forwards requests over local IPC.
-- **No XPC helper:** stick to Unix socket + token + peer checks.
+## 决策（已锁定）
+- **配置键：**`exec.host` + `exec.security`（允许按代理覆盖）。
+- **提升模式：**保留 `/elevated` 作为 gateway 全权限别名。
+- **询问默认：**`on-miss`。
+- **审批存储：**`~/.clawdbot/exec-approvals.json`（JSON，无旧格式迁移）。
+- **执行器：**无界面系统服务；UI app 通过 Unix socket 处理审批。
+- **节点身份：**使用现有 `nodeId`。
+- **socket 认证：**Unix socket + token（跨平台）；必要时再拆分。
+- **节点主机状态：**`~/.clawdbot/node.json`（node id + 配对 token）。
+- **macOS exec 主机：**在 macOS app 内执行 `system.run`；节点主机服务通过本地 IPC 转发请求。
+- **不使用 XPC helper：**坚持 Unix socket + token + peer 检查。
 
-## Key concepts
+## 关键概念
 ### Host
-- `sandbox`: Docker exec (current behavior).
-- `gateway`: exec on gateway host.
-- `node`: exec on node runner via Bridge (`system.run`).
+- `sandbox`：Docker exec（当前行为）。
+- `gateway`：在 gateway 主机上执行。
+- `node`：通过 Bridge（`system.run`）在节点执行器上执行。
 
-### Security mode
-- `deny`: always block.
-- `allowlist`: allow only matches.
-- `full`: allow everything (equivalent to elevated).
+### Security 模式
+- `deny`：始终阻止。
+- `allowlist`：仅允许命中列表。
+- `full`：允许所有（等同 elevated）。
 
-### Ask mode
-- `off`: never ask.
-- `on-miss`: ask only when allowlist does not match.
-- `always`: ask every time.
+### Ask 模式
+- `off`：从不询问。
+- `on-miss`：仅在允许列表未命中时询问。
+- `always`：每次都询问。
 
-Ask is **independent** of allowlist; allowlist can be used with `always` or `on-miss`.
+Ask 与 allowlist **独立**；allowlist 可与 `always` 或 `on-miss` 一起使用。
 
-### Policy resolution (per exec)
-1) Resolve `exec.host` (tool param → agent override → global default).
-2) Resolve `exec.security` and `exec.ask` (same precedence).
-3) If host is `sandbox`, proceed with local sandbox exec.
-4) If host is `gateway` or `node`, apply security + ask policy on that host.
+### 策略解析（每次 exec）
+1) 解析 `exec.host`（工具参数 → 代理覆盖 → 全局默认）。
+2) 解析 `exec.security` 与 `exec.ask`（同样优先级）。
+3) 若 host 为 `sandbox`，走本地沙箱 exec。
+4) 若 host 为 `gateway` 或 `node`，在该主机上应用安全与询问策略。
 
-## Default safety
-- Default `exec.host = sandbox`.
-- Default `exec.security = deny` for `gateway` and `node`.
-- Default `exec.ask = on-miss` (only relevant if security allows).
-- If no node binding is set, **agent may target any node**, but only if policy allows it.
+## 默认安全
+- 默认 `exec.host = sandbox`。
+- 默认 `exec.security = deny`（对 `gateway` 与 `node`）。
+- 默认 `exec.ask = on-miss`（仅在安全允许时相关）。
+- 若未设置节点绑定，**代理可指向任意节点**，但仍受策略限制。
 
-## Config surface
-### Tool parameters
-- `exec.host` (optional): `sandbox | gateway | node`.
-- `exec.security` (optional): `deny | allowlist | full`.
-- `exec.ask` (optional): `off | on-miss | always`.
-- `exec.node` (optional): node id/name to use when `host=node`.
+## 配置面
+### 工具参数
+- `exec.host`（可选）：`sandbox | gateway | node`。
+- `exec.security`（可选）：`deny | allowlist | full`。
+- `exec.ask`（可选）：`off | on-miss | always`。
+- `exec.node`（可选）：`host=node` 时使用的节点 id 或名称。
 
-### Config keys (global)
+### 全局配置键
 - `tools.exec.host`
 - `tools.exec.security`
 - `tools.exec.ask`
-- `tools.exec.node` (default node binding)
+- `tools.exec.node`（默认节点绑定）
 
-### Config keys (per agent)
+### 按代理配置键
 - `agents.list[].tools.exec.host`
 - `agents.list[].tools.exec.security`
 - `agents.list[].tools.exec.ask`
 - `agents.list[].tools.exec.node`
 
-### Alias
-- `/elevated on` = set `tools.exec.host=gateway`, `tools.exec.security=full` for the agent session.
-- `/elevated off` = restore previous exec settings for the agent session.
+### 别名
+- `/elevated on` = 为当前代理会话设置 `tools.exec.host=gateway`、`tools.exec.security=full`。
+- `/elevated off` = 恢复该会话之前的 exec 设置。
 
-## Approvals store (JSON)
-Path: `~/.clawdbot/exec-approvals.json`
+## 审批存储（JSON）
+路径：`~/.clawdbot/exec-approvals.json`
 
-Purpose:
-- Local policy + allowlists for the **execution host** (gateway or node runner).
-- Ask fallback when no UI is available.
-- IPC credentials for UI clients.
+用途：
+- **执行主机**（gateway 或 node runner）的本地策略与允许列表。
+- 无 UI 时的询问兜底。
+- UI 客户端的 IPC 凭据。
 
-Proposed schema (v1):
+建议 schema（v1）：
 ```json
 {
   "version": 1,
@@ -123,41 +123,41 @@ Proposed schema (v1):
   }
 }
 ```
-Notes:
-- No legacy allowlist formats.
-- `askFallback` applies only when `ask` is required and no UI is reachable.
-- File permissions: `0600`.
+说明：
+- 不支持旧允许列表格式。
+- `askFallback` 仅在需要询问但 UI 不可达时生效。
+- 文件权限：`0600`。
 
-## Runner service (headless)
-### Role
-- Enforce `exec.security` + `exec.ask` locally.
-- Execute system commands and return output.
-- Emit Bridge events for exec lifecycle (optional but recommended).
+## 执行服务（无界面）
+### 角色
+- 在本地主机执行 `exec.security` 与 `exec.ask`。
+- 执行系统命令并返回输出。
+- 发出 exec 生命周期 Bridge 事件（可选但推荐）。
 
-### Service lifecycle
-- Launchd/daemon on macOS; system service on Linux/Windows.
-- Approvals JSON is local to the execution host.
-- UI hosts a local Unix socket; runners connect on demand.
+### 服务生命周期
+- macOS 使用 launchd 守护；Linux/Windows 使用系统服务。
+- 审批 JSON 存储在执行主机本地。
+- UI 在本地 Unix socket 上提供服务；执行器按需连接。
 
-## UI integration (macOS app)
+## UI 集成（macOS app）
 ### IPC
-- Unix socket at `~/.clawdbot/exec-approvals.sock` (0600).
-- Token stored in `exec-approvals.json` (0600).
-- Peer checks: same-UID only.
-- Challenge/response: nonce + HMAC(token, request-hash) to prevent replay.
-- Short TTL (e.g., 10s) + max payload + rate limit.
+- Unix socket：`~/.clawdbot/exec-approvals.sock`（0600）。
+- Token 存储在 `exec-approvals.json`（0600）。
+- 对端检查：仅同 UID。
+- Challenge/response：nonce + HMAC(token, request-hash) 防重放。
+- 短 TTL（例如 10s）+ 最大载荷 + 限速。
 
-### Ask flow (macOS app exec host)
-1) Node service receives `system.run` from gateway.
-2) Node service connects to the local socket and sends the prompt/exec request.
-3) App validates peer + token + HMAC + TTL, then shows dialog if needed.
-4) App executes the command in UI context and returns output.
-5) Node service returns output to gateway.
+### 询问流程（macOS app exec 主机）
+1) 节点服务从 gateway 接收 `system.run`。
+2) 节点服务连接本地 socket 并发送提示或执行请求。
+3) app 校验对端 + token + HMAC + TTL，然后视情况弹窗。
+4) app 在 UI 上下文执行命令并返回输出。
+5) 节点服务返回输出给 gateway。
 
-If UI missing:
-- Apply `askFallback` (`deny|allowlist|full`).
+如果 UI 缺失：
+- 使用 `askFallback`（`deny|allowlist|full`）。
 
-### Diagram (SCI)
+### 示意图（SCI）
 ```
 Agent -> Gateway -> Bridge -> Node Service (TS)
                          |  IPC (UDS + token + HMAC + TTL)
@@ -165,100 +165,100 @@ Agent -> Gateway -> Bridge -> Node Service (TS)
                      Mac App (UI + TCC + system.run)
 ```
 
-## Node identity + binding
-- Use existing `nodeId` from Bridge pairing.
-- Binding model:
-  - `tools.exec.node` restricts the agent to a specific node.
-  - If unset, agent can pick any node (policy still enforces defaults).
-- Node selection resolution:
-  - `nodeId` exact match
-  - `displayName` (normalized)
+## 节点身份与绑定
+- 使用 Bridge 配对的 `nodeId`。
+- 绑定模型：
+  - `tools.exec.node` 将代理限制到特定节点。
+  - 若未设置，代理可选择任意节点（策略仍会限制）。
+- 节点选择解析：
+  - `nodeId` 精确匹配
+  - `displayName`（规范化）
   - `remoteIp`
-  - `nodeId` prefix (>= 6 chars)
+  - `nodeId` 前缀（>= 6 字符）
 
-## Eventing
-### Who sees events
-- System events are **per session** and shown to the agent on the next prompt.
-- Stored in the gateway in-memory queue (`enqueueSystemEvent`).
+## 事件
+### 谁能看到事件
+- 系统事件是**按会话**的，并在下一次提示时展示给代理。
+- 存储在 gateway 内存队列（`enqueueSystemEvent`）。
 
-### Event text
+### 事件文本
 - `Exec started (node=<id>, id=<runId>)`
-- `Exec finished (node=<id>, id=<runId>, code=<code>)` + optional output tail
+- `Exec finished (node=<id>, id=<runId>, code=<code>)` + 可选输出尾部
 - `Exec denied (node=<id>, id=<runId>, <reason>)`
 
-### Transport
-Option A (recommended):
-- Runner sends Bridge `event` frames `exec.started` / `exec.finished`.
-- Gateway `handleBridgeEvent` maps these into `enqueueSystemEvent`.
+### 传输
+方案 A（推荐）：
+- 执行器通过 Bridge 发送 `exec.started` / `exec.finished` 事件帧。
+- Gateway `handleBridgeEvent` 将其映射为 `enqueueSystemEvent`。
 
-Option B:
-- Gateway `exec` tool handles lifecycle directly (synchronous only).
+方案 B：
+- Gateway `exec` 工具直接处理生命周期（仅同步）。
 
-## Exec flows
-### Sandbox host
-- Existing `exec` behavior (Docker or host when unsandboxed).
-- PTY supported in non-sandbox mode only.
+## Exec 流程
+### Sandbox 主机
+- 维持现有 `exec` 行为（Docker 或非沙箱模式下主机执行）。
+- PTY 仅在非沙箱模式支持。
 
-### Gateway host
-- Gateway process executes on its own machine.
-- Enforces local `exec-approvals.json` (security/ask/allowlist).
+### Gateway 主机
+- Gateway 进程在自身机器执行。
+- 本地 `exec-approvals.json` 执行安全与询问策略。
 
-### Node host
-- Gateway calls `node.invoke` with `system.run`.
-- Runner enforces local approvals.
-- Runner returns aggregated stdout/stderr.
-- Optional Bridge events for start/finish/deny.
+### Node 主机
+- Gateway 调用 `node.invoke` 并执行 `system.run`。
+- 执行器应用本地审批策略。
+- 执行器返回聚合的 stdout/stderr。
+- 可选 Bridge 事件（start/finish/deny）。
 
-## Output caps
-- Cap combined stdout+stderr at **200k**; keep **tail 20k** for events.
-- Truncate with a clear suffix (e.g., `"… (truncated)"`).
+## 输出上限
+- 合并 stdout+stderr 上限 **200k**；事件保留尾部 **20k**。
+- 超出时截断并附清晰后缀（如 `"… (truncated)"`）。
 
-## Slash commands
+## 斜杠命令
 - `/exec host=<sandbox|gateway|node> security=<deny|allowlist|full> ask=<off|on-miss|always> node=<id>`
-- Per-agent, per-session overrides; non-persistent unless saved via config.
-- `/elevated on|off|ask|full` remains a shortcut for `host=gateway security=full` (with `full` skipping approvals).
+- 按代理、按会话覆盖；非持久，除非通过配置保存。
+- `/elevated on|off|ask|full` 仍是 `host=gateway security=full` 的快捷方式（`full` 跳过审批）。
 
-## Cross-platform story
-- The runner service is the portable execution target.
-- UI is optional; if missing, `askFallback` applies.
-- Windows/Linux support the same approvals JSON + socket protocol.
+## 跨平台方案
+- 执行服务是可移植的执行目标。
+- UI 可选；缺失时使用 `askFallback`。
+- Windows/Linux 与 macOS 使用相同的审批 JSON + socket 协议。
 
-## Implementation phases
-### Phase 1: config + exec routing
-- Add config schema for `exec.host`, `exec.security`, `exec.ask`, `exec.node`.
-- Update tool plumbing to respect `exec.host`.
-- Add `/exec` slash command and keep `/elevated` alias.
+## 实现阶段
+### 阶段 1：配置与 exec 路由
+- 添加 `exec.host`、`exec.security`、`exec.ask`、`exec.node` 的 schema。
+- 更新工具管线以遵循 `exec.host`。
+- 添加 `/exec` 斜杠命令并保留 `/elevated` 别名。
 
-### Phase 2: approvals store + gateway enforcement
-- Implement `exec-approvals.json` reader/writer.
-- Enforce allowlist + ask modes for `gateway` host.
-- Add output caps.
+### 阶段 2：审批存储与 gateway 执行
+- 实现 `exec-approvals.json` 读写。
+- 在 `gateway` 主机执行 allowlist + ask。
+- 添加输出上限。
 
-### Phase 3: node runner enforcement
-- Update node runner to enforce allowlist + ask.
-- Add Unix socket prompt bridge to macOS app UI.
-- Wire `askFallback`.
+### 阶段 3：节点执行器策略
+- 更新节点执行器以执行 allowlist + ask。
+- 添加 Unix socket 提示桥接到 macOS app UI。
+- 接线 `askFallback`。
 
-### Phase 4: events
-- Add node → gateway Bridge events for exec lifecycle.
-- Map to `enqueueSystemEvent` for agent prompts.
+### 阶段 4：事件
+- 添加 node -> gateway Bridge 事件用于 exec 生命周期。
+- 映射为 `enqueueSystemEvent` 以供代理提示。
 
-### Phase 5: UI polish
-- Mac app: allowlist editor, per-agent switcher, ask policy UI.
-- Node binding controls (optional).
+### 阶段 5：UI 打磨
+- macOS app：允许列表编辑器、按代理切换器、询问策略 UI。
+- 节点绑定控制（可选）。
 
-## Testing plan
-- Unit tests: allowlist matching (glob + case-insensitive).
-- Unit tests: policy resolution precedence (tool param → agent override → global).
-- Integration tests: node runner deny/allow/ask flows.
-- Bridge event tests: node event → system event routing.
+## 测试计划
+- 单测：允许列表匹配（glob + 不区分大小写）。
+- 单测：策略解析优先级（工具参数 → 代理覆盖 → 全局）。
+- 集成测试：节点执行 deny/allow/ask 流程。
+- Bridge 事件测试：node 事件 -> system 事件路由。
 
-## Open risks
-- UI unavailability: ensure `askFallback` is respected.
-- Long-running commands: rely on timeout + output caps.
-- Multi-node ambiguity: error unless node binding or explicit node param.
+## 风险
+- UI 不可用：确保 `askFallback` 生效。
+- 长时间命令：依赖超时与输出上限。
+- 多节点歧义：除非节点绑定或显式节点参数，否则报错。
 
-## Related docs
+## 相关文档
 - [Exec tool](/tools/exec)
 - [Exec approvals](/tools/exec-approvals)
 - [Nodes](/nodes)

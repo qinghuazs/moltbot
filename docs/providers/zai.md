@@ -1,24 +1,22 @@
 ---
-summary: "Use Z.AI (GLM models) with Moltbot"
+summary: "在 Moltbot 中使用 Z.AI（GLM 模型）"
 read_when:
-  - You want Z.AI / GLM models in Moltbot
-  - You need a simple ZAI_API_KEY setup
+  - 想在 Moltbot 中使用 Z.AI 或 GLM 模型
+  - 需要一个简单的 ZAI_API_KEY 设置
 ---
 # Z.AI
 
-Z.AI is the API platform for **GLM** models. It provides REST APIs for GLM and uses API keys
-for authentication. Create your API key in the Z.AI console. Moltbot uses the `zai` provider
-with a Z.AI API key.
+Z.AI 是 **GLM** 模型的 API 平台，提供 REST API 并使用 API key 认证。在 Z.AI 控制台创建 API key。Moltbot 使用 `zai` provider 配合 Z.AI API key。
 
-## CLI setup
+## CLI 设置
 
 ```bash
 moltbot onboard --auth-choice zai-api-key
-# or non-interactive
+# 或非交互
 moltbot onboard --zai-api-key "$ZAI_API_KEY"
 ```
 
-## Config snippet
+## 配置片段
 
 ```json5
 {
@@ -27,8 +25,8 @@ moltbot onboard --zai-api-key "$ZAI_API_KEY"
 }
 ```
 
-## Notes
+## 说明
 
-- GLM models are available as `zai/<model>` (example: `zai/glm-4.7`).
-- See [/providers/glm](/providers/glm) for the model family overview.
-- Z.AI uses Bearer auth with your API key.
+- GLM 模型引用格式为 `zai/<model>`（例如 `zai/glm-4.7`）。
+- 模型家族概览见 [/providers/glm](/providers/glm)。
+- Z.AI 使用 Bearer 认证携带你的 API key。

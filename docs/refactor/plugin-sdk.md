@@ -1,41 +1,41 @@
 ---
-summary: "Plan: one clean plugin SDK + runtime for all messaging connectors"
+summary: "计划：统一的插件 SDK 与运行时，覆盖所有消息连接器"
 read_when:
-  - Defining or refactoring the plugin architecture
-  - Migrating channel connectors to the plugin SDK/runtime
+  - 定义或重构插件架构
+  - 将渠道连接器迁移到插件 SDK 或运行时
 ---
-# Plugin SDK + Runtime Refactor Plan
+# 插件 SDK 与运行时重构计划
 
-Goal: every messaging connector is a plugin (bundled or external) using one stable API.
-No plugin imports from `src/**` directly. All dependencies go through the SDK or runtime.
+目标：每个消息连接器都是插件（内置或外部），并使用同一套稳定 API。
+插件不得直接从 `src/**` 导入，所有依赖通过 SDK 或运行时提供。
 
-## Why now
-- Current connectors mix patterns: direct core imports, dist-only bridges, and custom helpers.
-- This makes upgrades brittle and blocks a clean external plugin surface.
+## 为什么现在做
+- 现有连接器模式混杂：直接 core 导入、仅 dist 的桥接、以及自定义 helper。
+- 这使升级脆弱，并阻碍清晰的外部插件能力面。
 
-## Target architecture (two layers)
+## 目标架构（两层）
 
-### 1) Plugin SDK (compile-time, stable, publishable)
-Scope: types, helpers, and config utilities. No runtime state, no side effects.
+### 1) 插件 SDK（编译期、稳定、可发布）
+范围：类型、helper 与配置工具。无运行时状态、无副作用。
 
-Contents (examples):
-- Types: `ChannelPlugin`, adapters, `ChannelMeta`, `ChannelCapabilities`, `ChannelDirectoryEntry`.
-- Config helpers: `buildChannelConfigSchema`, `setAccountEnabledInConfigSection`, `deleteAccountFromConfigSection`,
-  `applyAccountNameToChannelSection`.
-- Pairing helpers: `PAIRING_APPROVED_MESSAGE`, `formatPairingApproveHint`.
-- Onboarding helpers: `promptChannelAccessConfig`, `addWildcardAllowFrom`, onboarding types.
-- Tool param helpers: `createActionGate`, `readStringParam`, `readNumberParam`, `readReactionParams`, `jsonResult`.
-- Docs link helper: `formatDocsLink`.
+内容示例：
+- Types：`ChannelPlugin`、adapters、`ChannelMeta`、`ChannelCapabilities`、`ChannelDirectoryEntry`。
+- 配置 helper：`buildChannelConfigSchema`、`setAccountEnabledInConfigSection`、`deleteAccountFromConfigSection`、
+  `applyAccountNameToChannelSection`。
+- 配对 helper：`PAIRING_APPROVED_MESSAGE`、`formatPairingApproveHint`。
+- 引导 helper：`promptChannelAccessConfig`、`addWildcardAllowFrom`、onboarding types。
+- 工具参数 helper：`createActionGate`、`readStringParam`、`readNumberParam`、`readReactionParams`、`jsonResult`。
+- 文档链接 helper：`formatDocsLink`。
 
-Delivery:
-- Publish as `@clawdbot/plugin-sdk` (or export from core under `clawdbot/plugin-sdk`).
-- Semver with explicit stability guarantees.
+交付方式：
+- 发布为 `@clawdbot/plugin-sdk`（或从 core 以 `clawdbot/plugin-sdk` 导出）。
+- 使用 semver 并给出明确稳定性保证。
 
-### 2) Plugin Runtime (execution surface, injected)
-Scope: everything that touches core runtime behavior.
-Accessed via `MoltbotPluginApi.runtime` so plugins never import `src/**`.
+### 2) 插件运行时（执行面、注入）
+范围：所有触及核心运行时行为的功能。
+通过 `MoltbotPluginApi.runtime` 访问，确保插件不直接导入 `src/**`。
 
-Proposed surface (minimal but complete):
+建议的最小但完整接口：
 ```ts
 export type PluginRuntime = {
   channel: {
@@ -128,60 +128,60 @@ export type PluginRuntime = {
 };
 ```
 
-Notes:
-- Runtime is the only way to access core behavior.
-- SDK is intentionally small and stable.
-- Each runtime method maps to an existing core implementation (no duplication).
+说明：
+- 运行时是访问核心行为的唯一途径。
+- SDK 有意保持小而稳定。
+- 每个运行时方法都映射到现有 core 实现（不重复实现）。
 
-## Migration plan (phased, safe)
+## 迁移计划（分阶段，安全）
 
-### Phase 0: scaffolding
-- Introduce `@clawdbot/plugin-sdk`.
-- Add `api.runtime` to `MoltbotPluginApi` with the surface above.
-- Maintain existing imports during a transition window (deprecation warnings).
+### 阶段 0：脚手架
+- 引入 `@clawdbot/plugin-sdk`。
+- 为 `MoltbotPluginApi` 增加 `api.runtime`，包含上述接口。
+- 过渡期保留现有导入（输出弃用警告）。
 
-### Phase 1: bridge cleanup (low risk)
-- Replace per-extension `core-bridge.ts` with `api.runtime`.
-- Migrate BlueBubbles, Zalo, Zalo Personal first (already close).
-- Remove duplicated bridge code.
+### 阶段 1：桥接清理（低风险）
+- 用 `api.runtime` 替换各扩展的 `core-bridge.ts`。
+- 优先迁移 BlueBubbles、Zalo、Zalo Personal（已较接近）。
+- 删除重复的桥接代码。
 
-### Phase 2: light direct-import plugins
-- Migrate Matrix to SDK + runtime.
-- Validate onboarding, directory, group mention logic.
+### 阶段 2：轻量直接导入插件
+- 迁移 Matrix 到 SDK + runtime。
+- 验证 onboarding、目录、群提及逻辑。
 
-### Phase 3: heavy direct-import plugins
-- Migrate MS Teams (largest set of runtime helpers).
-- Ensure reply/typing semantics match current behavior.
+### 阶段 3：重度直接导入插件
+- 迁移 MS Teams（运行时 helper 最多）。
+- 确保回复与输入指示语义与当前一致。
 
-### Phase 4: iMessage pluginization
-- Move iMessage into `extensions/imessage`.
-- Replace direct core calls with `api.runtime`.
-- Keep config keys, CLI behavior, and docs intact.
+### 阶段 4：iMessage 插件化
+- 将 iMessage 移至 `extensions/imessage`。
+- 用 `api.runtime` 替换直接 core 调用。
+- 保持配置键、CLI 行为与文档不变。
 
-### Phase 5: enforcement
-- Add lint rule / CI check: no `extensions/**` imports from `src/**`.
-- Add plugin SDK/version compatibility checks (runtime + SDK semver).
+### 阶段 5：强制执行
+- 添加 lint 规则或 CI 检查：`extensions/**` 禁止导入 `src/**`。
+- 添加插件 SDK 或版本兼容检查（runtime + SDK semver）。
 
-## Compatibility and versioning
-- SDK: semver, published, documented changes.
-- Runtime: versioned per core release. Add `api.runtime.version`.
-- Plugins declare a required runtime range (e.g., `moltbotRuntime: ">=2026.2.0"`).
+## 兼容与版本
+- SDK：semver，发布并记录变更。
+- Runtime：随 core 发布版本化，添加 `api.runtime.version`。
+- 插件声明所需 runtime 范围（如 `moltbotRuntime: ">=2026.2.0"`）。
 
-## Testing strategy
-- Adapter-level unit tests (runtime functions exercised with real core implementation).
-- Golden tests per plugin: ensure no behavior drift (routing, pairing, allowlist, mention gating).
-- A single end-to-end plugin sample used in CI (install + run + smoke).
+## 测试策略
+- 适配器级单测（用真实 core 实现调用 runtime 函数）。
+- 插件 golden 测试：确保行为无漂移（路由、配对、允许列表、提及 gating）。
+- CI 中使用单一端到端插件样例（安装、运行、冒烟）。
 
-## Open questions
-- Where to host SDK types: separate package or core export?
-- Runtime type distribution: in SDK (types only) or in core?
-- How to expose docs links for bundled vs external plugins?
-- Do we allow limited direct core imports for in-repo plugins during transition?
+## 未决问题
+- SDK 类型应放在独立包还是 core 导出？
+- 运行时类型分发方式：SDK 中仅类型，还是 core 中提供？
+- 对内置与外部插件的文档链接如何暴露？
+- 过渡期是否允许仓库内插件有限直导 core？
 
-## Success criteria
-- All channel connectors are plugins using SDK + runtime.
-- No `extensions/**` imports from `src/**`.
-- New connector templates depend only on SDK + runtime.
-- External plugins can be developed and updated without core source access.
+## 成功标准
+- 所有渠道连接器为插件并使用 SDK + runtime。
+- `extensions/**` 不再导入 `src/**`。
+- 新连接器模板仅依赖 SDK + runtime。
+- 外部插件可在无需 core 源码的情况下开发与更新。
 
-Related docs: [Plugins](/plugin), [Channels](/channels/index), [Configuration](/gateway/configuration).
+相关文档：[Plugins](/plugin)、[Channels](/channels/index)、[Configuration](/gateway/configuration)。

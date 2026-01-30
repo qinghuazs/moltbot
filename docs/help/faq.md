@@ -1,278 +1,272 @@
 ---
-summary: "Frequently asked questions about Moltbot setup, configuration, and usage"
+summary: "关于 Moltbot 安装、配置与使用的常见问题"
 ---
-# FAQ
+# 常见问题
 
-Quick answers plus deeper troubleshooting for real-world setups (local dev, VPS, multi-agent, OAuth/API keys, model failover). For runtime diagnostics, see [Troubleshooting](/gateway/troubleshooting). For the full config reference, see [Configuration](/gateway/configuration).
+这里提供快速解答，以及面向真实环境的深入排查（本地开发、VPS、多 agent、OAuth/API key、模型故障切换）。运行时诊断请看 [Troubleshooting](/gateway/troubleshooting)。完整配置参考请看 [Configuration](/gateway/configuration)。
 
-## Table of contents
+## 目录
 
-- [Quick start and first-run setup](#quick-start-and-firstrun-setup)
-  - [Im stuck whats the fastest way to get unstuck?](#im-stuck-whats-the-fastest-way-to-get-unstuck)
-  - [What’s the recommended way to install and set up Moltbot?](#whats-the-recommended-way-to-install-and-set-up-moltbot)
-  - [How do I open the dashboard after onboarding?](#how-do-i-open-the-dashboard-after-onboarding)
-  - [How do I authenticate the dashboard (token) on localhost vs remote?](#how-do-i-authenticate-the-dashboard-token-on-localhost-vs-remote)
-  - [What runtime do I need?](#what-runtime-do-i-need)
-  - [Does it run on Raspberry Pi?](#does-it-run-on-raspberry-pi)
-  - [Any tips for Raspberry Pi installs?](#any-tips-for-raspberry-pi-installs)
-  - [It is stuck on "wake up my friend" / onboarding will not hatch. What now?](#it-is-stuck-on-wake-up-my-friend-onboarding-will-not-hatch-what-now)
-  - [Can I migrate my setup to a new machine (Mac mini) without redoing onboarding?](#can-i-migrate-my-setup-to-a-new-machine-mac-mini-without-redoing-onboarding)
-  - [Where do I see what’s new in the latest version?](#where-do-i-see-whats-new-in-the-latest-version)
-  - [I can't access docs.molt.bot (SSL error). What now?](#i-cant-access-docsmoltbot-ssl-error-what-now)
-  - [What’s the difference between stable and beta?](#whats-the-difference-between-stable-and-beta)
-- [How do I install the beta version, and what’s the difference between beta and dev?](#how-do-i-install-the-beta-version-and-whats-the-difference-between-beta-and-dev)
-  - [How do I try the latest bits?](#how-do-i-try-the-latest-bits)
-  - [How long does install and onboarding usually take?](#how-long-does-install-and-onboarding-usually-take)
-  - [Installer stuck? How do I get more feedback?](#installer-stuck-how-do-i-get-more-feedback)
-  - [Windows install says git not found or moltbot not recognized](#windows-install-says-git-not-found-or-moltbot-not-recognized)
-  - [The docs didn’t answer my question - how do I get a better answer?](#the-docs-didnt-answer-my-question-how-do-i-get-a-better-answer)
-  - [How do I install Moltbot on Linux?](#how-do-i-install-moltbot-on-linux)
-  - [How do I install Moltbot on a VPS?](#how-do-i-install-moltbot-on-a-vps)
-  - [Where are the cloud/VPS install guides?](#where-are-the-cloudvps-install-guides)
-  - [Can I ask Clawd to update itself?](#can-i-ask-clawd-to-update-itself)
-  - [What does the onboarding wizard actually do?](#what-does-the-onboarding-wizard-actually-do)
-  - [Do I need a Claude or OpenAI subscription to run this?](#do-i-need-a-claude-or-openai-subscription-to-run-this)
-  - [Can I use Claude Max subscription without an API key](#can-i-use-claude-max-subscription-without-an-api-key)
-  - [How does Anthropic "setup-token" auth work?](#how-does-anthropic-setuptoken-auth-work)
-  - [Where do I find an Anthropic setup-token?](#where-do-i-find-an-anthropic-setuptoken)
-  - [Do you support Claude subscription auth (Claude Code OAuth)?](#do-you-support-claude-subscription-auth-claude-code-oauth)
-  - [Why am I seeing `HTTP 429: rate_limit_error` from Anthropic?](#why-am-i-seeing-http-429-ratelimiterror-from-anthropic)
-  - [Is AWS Bedrock supported?](#is-aws-bedrock-supported)
-  - [How does Codex auth work?](#how-does-codex-auth-work)
-  - [Do you support OpenAI subscription auth (Codex OAuth)?](#do-you-support-openai-subscription-auth-codex-oauth)
-  - [How do I set up Gemini CLI OAuth](#how-do-i-set-up-gemini-cli-oauth)
-  - [Is a local model OK for casual chats?](#is-a-local-model-ok-for-casual-chats)
-  - [How do I keep hosted model traffic in a specific region?](#how-do-i-keep-hosted-model-traffic-in-a-specific-region)
-  - [Do I have to buy a Mac Mini to install this?](#do-i-have-to-buy-a-mac-mini-to-install-this)
-  - [Do I need a Mac mini for iMessage support?](#do-i-need-a-mac-mini-for-imessage-support)
-  - [If I buy a Mac mini to run Moltbot, can I connect it to my MacBook Pro?](#if-i-buy-a-mac-mini-to-run-moltbot-can-i-connect-it-to-my-macbook-pro)
-  - [Can I use Bun?](#can-i-use-bun)
-  - [Telegram: what goes in `allowFrom`?](#telegram-what-goes-in-allowfrom)
-  - [Can multiple people use one WhatsApp number with different Moltbots?](#can-multiple-people-use-one-whatsapp-number-with-different-moltbots)
-  - [Can I run a "fast chat" agent and an "Opus for coding" agent?](#can-i-run-a-fast-chat-agent-and-an-opus-for-coding-agent)
-  - [Does Homebrew work on Linux?](#does-homebrew-work-on-linux)
-  - [What’s the difference between the hackable (git) install and npm install?](#whats-the-difference-between-the-hackable-git-install-and-npm-install)
-  - [Can I switch between npm and git installs later?](#can-i-switch-between-npm-and-git-installs-later)
-  - [Should I run the Gateway on my laptop or a VPS?](#should-i-run-the-gateway-on-my-laptop-or-a-vps)
-  - [How important is it to run Moltbot on a dedicated machine?](#how-important-is-it-to-run-moltbot-on-a-dedicated-machine)
-  - [What are the minimum VPS requirements and recommended OS?](#what-are-the-minimum-vps-requirements-and-recommended-os)
-  - [Can I run Moltbot in a VM and what are the requirements](#can-i-run-moltbot-in-a-vm-and-what-are-the-requirements)
-- [What is Moltbot?](#what-is-moltbot)
-  - [What is Moltbot, in one paragraph?](#what-is-moltbot-in-one-paragraph)
-  - [What’s the value proposition?](#whats-the-value-proposition)
-  - [I just set it up what should I do first](#i-just-set-it-up-what-should-i-do-first)
-  - [What are the top five everyday use cases for Moltbot](#what-are-the-top-five-everyday-use-cases-for-moltbot)
-  - [Can Moltbot help with lead gen outreach ads and blogs for a SaaS](#can-moltbot-help-with-lead-gen-outreach-ads-and-blogs-for-a-saas)
-  - [What are the advantages vs Claude Code for web development?](#what-are-the-advantages-vs-claude-code-for-web-development)
-- [Skills and automation](#skills-and-automation)
-  - [How do I customize skills without keeping the repo dirty?](#how-do-i-customize-skills-without-keeping-the-repo-dirty)
-  - [Can I load skills from a custom folder?](#can-i-load-skills-from-a-custom-folder)
-  - [How can I use different models for different tasks?](#how-can-i-use-different-models-for-different-tasks)
-  - [The bot freezes while doing heavy work. How do I offload that?](#the-bot-freezes-while-doing-heavy-work-how-do-i-offload-that)
-  - [Cron or reminders do not fire. What should I check?](#cron-or-reminders-do-not-fire-what-should-i-check)
-  - [How do I install skills on Linux?](#how-do-i-install-skills-on-linux)
-  - [Can Moltbot run tasks on a schedule or continuously in the background?](#can-moltbot-run-tasks-on-a-schedule-or-continuously-in-the-background)
-  - [Can I run Apple/macOS-only skills from Linux?](#can-i-run-applemacosonly-skills-from-linux)
-  - [Do you have a Notion or HeyGen integration?](#do-you-have-a-notion-or-heygen-integration)
-  - [How do I install the Chrome extension for browser takeover?](#how-do-i-install-the-chrome-extension-for-browser-takeover)
-- [Sandboxing and memory](#sandboxing-and-memory)
-  - [Is there a dedicated sandboxing doc?](#is-there-a-dedicated-sandboxing-doc)
-  - [How do I bind a host folder into the sandbox?](#how-do-i-bind-a-host-folder-into-the-sandbox)
-  - [How does memory work?](#how-does-memory-work)
-  - [Memory keeps forgetting things. How do I make it stick?](#memory-keeps-forgetting-things-how-do-i-make-it-stick)
-  - [Does memory persist forever? What are the limits?](#does-memory-persist-forever-what-are-the-limits)
-  - [Does semantic memory search require an OpenAI API key?](#does-semantic-memory-search-require-an-openai-api-key)
-- [Where things live on disk](#where-things-live-on-disk)
-  - [Is all data used with Moltbot saved locally?](#is-all-data-used-with-moltbot-saved-locally)
-  - [Where does Moltbot store its data?](#where-does-moltbot-store-its-data)
-  - [Where should AGENTS.md / SOUL.md / USER.md / MEMORY.md live?](#where-should-agentsmd-soulmd-usermd-memorymd-live)
-  - [What’s the recommended backup strategy?](#whats-the-recommended-backup-strategy)
-  - [How do I completely uninstall Moltbot?](#how-do-i-completely-uninstall-moltbot)
-  - [Can agents work outside the workspace?](#can-agents-work-outside-the-workspace)
-  - [I’m in remote mode - where is the session store?](#im-in-remote-mode-where-is-the-session-store)
-- [Config basics](#config-basics)
-  - [What format is the config? Where is it?](#what-format-is-the-config-where-is-it)
-  - [I set `gateway.bind: "lan"` (or `"tailnet"`) and now nothing listens / the UI says unauthorized](#i-set-gatewaybind-lan-or-tailnet-and-now-nothing-listens-the-ui-says-unauthorized)
-  - [Why do I need a token on localhost now?](#why-do-i-need-a-token-on-localhost-now)
-  - [Do I have to restart after changing config?](#do-i-have-to-restart-after-changing-config)
-  - [How do I enable web search (and web fetch)?](#how-do-i-enable-web-search-and-web-fetch)
-  - [config.apply wiped my config. How do I recover and avoid this?](#configapply-wiped-my-config-how-do-i-recover-and-avoid-this)
-  - [How do I run a central Gateway with specialized workers across devices?](#how-do-i-run-a-central-gateway-with-specialized-workers-across-devices)
-  - [Can the Moltbot browser run headless?](#can-the-moltbot-browser-run-headless)
-  - [How do I use Brave for browser control?](#how-do-i-use-brave-for-browser-control)
-- [Remote gateways + nodes](#remote-gateways-nodes)
-  - [How do commands propagate between Telegram, the gateway, and nodes?](#how-do-commands-propagate-between-telegram-the-gateway-and-nodes)
-  - [How can my agent access my computer if the Gateway is hosted remotely?](#how-can-my-agent-access-my-computer-if-the-gateway-is-hosted-remotely)
-  - [Tailscale is connected but I get no replies. What now?](#tailscale-is-connected-but-i-get-no-replies-what-now)
-  - [Can two Moltbots talk to each other (local + VPS)?](#can-two-moltbots-talk-to-each-other-local-vps)
-  - [Do I need separate VPSes for multiple agents](#do-i-need-separate-vpses-for-multiple-agents)
-  - [Is there a benefit to using a node on my personal laptop instead of SSH from a VPS?](#is-there-a-benefit-to-using-a-node-on-my-personal-laptop-instead-of-ssh-from-a-vps)
-  - [Do nodes run a gateway service?](#do-nodes-run-a-gateway-service)
-  - [Is there an API / RPC way to apply config?](#is-there-an-api-rpc-way-to-apply-config)
-  - [What’s a minimal “sane” config for a first install?](#whats-a-minimal-sane-config-for-a-first-install)
-  - [How do I set up Tailscale on a VPS and connect from my Mac?](#how-do-i-set-up-tailscale-on-a-vps-and-connect-from-my-mac)
-  - [How do I connect a Mac node to a remote Gateway (Tailscale Serve)?](#how-do-i-connect-a-mac-node-to-a-remote-gateway-tailscale-serve)
-  - [Should I install on a second laptop or just add a node?](#should-i-install-on-a-second-laptop-or-just-add-a-node)
-- [Env vars and .env loading](#env-vars-and-env-loading)
-  - [How does Moltbot load environment variables?](#how-does-moltbot-load-environment-variables)
-  - [“I started the Gateway via the service and my env vars disappeared.” What now?](#i-started-the-gateway-via-the-service-and-my-env-vars-disappeared-what-now)
-  - [I set `COPILOT_GITHUB_TOKEN`, but models status shows “Shell env: off.” Why?](#i-set-copilotgithubtoken-but-models-status-shows-shell-env-off-why)
-- [Sessions & multiple chats](#sessions-multiple-chats)
-  - [How do I start a fresh conversation?](#how-do-i-start-a-fresh-conversation)
-  - [Do sessions reset automatically if I never send `/new`?](#do-sessions-reset-automatically-if-i-never-send-new)
-  - [Is there a way to make a team of Moltbots one CEO and many agents](#is-there-a-way-to-make-a-team-of-moltbots-one-ceo-and-many-agents)
-  - [Why did context get truncated mid-task? How do I prevent it?](#why-did-context-get-truncated-midtask-how-do-i-prevent-it)
-  - [How do I completely reset Moltbot but keep it installed?](#how-do-i-completely-reset-moltbot-but-keep-it-installed)
-  - [I’m getting “context too large” errors - how do I reset or compact?](#im-getting-context-too-large-errors-how-do-i-reset-or-compact)
-  - [Why am I seeing “LLM request rejected: messages.N.content.X.tool_use.input: Field required”?](#why-am-i-seeing-llm-request-rejected-messagesncontentxtooluseinput-field-required)
-  - [Why am I getting heartbeat messages every 30 minutes?](#why-am-i-getting-heartbeat-messages-every-30-minutes)
-  - [Do I need to add a “bot account” to a WhatsApp group?](#do-i-need-to-add-a-bot-account-to-a-whatsapp-group)
-  - [How do I get the JID of a WhatsApp group?](#how-do-i-get-the-jid-of-a-whatsapp-group)
-  - [Why doesn’t Moltbot reply in a group?](#why-doesnt-moltbot-reply-in-a-group)
-  - [Do groups/threads share context with DMs?](#do-groupsthreads-share-context-with-dms)
-  - [How many workspaces and agents can I create?](#how-many-workspaces-and-agents-can-i-create)
-  - [Can I run multiple bots or chats at the same time (Slack), and how should I set that up?](#can-i-run-multiple-bots-or-chats-at-the-same-time-slack-and-how-should-i-set-that-up)
-- [Models: defaults, selection, aliases, switching](#models-defaults-selection-aliases-switching)
-  - [What is the “default model”?](#what-is-the-default-model)
-  - [What model do you recommend?](#what-model-do-you-recommend)
-  - [How do I switch models without wiping my config?](#how-do-i-switch-models-without-wiping-my-config)
-  - [Can I use self-hosted models (llama.cpp, vLLM, Ollama)?](#can-i-use-selfhosted-models-llamacpp-vllm-ollama)
-  - [What do Clawd, Flawd, and Krill use for models?](#what-do-clawd-flawd-and-krill-use-for-models)
-  - [How do I switch models on the fly (without restarting)?](#how-do-i-switch-models-on-the-fly-without-restarting)
-  - [Can I use GPT 5.2 for daily tasks and Codex 5.2 for coding](#can-i-use-gpt-52-for-daily-tasks-and-codex-52-for-coding)
-  - [Why do I see “Model … is not allowed” and then no reply?](#why-do-i-see-model-is-not-allowed-and-then-no-reply)
-  - [Why do I see “Unknown model: minimax/MiniMax-M2.1”?](#why-do-i-see-unknown-model-minimaxminimaxm21)
-  - [Can I use MiniMax as my default and OpenAI for complex tasks?](#can-i-use-minimax-as-my-default-and-openai-for-complex-tasks)
-  - [Are opus / sonnet / gpt built‑in shortcuts?](#are-opus-sonnet-gpt-builtin-shortcuts)
-  - [How do I define/override model shortcuts (aliases)?](#how-do-i-defineoverride-model-shortcuts-aliases)
-  - [How do I add models from other providers like OpenRouter or Z.AI?](#how-do-i-add-models-from-other-providers-like-openrouter-or-zai)
-- [Model failover and “All models failed”](#model-failover-and-all-models-failed)
-  - [How does failover work?](#how-does-failover-work)
-  - [What does this error mean?](#what-does-this-error-mean)
-  - [Fix checklist for `No credentials found for profile "anthropic:default"`](#fix-checklist-for-no-credentials-found-for-profile-anthropicdefault)
-  - [Why did it also try Google Gemini and fail?](#why-did-it-also-try-google-gemini-and-fail)
-- [Auth profiles: what they are and how to manage them](#auth-profiles-what-they-are-and-how-to-manage-them)
-  - [What is an auth profile?](#what-is-an-auth-profile)
-  - [What are typical profile IDs?](#what-are-typical-profile-ids)
-  - [Can I control which auth profile is tried first?](#can-i-control-which-auth-profile-is-tried-first)
-  - [OAuth vs API key: what’s the difference?](#oauth-vs-api-key-whats-the-difference)
-- [Gateway: ports, “already running”, and remote mode](#gateway-ports-already-running-and-remote-mode)
-  - [What port does the Gateway use?](#what-port-does-the-gateway-use)
-  - [Why does `moltbot gateway status` say `Runtime: running` but `RPC probe: failed`?](#why-does-moltbot-gateway-status-say-runtime-running-but-rpc-probe-failed)
-  - [Why does `moltbot gateway status` show `Config (cli)` and `Config (service)` different?](#why-does-moltbot-gateway-status-show-config-cli-and-config-service-different)
-  - [What does “another gateway instance is already listening” mean?](#what-does-another-gateway-instance-is-already-listening-mean)
-  - [How do I run Moltbot in remote mode (client connects to a Gateway elsewhere)?](#how-do-i-run-moltbot-in-remote-mode-client-connects-to-a-gateway-elsewhere)
-  - [The Control UI says “unauthorized” (or keeps reconnecting). What now?](#the-control-ui-says-unauthorized-or-keeps-reconnecting-what-now)
-  - [I set `gateway.bind: "tailnet"` but it can’t bind / nothing listens](#i-set-gatewaybind-tailnet-but-it-cant-bind-nothing-listens)
-  - [Can I run multiple Gateways on the same host?](#can-i-run-multiple-gateways-on-the-same-host)
-  - [What does “invalid handshake” / code 1008 mean?](#what-does-invalid-handshake-code-1008-mean)
-- [Logging and debugging](#logging-and-debugging)
-  - [Where are logs?](#where-are-logs)
-  - [How do I start/stop/restart the Gateway service?](#how-do-i-startstoprestart-the-gateway-service)
-  - [I closed my terminal on Windows - how do I restart Moltbot?](#i-closed-my-terminal-on-windows-how-do-i-restart-moltbot)
-  - [The Gateway is up but replies never arrive. What should I check?](#the-gateway-is-up-but-replies-never-arrive-what-should-i-check)
-  - ["Disconnected from gateway: no reason" - what now?](#disconnected-from-gateway-no-reason-what-now)
-  - [Telegram setMyCommands fails with network errors. What should I check?](#telegram-setmycommands-fails-with-network-errors-what-should-i-check)
-  - [TUI shows no output. What should I check?](#tui-shows-no-output-what-should-i-check)
-  - [How do I completely stop then start the Gateway?](#how-do-i-completely-stop-then-start-the-gateway)
-  - [ELI5: `moltbot gateway restart` vs `moltbot gateway`](#eli5-moltbot-gateway-restart-vs-moltbot-gateway)
-  - [What’s the fastest way to get more details when something fails?](#whats-the-fastest-way-to-get-more-details-when-something-fails)
-- [Media & attachments](#media-attachments)
-  - [My skill generated an image/PDF, but nothing was sent](#my-skill-generated-an-imagepdf-but-nothing-was-sent)
-- [Security and access control](#security-and-access-control)
-  - [Is it safe to expose Moltbot to inbound DMs?](#is-it-safe-to-expose-moltbot-to-inbound-dms)
-  - [Is prompt injection only a concern for public bots?](#is-prompt-injection-only-a-concern-for-public-bots)
-  - [Should my bot have its own email GitHub account or phone number](#should-my-bot-have-its-own-email-github-account-or-phone-number)
-  - [Can I give it autonomy over my text messages and is that safe](#can-i-give-it-autonomy-over-my-text-messages-and-is-that-safe)
-  - [Can I use cheaper models for personal assistant tasks?](#can-i-use-cheaper-models-for-personal-assistant-tasks)
-  - [I ran `/start` in Telegram but didn’t get a pairing code](#i-ran-start-in-telegram-but-didnt-get-a-pairing-code)
-  - [WhatsApp: will it message my contacts? How does pairing work?](#whatsapp-will-it-message-my-contacts-how-does-pairing-work)
-- [Chat commands, aborting tasks, and “it won’t stop”](#chat-commands-aborting-tasks-and-it-wont-stop)
-  - [How do I stop internal system messages from showing in chat](#how-do-i-stop-internal-system-messages-from-showing-in-chat)
-  - [How do I stop/cancel a running task?](#how-do-i-stopcancel-a-running-task)
-  - [How do I send a Discord message from Telegram? (“Cross-context messaging denied”)](#how-do-i-send-a-discord-message-from-telegram-crosscontext-messaging-denied)
-  - [Why does it feel like the bot “ignores” rapid‑fire messages?](#why-does-it-feel-like-the-bot-ignores-rapidfire-messages)
+- [快速开始与首次运行设置](#快速开始与首次运行设置)
+  - [我卡住了最快怎么脱困](#我卡住了最快怎么脱困)
+  - [安装和设置 Moltbot 的推荐方式是什么](#安装和设置-moltbot-的推荐方式是什么)
+  - [完成 onboarding 后怎么打开仪表板](#完成-onboarding-后怎么打开仪表板)
+  - [本地与远程如何认证仪表板 token](#本地与远程如何认证仪表板-token)
+  - [需要什么运行时](#需要什么运行时)
+  - [可以在树莓派上运行吗](#可以在树莓派上运行吗)
+  - [树莓派安装有什么建议](#树莓派安装有什么建议)
+  - [卡在 wake-up-my-friend 或 onboarding 不出壳怎么办](#卡在-wake-up-my-friend-或-onboarding-不出壳怎么办)
+  - [能否把配置迁移到新机器 Mac mini 而不重新 onboarding](#能否把配置迁移到新机器-mac-mini-而不重新-onboarding)
+  - [最新版本有哪些新内容](#最新版本有哪些新内容)
+  - [无法访问 docs.molt.bot SSL 错误怎么办](#无法访问-docsmoltbot-ssl-错误怎么办)
+  - [stable 与 beta 有什么区别](#stable-与-beta-有什么区别)
+- [如何安装 beta 版本以及 beta 与 dev 的区别是什么](#如何安装-beta-版本以及-beta-与-dev-的区别是什么)
+  - [如何体验最新版本](#如何体验最新版本)
+  - [安装与 onboarding 通常需要多久](#安装与-onboarding-通常需要多久)
+  - [安装器卡住了怎么获得更多反馈](#安装器卡住了怎么获得更多反馈)
+  - [Windows 安装提示 git 未找到或无法识别 moltbot](#windows-安装提示-git-未找到或无法识别-moltbot)
+  - [文档没回答我的问题如何得到更好的答案](#文档没回答我的问题如何得到更好的答案)
+  - [如何在 Linux 上安装 Moltbot](#如何在-linux-上安装-moltbot)
+  - [如何在 VPS 上安装 Moltbot](#如何在-vps-上安装-moltbot)
+  - [云端与 VPS 安装指南在哪里](#云端与-vps-安装指南在哪里)
+  - [可以让 Clawd 自己更新吗](#可以让-clawd-自己更新吗)
+  - [onboarding 向导实际做什么](#onboarding-向导实际做什么)
+  - [运行需要 Claude 或 OpenAI 订阅吗](#运行需要-claude-或-openai-订阅吗)
+  - [没有 API key 可以用 Claude Max 订阅吗](#没有-api-key-可以用-claude-max-订阅吗)
+  - [Anthropic setup-token 认证如何工作](#anthropic-setup-token-认证如何工作)
+  - [在哪里找到 Anthropic setup-token](#在哪里找到-anthropic-setup-token)
+  - [是否支持 Claude 订阅认证 Claude Code OAuth](#是否支持-claude-订阅认证-claude-code-oauth)
+  - [为什么我看到来自 Anthropic 的 HTTP 429 rate_limit_error](#为什么我看到来自-anthropic-的-http-429-rate_limit_error)
+  - [是否支持 AWS Bedrock](#是否支持-aws-bedrock)
+  - [Codex 认证如何工作](#codex-认证如何工作)
+  - [是否支持 OpenAI 订阅认证 Codex OAuth](#是否支持-openai-订阅认证-codex-oauth)
+  - [如何设置 Gemini CLI OAuth](#如何设置-gemini-cli-oauth)
+  - [本地模型适合日常聊天吗](#本地模型适合日常聊天吗)
+  - [如何把托管模型流量限制在特定区域](#如何把托管模型流量限制在特定区域)
+  - [安装是否必须买 Mac Mini](#安装是否必须买-mac-mini)
+  - [iMessage 支持需要 Mac mini 吗](#imessage-支持需要-mac-mini-吗)
+  - [买 Mac mini 跑 Moltbot 后能否连接到 MacBook Pro](#买-mac-mini-跑-moltbot-后能否连接到-macbook-pro)
+  - [可以用 Bun 吗](#可以用-bun-吗)
+  - [Telegram 的 allowFrom 里填什么](#telegram-的-allowfrom-里填什么)
+  - [多个人能否用同一个 WhatsApp 号码配不同 Moltbots](#多个人能否用同一个-whatsapp-号码配不同-moltbots)
+  - [能否同时运行快速聊天 agent 和用于编码的 Opus agent](#能否同时运行快速聊天-agent-和用于编码的-opus-agent)
+  - [Homebrew 能在 Linux 上工作吗](#homebrew-能在-linux-上工作吗)
+  - [可黑客化 git 安装与 npm 安装有何区别](#可黑客化-git-安装与-npm-安装有何区别)
+  - [之后能在 npm 与 git 安装之间切换吗](#之后能在-npm-与-git-安装之间切换吗)
+  - [Gateway 应该跑在笔记本还是 VPS](#gateway-应该跑在笔记本还是-vps)
+  - [在专用机器上运行 Moltbot 有多重要](#在专用机器上运行-moltbot-有多重要)
+  - [VPS 最低配置与推荐系统是什么](#vps-最低配置与推荐系统是什么)
+  - [能否在 VM 里运行 Moltbot 以及要求是什么](#能否在-vm-里运行-moltbot-以及要求是什么)
+- [什么是 Moltbot](#什么是-moltbot)
+  - [用一段话介绍 Moltbot](#用一段话介绍-moltbot)
+  - [价值主张是什么](#价值主张是什么)
+  - [刚装好后应该做什么](#刚装好后应该做什么)
+  - [Moltbot 的五个日常用例](#moltbot-的五个日常用例)
+  - [Moltbot 能帮助 SaaS 做获客外联广告和博客吗](#moltbot-能帮助-saas-做获客外联广告和博客吗)
+  - [相比 Claude Code 的 Web 开发优势是什么](#相比-claude-code-的-web-开发优势是什么)
+- [技能与自动化](#技能与自动化)
+  - [如何自定义技能而不弄脏仓库](#如何自定义技能而不弄脏仓库)
+  - [能否从自定义文件夹加载技能](#能否从自定义文件夹加载技能)
+  - [如何为不同任务使用不同模型](#如何为不同任务使用不同模型)
+  - [机器人在重活时卡住了怎么卸载负载](#机器人在重活时卡住了怎么卸载负载)
+  - [Cron 或提醒不触发检查什么](#cron-或提醒不触发检查什么)
+  - [如何在 Linux 上安装技能](#如何在-linux-上安装技能)
+  - [Moltbot 能否定时或持续在后台运行任务](#moltbot-能否定时或持续在后台运行任务)
+  - [能否在 Linux 上运行仅限 Apple 或 macOS 的技能](#能否在-linux-上运行仅限-apple-或-macos-的技能)
+  - [是否有 Notion 或 HeyGen 集成](#是否有-notion-或-heygen-集成)
+  - [如何安装浏览器接管的 Chrome 扩展](#如何安装浏览器接管的-chrome-扩展)
+- [沙箱与记忆](#沙箱与记忆)
+  - [有专门的沙箱文档吗](#有专门的沙箱文档吗)
+  - [如何把宿主机文件夹绑定到沙箱](#如何把宿主机文件夹绑定到沙箱)
+  - [记忆如何工作](#记忆如何工作)
+  - [记忆总忘事怎么让它记住](#记忆总忘事怎么让它记住)
+  - [记忆会永久保存吗有什么限制](#记忆会永久保存吗有什么限制)
+  - [语义记忆检索需要 OpenAI API key 吗](#语义记忆检索需要-openai-api-key-吗)
+- [磁盘上的位置](#磁盘上的位置)
+  - [Moltbot 的数据是否全部保存在本地](#moltbot-的数据是否全部保存在本地)
+  - [Moltbot 把数据存在哪里](#moltbot-把数据存在哪里)
+  - [AGENTS.md SOUL.md USER.md MEMORY.md 应该放在哪里](#agentsmd-soulmd-usermd-memorymd-应该放在哪里)
+  - [推荐的备份策略](#推荐的备份策略)
+  - [如何彻底卸载 Moltbot](#如何彻底卸载-moltbot)
+  - [agent 能在工作区之外工作吗](#agent-能在工作区之外工作吗)
+  - [远程模式下会话存储在哪里](#远程模式下会话存储在哪里)
+- [配置基础](#配置基础)
+  - [配置是什么格式在哪里](#配置是什么格式在哪里)
+  - [我设置 gateway.bind lan 或 tailnet 后没有监听或 UI 显示未授权](#我设置-gatewaybind-lan-或-tailnet-后没有监听或-ui-显示未授权)
+  - [为什么现在 localhost 也需要 token](#为什么现在-localhost-也需要-token)
+  - [修改配置后需要重启吗](#修改配置后需要重启吗)
+  - [如何启用 web search 以及 web fetch](#如何启用-web-search-以及-web-fetch)
+  - [config.apply 清空了我的配置如何恢复并避免](#configapply-清空了我的配置如何恢复并避免)
+  - [如何运行一个中心 Gateway 并在多设备上用专用 worker](#如何运行一个中心-gateway-并在多设备上用专用-worker)
+  - [Moltbot 浏览器能无头运行吗](#moltbot-浏览器能无头运行吗)
+  - [如何用 Brave 控制浏览器](#如何用-brave-控制浏览器)
+- [远程 Gateway 与节点](#远程-gateway-与节点)
+  - [Telegram gateway 与节点之间的命令如何传播](#telegram-gateway-与节点之间的命令如何传播)
+  - [Gateway 远程托管时 agent 如何访问我的电脑](#gateway-远程托管时-agent-如何访问我的电脑)
+  - [Tailscale 已连接但没回复怎么办](#tailscale-已连接但没回复怎么办)
+  - [两个 Moltbot 能互相对话吗 本地加 VPS](#两个-moltbot-能互相对话吗-本地加-vps)
+  - [多个 agent 需要单独的 VPS 吗](#多个-agent-需要单独的-vps-吗)
+  - [用本地笔记本做节点而不是从 VPS 用 SSH 有好处吗](#用本地笔记本做节点而不是从-vps-用-ssh-有好处吗)
+  - [节点会运行 gateway 服务吗](#节点会运行-gateway-服务吗)
+  - [是否有 API 或 RPC 方式应用配置](#是否有-api-或-rpc-方式应用配置)
+  - [首次安装的最小合理配置是什么](#首次安装的最小合理配置是什么)
+  - [如何在 VPS 上设置 Tailscale 并从 Mac 连接](#如何在-vps-上设置-tailscale-并从-mac-连接)
+  - [如何把 Mac 节点连接到远程 Gateway Tailscale Serve](#如何把-mac-节点连接到远程-gateway-tailscale-serve)
+  - [应该在第二台笔记本上安装还是只加节点](#应该在第二台笔记本上安装还是只加节点)
+- [环境变量与 .env 加载](#环境变量与-env-加载)
+  - [Moltbot 如何加载环境变量](#moltbot-如何加载环境变量)
+  - [我通过 service 启动 Gateway 后环境变量消失了怎么办](#我通过-service-启动-gateway-后环境变量消失了怎么办)
+  - [我设置了 COPILOT_GITHUB_TOKEN 但 models status 显示 Shell env off 为什么](#我设置了-copilot_github_token-但-models-status-显示-shell-env-off-为什么)
+- [会话与多聊天](#会话与多聊天)
+  - [如何开启新对话](#如何开启新对话)
+  - [不发 /new 会自动重置会话吗](#不发-new-会自动重置会话吗)
+  - [是否可以让 Moltbot 团队一个 CEO 多个 agent](#是否可以让-moltbot-团队一个-ceo-多个-agent)
+  - [为什么上下文在任务中途被截断如何避免](#为什么上下文在任务中途被截断如何避免)
+  - [如何完全重置 Moltbot 但保留安装](#如何完全重置-moltbot-但保留安装)
+  - [我遇到 context too large 错误如何重置或压缩](#我遇到-context-too-large-错误如何重置或压缩)
+  - [为什么我看到 LLM request rejected messages N content X tool_use input Field required](#为什么我看到-llm-request-rejected-messages-n-content-x-tool_use-input-field-required)
+  - [为什么每 30 分钟会收到 heartbeat 消息](#为什么每-30-分钟会收到-heartbeat-消息)
+  - [我需要把 bot 账号加到 WhatsApp 群吗](#我需要把-bot-账号加到-whatsapp-群吗)
+  - [如何获取 WhatsApp 群的 JID](#如何获取-whatsapp-群的-jid)
+  - [为什么 Moltbot 在群里不回复](#为什么-moltbot-在群里不回复)
+  - [群或线程与私聊共享上下文吗](#群或线程与私聊共享上下文吗)
+  - [可以创建多少工作区和 agent](#可以创建多少工作区和-agent)
+  - [Slack 能否同时运行多个 bot 或聊天如何设置](#slack-能否同时运行多个-bot-或聊天如何设置)
+- [模型：默认、选择、别名与切换](#模型默认选择别名与切换)
+  - [什么是默认模型](#什么是默认模型)
+  - [推荐什么模型](#推荐什么模型)
+  - [如何切换模型而不清空配置](#如何切换模型而不清空配置)
+  - [可以使用自托管模型吗 llama.cpp vLLM Ollama](#可以使用自托管模型吗-llamacpp-vllm-ollama)
+  - [Clawd Flawd Krill 用什么模型](#clawd-flawd-krill-用什么模型)
+  - [如何在不重启的情况下切换模型](#如何在不重启的情况下切换模型)
+  - [能否用 GPT 5.2 做日常 Codex 5.2 做编码](#能否用-gpt-52-做日常-codex-52-做编码)
+  - [为什么看到 Model is not allowed 然后无回复](#为什么看到-model-is-not-allowed-然后无回复)
+  - [为什么看到 Unknown model minimax MiniMax M2.1](#为什么看到-unknown-model-minimax-minimax-m21)
+  - [能否把 MiniMax 作为默认 OpenAI 做复杂任务](#能否把-minimax-作为默认-openai-做复杂任务)
+  - [opus sonnet gpt 是内置快捷方式吗](#opus-sonnet-gpt-是内置快捷方式吗)
+  - [如何定义或覆盖模型快捷方式别名](#如何定义或覆盖模型快捷方式别名)
+  - [如何添加来自 OpenRouter 或 Z.AI 的模型](#如何添加来自-openrouter-或-zai-的模型)
+- [模型故障切换与所有模型失败](#模型故障切换与所有模型失败)
+  - [故障切换如何工作](#故障切换如何工作)
+  - [这个错误是什么意思](#这个错误是什么意思)
+  - [No credentials found for profile anthropic default 修复清单](#no-credentials-found-for-profile-anthropic-default-修复清单)
+  - [为什么也尝试了 Google Gemini 并失败](#为什么也尝试了-google-gemini-并失败)
+- [认证 profile 含义与管理](#认证-profile-含义与管理)
+  - [什么是认证 profile](#什么是认证-profile)
+  - [常见 profile ID 是什么](#常见-profile-id-是什么)
+  - [可以控制优先尝试的 profile 吗](#可以控制优先尝试的-profile-吗)
+  - [OAuth 与 API key 有何区别](#oauth-与-api-key-有何区别)
+- [Gateway 端口已在运行与远程模式](#gateway-端口已在运行与远程模式)
+  - [Gateway 用什么端口](#gateway-用什么端口)
+  - [为什么 moltbot gateway status 说 Runtime running 但 RPC probe failed](#为什么-moltbot-gateway-status-说-runtime-running-但-rpc-probe-failed)
+  - [为什么 moltbot gateway status 显示 Config cli 与 Config service 不同](#为什么-moltbot-gateway-status-显示-config-cli-与-config-service-不同)
+  - [另一个 gateway 实例已在监听是什么意思](#另一个-gateway-实例已在监听是什么意思)
+  - [如何运行远程模式客户端连接到别处的 Gateway](#如何运行远程模式客户端连接到别处的-gateway)
+  - [Control UI 显示未授权或不停重连怎么办](#control-ui-显示未授权或不停重连怎么办)
+  - [我设置 gateway.bind tailnet 但无法绑定或没有监听](#我设置-gatewaybind-tailnet-但无法绑定或没有监听)
+  - [同一主机能跑多个 Gateway 吗](#同一主机能跑多个-gateway-吗)
+  - [invalid handshake 或 code 1008 是什么意思](#invalid-handshake-或-code-1008-是什么意思)
+- [日志与调试](#日志与调试)
+  - [日志在哪里](#日志在哪里)
+  - [如何启动停止重启 Gateway 服务](#如何启动停止重启-gateway-服务)
+  - [Windows 关闭终端后如何重启 Moltbot](#windows-关闭终端后如何重启-moltbot)
+  - [Gateway 在跑但回复不到达检查什么](#gateway-在跑但回复不到达检查什么)
+  - [Disconnected from gateway no reason 怎么办](#disconnected-from-gateway-no-reason-怎么办)
+  - [Telegram setMyCommands 失败有网络错误检查什么](#telegram-setmycommands-失败有网络错误检查什么)
+  - [TUI 没输出检查什么](#tui-没输出检查什么)
+  - [如何完全停止再启动 Gateway](#如何完全停止再启动-gateway)
+  - [ELI5 moltbot gateway restart vs moltbot gateway](#eli5-moltbot-gateway-restart-vs-moltbot-gateway)
+  - [出错时最快获取更多细节的方法是什么](#出错时最快获取更多细节的方法是什么)
+- [媒体与附件](#媒体与附件)
+  - [技能生成图片或 PDF 但未发送](#技能生成图片或-pdf-但未发送)
+- [安全与访问控制](#安全与访问控制)
+  - [对外暴露 Moltbot 的私信入口安全吗](#对外暴露-moltbot-的私信入口安全吗)
+  - [提示词注入是否只对公共 bot 需要关注](#提示词注入是否只对公共-bot-需要关注)
+  - [机器人要不要单独的邮箱 GitHub 账号或手机号](#机器人要不要单独的邮箱-github-账号或手机号)
+  - [让它自动处理短信是否安全](#让它自动处理短信是否安全)
+  - [个人助理任务能否用更便宜的模型](#个人助理任务能否用更便宜的模型)
+  - [我在 Telegram 里运行 start 但没得到配对码](#我在-telegram-里运行-start-但没得到配对码)
+  - [WhatsApp 会给联系人发消息吗配对如何工作](#whatsapp-会给联系人发消息吗配对如何工作)
+- [聊天命令终止任务与停不下来](#聊天命令终止任务与停不下来)
+  - [如何阻止内部系统消息显示在聊天中](#如何阻止内部系统消息显示在聊天中)
+  - [如何停止或取消运行中的任务](#如何停止或取消运行中的任务)
+  - [如何从 Telegram 发送 Discord 消息 Cross-context messaging denied](#如何从-telegram-发送-discord-消息-cross-context-messaging-denied)
+  - [为什么机器人看起来忽略快速连续消息](#为什么机器人看起来忽略快速连续消息)
+- [只回答截图或聊天记录中的具体问题](#只回答截图或聊天记录中的具体问题)
 
-## First 60 seconds if something's broken
+## 出问题后的前 60 秒
 
-1) **Quick status (first check)**
+1) **快速状态（首要检查）**
    ```bash
    moltbot status
    ```
-   Fast local summary: OS + update, gateway/service reachability, agents/sessions, provider config + runtime issues (when gateway is reachable).
+   快速本地摘要：OS + 更新、gateway/service 可达性、agents/sessions、提供方配置 + 运行时问题（当 gateway 可达时）。
 
-2) **Pasteable report (safe to share)**
+2) **可粘贴报告（可安全分享）**
    ```bash
    moltbot status --all
    ```
-   Read-only diagnosis with log tail (tokens redacted).
+   只读诊断，附带日志尾部（已脱敏 token）。
 
-3) **Daemon + port state**
+3) **守护进程 + 端口状态**
    ```bash
    moltbot gateway status
    ```
-   Shows supervisor runtime vs RPC reachability, the probe target URL, and which config the service likely used.
+   展示 supervisor 运行态与 RPC 可达性、探测目标 URL，以及服务可能使用的配置。
 
-4) **Deep probes**
+4) **深度探测**
    ```bash
    moltbot status --deep
    ```
-   Runs gateway health checks + provider probes (requires a reachable gateway). See [Health](/gateway/health).
+   运行 gateway 健康检查 + 提供方探测（需要 gateway 可达）。见 [Health](/gateway/health)。
 
-5) **Tail the latest log**
+5) **跟踪最新日志**
    ```bash
    moltbot logs --follow
    ```
-   If RPC is down, fall back to:
+   如果 RPC 不通，改用：
    ```bash
    tail -f "$(ls -t /tmp/moltbot/moltbot-*.log | head -1)"
    ```
-   File logs are separate from service logs; see [Logging](/logging) and [Troubleshooting](/gateway/troubleshooting).
+   文件日志与 service 日志分离；见 [Logging](/logging) 和 [Troubleshooting](/gateway/troubleshooting)。
 
-6) **Run the doctor (repairs)**
+6) **运行 doctor（修复）**
    ```bash
    moltbot doctor
    ```
-   Repairs/migrates config/state + runs health checks. See [Doctor](/gateway/doctor).
+   修复/迁移配置与状态并运行健康检查。见 [Doctor](/gateway/doctor)。
 
-7) **Gateway snapshot**
+7) **Gateway 快照**
    ```bash
    moltbot health --json
-   moltbot health --verbose   # shows the target URL + config path on errors
+   moltbot health --verbose   # 出错时显示目标 URL + 配置路径
    ```
-   Asks the running gateway for a full snapshot (WS-only). See [Health](/gateway/health).
+   向运行中的 gateway 请求完整快照（仅 WS）。见 [Health](/gateway/health)。
 
-## Quick start and first-run setup
+## 快速开始与首次运行设置
 
-### Im stuck whats the fastest way to get unstuck
+### 我卡住了最快怎么脱困
 
-Use a local AI agent that can **see your machine**. That is far more effective than asking
-in Discord, because most "I'm stuck" cases are **local config or environment issues** that
-remote helpers cannot inspect.
+使用一个能**看见你机器**的本地 AI agent。它比在 Discord 里求助更有效，因为多数“我卡住了”的情况是**本地配置或环境问题**，远程帮手无法检查。
 
 - **Claude Code**: https://www.anthropic.com/claude-code/
 - **OpenAI Codex**: https://openai.com/codex/
 
-These tools can read the repo, run commands, inspect logs, and help fix your machine-level
-setup (PATH, services, permissions, auth files). Give them the **full source checkout** via
-the hackable (git) install:
+这些工具可以读仓库、运行命令、检查日志，帮助修复机器级设置（PATH、服务、权限、认证文件）。请用可黑客化（git）安装给它**完整源码检出**：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --install-method git
 ```
 
-This installs Moltbot **from a git checkout**, so the agent can read the code + docs and
-reason about the exact version you are running. You can always switch back to stable later
-by re-running the installer without `--install-method git`.
+这会从 **git 检出**安装 Moltbot，因此 agent 能读代码与文档并推理你正在运行的具体版本。之后随时可以不带 `--install-method git` 重新运行安装器回到 stable。
 
-Tip: ask the agent to **plan and supervise** the fix (step-by-step), then execute only the
-necessary commands. That keeps changes small and easier to audit.
+提示：让 agent **先规划与监督**修复步骤，再只执行必要命令。这样改动更小也更容易审计。
 
-If you discover a real bug or fix, please file a GitHub issue or send a PR:
+如果你发现真实 bug 或修复，请提交 GitHub issue 或 PR：
 https://github.com/moltbot/moltbot/issues
 https://github.com/moltbot/moltbot/pulls
 
-Start with these commands (share outputs when asking for help):
+求助时先跑这些命令（并分享输出）：
 
 ```bash
 moltbot status
@@ -280,169 +274,152 @@ moltbot models status
 moltbot doctor
 ```
 
-What they do:
-- `moltbot status`: quick snapshot of gateway/agent health + basic config.
-- `moltbot models status`: checks provider auth + model availability.
-- `moltbot doctor`: validates and repairs common config/state issues.
+它们的作用：
+- `moltbot status`：gateway/agent 健康 + 基础配置的快速快照。
+- `moltbot models status`：检查提供方认证 + 模型可用性。
+- `moltbot doctor`：验证并修复常见配置/状态问题。
 
-Other useful CLI checks: `moltbot status --all`, `moltbot logs --follow`,
-`moltbot gateway status`, `moltbot health --verbose`.
+其他有用的 CLI 检查：`moltbot status --all`、`moltbot logs --follow`、
+`moltbot gateway status`、`moltbot health --verbose`。
 
-Quick debug loop: [First 60 seconds if something's broken](#first-60-seconds-if-somethings-broken).
-Install docs: [Install](/install), [Installer flags](/install/installer), [Updating](/install/updating).
+快速排障循环见：[出问题后的前 60 秒](#出问题后的前-60-秒)。
+安装文档：[Install](/install)、[Installer flags](/install/installer)、[Updating](/install/updating)。
 
-### Whats the recommended way to install and set up Moltbot
+### 安装和设置 Moltbot 的推荐方式是什么
 
-The repo recommends running from source and using the onboarding wizard:
+仓库推荐从源码运行，并使用 onboarding 向导：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash
 moltbot onboard --install-daemon
 ```
 
-The wizard can also build UI assets automatically. After onboarding, you typically run the Gateway on port **18789**.
+向导也会自动构建 UI 资源。完成 onboarding 后，通常在 **18789** 端口运行 Gateway。
 
-From source (contributors/dev):
+从源码（贡献者/开发）：
 
 ```bash
 git clone https://github.com/moltbot/moltbot.git
 cd moltbot
 pnpm install
 pnpm build
-pnpm ui:build # auto-installs UI deps on first run
+pnpm ui:build # 首次运行会自动安装 UI 依赖
 moltbot onboard
 ```
 
-If you don’t have a global install yet, run it via `pnpm moltbot onboard`.
+如果你还没有全局安装，可用 `pnpm moltbot onboard` 运行。
 
-### How do I open the dashboard after onboarding
+### 完成 onboarding 后怎么打开仪表板
 
-The wizard now opens your browser with a tokenized dashboard URL right after onboarding and also prints the full link (with token) in the summary. Keep that tab open; if it didn’t launch, copy/paste the printed URL on the same machine. Tokens stay local to your host-nothing is fetched from the browser.
+向导现在会在 onboarding 结束后自动打开浏览器并提供带 token 的仪表板 URL，同时在摘要里打印完整链接（含 token）。请保持该标签页开启；如果没弹出，就在同一台机器上复制粘贴打印的 URL。token 只在本机使用，浏览器不会去拉取任何内容。
 
-### How do I authenticate the dashboard token on localhost vs remote
+### 本地与远程如何认证仪表板 token
 
-**Localhost (same machine):**
-- Open `http://127.0.0.1:18789/`.
-- If it asks for auth, run `moltbot dashboard` and use the tokenized link (`?token=...`).
-- The token is the same value as `gateway.auth.token` (or `CLAWDBOT_GATEWAY_TOKEN`) and is stored by the UI after first load.
+**本地（同一台机器）：**
+- 打开 `http://127.0.0.1:18789/`。
+- 如果提示认证，运行 `moltbot dashboard` 并使用带 token 的链接（`?token=...`）。
+- token 与 `gateway.auth.token`（或 `CLAWDBOT_GATEWAY_TOKEN`）一致，并在首次加载后由 UI 保存。
 
-**Not on localhost:**
-- **Tailscale Serve** (recommended): keep bind loopback, run `moltbot gateway --tailscale serve`, open `https://<magicdns>/`. If `gateway.auth.allowTailscale` is `true`, identity headers satisfy auth (no token).
-- **Tailnet bind**: run `moltbot gateway --bind tailnet --token "<token>"`, open `http://<tailscale-ip>:18789/`, paste token in dashboard settings.
-- **SSH tunnel**: `ssh -N -L 18789:127.0.0.1:18789 user@host` then open `http://127.0.0.1:18789/?token=...` from `moltbot dashboard`.
+**不在本机：**
+- **Tailscale Serve**（推荐）：保持绑定 loopback，运行 `moltbot gateway --tailscale serve`，打开 `https://<magicdns>/`。如果 `gateway.auth.allowTailscale` 为 `true`，身份头即可满足认证（无需 token）。
+- **Tailnet bind**：运行 `moltbot gateway --bind tailnet --token "<token>"`，打开 `http://<tailscale-ip>:18789/`，在仪表板设置里粘贴 token。
+- **SSH 隧道**：`ssh -N -L 18789:127.0.0.1:18789 user@host`，然后从 `moltbot dashboard` 打开 `http://127.0.0.1:18789/?token=...`。
 
-See [Dashboard](/web/dashboard) and [Web surfaces](/web) for bind modes and auth details.
+绑定模式与认证细节见：[Dashboard](/web/dashboard) 与 [Web surfaces](/web)。
 
-### What runtime do I need
+### 需要什么运行时
 
-Node **>= 22** is required. `pnpm` is recommended. Bun is **not recommended** for the Gateway.
+需要 Node **>= 22**。推荐 `pnpm`。Gateway **不推荐**使用 Bun。
 
-### Does it run on Raspberry Pi
+### 可以在树莓派上运行吗
 
-Yes. The Gateway is lightweight - docs list **512MB-1GB RAM**, **1 core**, and about **500MB**
-disk as enough for personal use, and note that a **Raspberry Pi 4 can run it**.
+可以。Gateway 很轻量，文档列出 **512MB-1GB RAM**、**1 核**和约 **500MB** 磁盘即可个人使用，并注明 **树莓派 4 可以运行**。
 
-If you want extra headroom (logs, media, other services), **2GB is recommended**, but it’s
-not a hard minimum.
+如果想留更多余量（日志、媒体、其他服务），推荐 **2GB**，但不是硬性下限。
 
-Tip: a small Pi/VPS can host the Gateway, and you can pair **nodes** on your laptop/phone for
-local screen/camera/canvas or command execution. See [Nodes](/nodes).
+提示：小型 Pi/VPS 可以托管 Gateway，你可以在笔记本/手机上配对 **节点** 来获得本地屏幕/摄像头/画布或命令执行。见 [Nodes](/nodes)。
 
-### Any tips for Raspberry Pi installs
+### 树莓派安装有什么建议
 
-Short version: it works, but expect rough edges.
+简版结论：可以跑，但要有心理准备。
 
-- Use a **64-bit** OS and keep Node >= 22.
-- Prefer the **hackable (git) install** so you can see logs and update fast.
-- Start without channels/skills, then add them one by one.
-- If you hit weird binary issues, it is usually an **ARM compatibility** problem.
+- 使用 **64 位**系统并保持 Node >= 22。
+- 优先使用 **可黑客化（git）安装**，便于看日志和快速更新。
+- 先不启用频道/技能，再逐个加入。
+- 遇到怪异二进制问题，多半是 **ARM 兼容性**。
 
-Docs: [Linux](/platforms/linux), [Install](/install).
+文档：[Linux](/platforms/linux)、[Install](/install)。
 
-### It is stuck on wake up my friend onboarding will not hatch What now
+### 卡在 wake up my friend 或 onboarding 不出壳怎么办
 
-That screen depends on the Gateway being reachable and authenticated. The TUI also sends
-"Wake up, my friend!" automatically on first hatch. If you see that line with **no reply**
-and tokens stay at 0, the agent never ran.
+这个界面依赖 Gateway 可达且已认证。TUI 在首次出壳时也会自动发送 “Wake up, my friend!”。如果你看到这行但**没有回复**并且 tokens 仍为 0，说明 agent 根本没跑起来。
 
-1) Restart the Gateway:
+1) 重启 Gateway：
 ```bash
 moltbot gateway restart
 ```
-2) Check status + auth:
+2) 检查状态 + 认证：
 ```bash
 moltbot status
 moltbot models status
 moltbot logs --follow
 ```
-3) If it still hangs, run:
+3) 还卡住就运行：
 ```bash
 moltbot doctor
 ```
 
-If the Gateway is remote, ensure the tunnel/Tailscale connection is up and that the UI
-is pointed at the right Gateway. See [Remote access](/gateway/remote).
+如果 Gateway 在远程，请确认隧道/Tailscale 连接正常，并确保 UI 指向正确的 Gateway。见 [Remote access](/gateway/remote)。
 
-### Can I migrate my setup to a new machine Mac mini without redoing onboarding
+### 能否把配置迁移到新机器 Mac mini 而不重新 onboarding
 
-Yes. Copy the **state directory** and **workspace**, then run Doctor once. This
-keeps your bot “exactly the same” (memory, session history, auth, and channel
-state) as long as you copy **both** locations:
+可以。复制 **状态目录** 与 **工作区**，再跑一次 Doctor。这会让你的机器人“完全一致”（记忆、会话历史、认证、频道状态），前提是你复制了**这两个位置**：
 
-1) Install Moltbot on the new machine.
-2) Copy `$CLAWDBOT_STATE_DIR` (default: `~/.clawdbot`) from the old machine.
-3) Copy your workspace (default: `~/clawd`).
-4) Run `moltbot doctor` and restart the Gateway service.
+1) 在新机器上安装 Moltbot。
+2) 从旧机器复制 `$CLAWDBOT_STATE_DIR`（默认：`~/.clawdbot`）。
+3) 复制你的工作区（默认：`~/clawd`）。
+4) 运行 `moltbot doctor` 并重启 Gateway 服务。
 
-That preserves config, auth profiles, WhatsApp creds, sessions, and memory. If you’re in
-remote mode, remember the gateway host owns the session store and workspace.
+这会保留配置、认证 profile、WhatsApp 凭据、会话和记忆。如果你处于远程模式，请记住 gateway 主机拥有会话存储与工作区。
 
-**Important:** if you only commit/push your workspace to GitHub, you’re backing
-up **memory + bootstrap files**, but **not** session history or auth. Those live
-under `~/.clawdbot/` (for example `~/.clawdbot/agents/<agentId>/sessions/`).
+**重要：** 如果你只是把工作区提交/推送到 GitHub，那只是在备份**记忆 + 启动文件**，**没有**包含会话历史或认证。它们在 `~/.clawdbot/` 下（例如 `~/.clawdbot/agents/<agentId>/sessions/`）。
 
-Related: [Migrating](/install/migrating), [Where things live on disk](/help/faq#where-does-moltbot-store-its-data),
-[Agent workspace](/concepts/agent-workspace), [Doctor](/gateway/doctor),
-[Remote mode](/gateway/remote).
+相关链接：[Migrating](/install/migrating)、[磁盘上的位置](/help/faq#where-does-moltbot-store-its-data)、
+[Agent workspace](/concepts/agent-workspace)、[Doctor](/gateway/doctor)、
+[Remote mode](/gateway/remote)。
 
-### Where do I see whats new in the latest version
+### 最新版本有哪些新内容
 
-Check the GitHub changelog:  
+查看 GitHub 的变更日志：  
 https://github.com/moltbot/moltbot/blob/main/CHANGELOG.md
 
-Newest entries are at the top. If the top section is marked **Unreleased**, the next dated
-section is the latest shipped version. Entries are grouped by **Highlights**, **Changes**, and
-**Fixes** (plus docs/other sections when needed).
+最新条目在最上方。如果顶部标注 **Unreleased**，则下一个带日期的段落是最新发布版本。条目按 **Highlights**、**Changes**、**Fixes** 分组（必要时还有 docs/其他部分）。
 
-### I cant access docsmoltbot SSL error What now
+### 无法访问 docs.molt.bot SSL 错误怎么办
 
-Some Comcast/Xfinity connections incorrectly block `docs.molt.bot` via Xfinity
-Advanced Security. Disable it or allowlist `docs.molt.bot`, then retry. More
-detail: [Troubleshooting](/help/troubleshooting#docsmoltbot-shows-an-ssl-error-comcastxfinity).
-Please help us unblock it by reporting here: https://spa.xfinity.com/check_url_status.
+部分 Comcast/Xfinity 连接会错误地通过 Xfinity Advanced Security 阻断 `docs.molt.bot`。请关闭它或把 `docs.molt.bot` 加入 allowlist，然后重试。更多细节见 [Troubleshooting](/help/troubleshooting#docsmoltbot-shows-an-ssl-error-comcastxfinity)。
+也请在这里反馈以帮助解封：https://spa.xfinity.com/check_url_status。
 
-If you still can't reach the site, the docs are mirrored on GitHub:
+如果仍无法访问，文档在 GitHub 也有镜像：
 https://github.com/moltbot/moltbot/tree/main/docs
 
-### Whats the difference between stable and beta
+### stable 与 beta 有什么区别
 
-**Stable** and **beta** are **npm dist‑tags**, not separate code lines:
+**stable** 与 **beta** 是 **npm dist-tag**，不是不同代码线：
 - `latest` = stable
-- `beta` = early build for testing
+- `beta` = 早期测试版本
 
-We ship builds to **beta**, test them, and once a build is solid we **promote
-that same version to `latest`**. That’s why beta and stable can point at the
-**same version**.
+我们把构建发布到 **beta**，测试稳定后再把**同一版本**提升到 `latest`。这就是为什么 beta 与 stable 可能指向**同一版本**。
 
-See what changed:  
+查看变更：  
 https://github.com/moltbot/moltbot/blob/main/CHANGELOG.md
 
-### How do I install the beta version and whats the difference between beta and dev
+### 如何安装 beta 版本以及 beta 与 dev 的区别是什么
 
-**Beta** is the npm dist‑tag `beta` (may match `latest`).  
-**Dev** is the moving head of `main` (git); when published, it uses the npm dist‑tag `dev`.
+**Beta** 是 npm dist-tag `beta`（可能与 `latest` 相同）。  
+**Dev** 是 `main` 的滚动头（git）；发布时使用 npm dist-tag `dev`。
 
-One‑liners (macOS/Linux):
+一键命令（macOS/Linux）：
 
 ```bash
 curl -fsSL --proto '=https' --tlsv1.2 https://molt.bot/install.sh | bash -s -- --beta
@@ -452,37 +429,36 @@ curl -fsSL --proto '=https' --tlsv1.2 https://molt.bot/install.sh | bash -s -- -
 curl -fsSL --proto '=https' --tlsv1.2 https://molt.bot/install.sh | bash -s -- --install-method git
 ```
 
-Windows installer (PowerShell):
+Windows 安装器（PowerShell）：
 https://molt.bot/install.ps1
 
-More detail: [Development channels](/install/development-channels) and [Installer flags](/install/installer).
+更多细节：[Development channels](/install/development-channels) 与 [Installer flags](/install/installer)。
 
-### How long does install and onboarding usually take
+### 安装与 onboarding 通常需要多久
 
-Rough guide:
-- **Install:** 2-5 minutes
-- **Onboarding:** 5-15 minutes depending on how many channels/models you configure
+粗略范围：
+- **安装：** 2-5 分钟
+- **onboarding：** 5-15 分钟，取决于你配置了多少频道/模型
 
-If it hangs, use [Installer stuck](/help/faq#installer-stuck-how-do-i-get-more-feedback)
-and the fast debug loop in [Im stuck](/help/faq#im-stuck--whats-the-fastest-way-to-get-unstuck).
+如果卡住，请看 [安装器卡住](#安装器卡住了怎么获得更多反馈) 以及 [我卡住了](#我卡住了最快怎么脱困) 里的快速排障。
 
-### How do I try the latest bits
+### 如何体验最新版本
 
-Two options:
+两种方式：
 
-1) **Dev channel (git checkout):**
+1) **Dev 渠道（git checkout）：**
 ```bash
 moltbot update --channel dev
 ```
-This switches to the `main` branch and updates from source.
+这会切到 `main` 分支并从源码更新。
 
-2) **Hackable install (from the installer site):**
+2) **可黑客化安装（安装器站点）：**
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --install-method git
 ```
-That gives you a local repo you can edit, then update via git.
+这会得到可编辑的本地仓库，然后通过 git 更新。
 
-If you prefer a clean clone manually, use:
+如果你想手动干净克隆：
 ```bash
 git clone https://github.com/moltbot/moltbot.git
 cd moltbot
@@ -490,104 +466,97 @@ pnpm install
 pnpm build
 ```
 
-Docs: [Update](/cli/update), [Development channels](/install/development-channels),
-[Install](/install).
+文档：[Update](/cli/update)、[Development channels](/install/development-channels)、
+[Install](/install)。
 
-### Installer stuck How do I get more feedback
+### 安装器卡住了怎么获得更多反馈
 
-Re-run the installer with **verbose output**:
+用 **verbose 输出**重新运行安装器：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --verbose
 ```
 
-Beta install with verbose:
+beta 安装 + verbose：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --beta --verbose
 ```
 
-For a hackable (git) install:
+可黑客化（git）安装：
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --install-method git --verbose
 ```
 
-More options: [Installer flags](/install/installer).
+更多选项见：[Installer flags](/install/installer)。
 
-### Windows install says git not found or moltbot not recognized
+### Windows 安装提示 git 未找到或无法识别 moltbot
 
-Two common Windows issues:
+Windows 常见两类问题：
 
-**1) npm error spawn git / git not found**
-- Install **Git for Windows** and make sure `git` is on your PATH.
-- Close and reopen PowerShell, then re-run the installer.
+**1) npm 错误 spawn git / git not found**
+- 安装 **Git for Windows**，并确保 `git` 在 PATH 中。
+- 关闭并重开 PowerShell，再次运行安装器。
 
-**2) moltbot is not recognized after install**
-- Your npm global bin folder is not on PATH.
-- Check the path:
+**2) 安装后 moltbot 未识别**
+- npm 全局 bin 目录不在 PATH。
+- 查看路径：
   ```powershell
   npm config get prefix
   ```
-- Ensure `<prefix>\\bin` is on PATH (on most systems it is `%AppData%\\npm`).
-- Close and reopen PowerShell after updating PATH.
+- 确保 `<prefix>\\bin` 在 PATH 中（多数系统为 `%AppData%\\npm`）。
+- 更新 PATH 后关闭并重开 PowerShell。
 
-If you want the smoothest Windows setup, use **WSL2** instead of native Windows.
-Docs: [Windows](/platforms/windows).
+如果要最省心的 Windows 方案，请用 **WSL2** 而不是原生 Windows。
+文档：[Windows](/platforms/windows)。
 
-### The docs didnt answer my question how do I get a better answer
+### 文档没回答我的问题如何得到更好的答案
 
-Use the **hackable (git) install** so you have the full source and docs locally, then ask
-your bot (or Claude/Codex) *from that folder* so it can read the repo and answer precisely.
+使用 **可黑客化（git）安装**，这样你本地就有完整源码和文档，然后让你的机器人（或 Claude/Codex）**在该目录下**读取仓库并精确回答。
 
 ```bash
 curl -fsSL https://molt.bot/install.sh | bash -s -- --install-method git
 ```
 
-More detail: [Install](/install) and [Installer flags](/install/installer).
+更多细节：[Install](/install) 与 [Installer flags](/install/installer)。
 
-### How do I install Moltbot on Linux
+### 如何在 Linux 上安装 Moltbot
 
-Short answer: follow the Linux guide, then run the onboarding wizard.
+简短答案：按 Linux 指南操作，然后运行 onboarding 向导。
 
-- Linux quick path + service install: [Linux](/platforms/linux).
-- Full walkthrough: [Getting Started](/start/getting-started).
-- Installer + updates: [Install & updates](/install/updating).
+- Linux 快速路径 + service 安装：[Linux](/platforms/linux)。
+- 完整流程：[Getting Started](/start/getting-started)。
+- 安装器 + 更新：[Install & updates](/install/updating)。
 
-### How do I install Moltbot on a VPS
+### 如何在 VPS 上安装 Moltbot
 
-Any Linux VPS works. Install on the server, then use SSH/Tailscale to reach the Gateway.
+任意 Linux VPS 都可用。安装在服务器上，然后用 SSH/Tailscale 访问 Gateway。
 
-Guides: [exe.dev](/platforms/exe-dev), [Hetzner](/platforms/hetzner), [Fly.io](/platforms/fly).  
-Remote access: [Gateway remote](/gateway/remote).
+指南：[exe.dev](/platforms/exe-dev)、[Hetzner](/platforms/hetzner)、[Fly.io](/platforms/fly)。  
+远程访问：[Gateway remote](/gateway/remote)。
 
-### Where are the cloudVPS install guides
+### 云端与 VPS 安装指南在哪里
 
-We keep a **hosting hub** with the common providers. Pick one and follow the guide:
+我们有一个**托管总览**覆盖常见提供商，选一个跟着走即可：
 
-- [VPS hosting](/vps) (all providers in one place)
+- [VPS hosting](/vps)（所有提供商一站式）
 - [Fly.io](/platforms/fly)
 - [Hetzner](/platforms/hetzner)
 - [exe.dev](/platforms/exe-dev)
 
-How it works in the cloud: the **Gateway runs on the server**, and you access it
-from your laptop/phone via the Control UI (or Tailscale/SSH). Your state + workspace
-live on the server, so treat the host as the source of truth and back it up.
+云端工作方式：**Gateway 跑在服务器上**，你通过 Control UI（或 Tailscale/SSH）从笔记本/手机访问。状态与工作区都在服务器上，所以把宿主机当事实来源并做好备份。
 
-You can pair **nodes** (Mac/iOS/Android/headless) to that cloud Gateway to access
-local screen/camera/canvas or run commands on your laptop while keeping the
-Gateway in the cloud.
+你还可以把 **节点**（Mac/iOS/Android/headless）配对到云端 Gateway，用于本地屏幕/摄像头/画布或在笔记本上执行命令，同时保持 Gateway 在云端。
 
-Hub: [Platforms](/platforms). Remote access: [Gateway remote](/gateway/remote).
-Nodes: [Nodes](/nodes), [Nodes CLI](/cli/nodes).
+总览：[Platforms](/platforms)。远程访问：[Gateway remote](/gateway/remote)。
+节点：[Nodes](/nodes)、[Nodes CLI](/cli/nodes)。
 
-### Can I ask Clawd to update itself
+### 可以让 Clawd 自己更新吗
 
-Short answer: **possible, not recommended**. The update flow can restart the
-Gateway (which drops the active session), may need a clean git checkout, and
-can prompt for confirmation. Safer: run updates from a shell as the operator.
+简短答案：**可以，但不推荐**。更新流程可能重启 Gateway（会断开当前会话）、可能需要干净的 git 检出，也可能需要确认提示。更安全的做法是以操作者身份在 shell 里更新。
 
-Use the CLI:
+使用 CLI：
 
 ```bash
 moltbot update
@@ -597,182 +566,161 @@ moltbot update --tag <dist-tag|version>
 moltbot update --no-restart
 ```
 
-If you must automate from an agent:
+如果必须让 agent 自动化：
 
 ```bash
 moltbot update --yes --no-restart
 moltbot gateway restart
 ```
 
-Docs: [Update](/cli/update), [Updating](/install/updating).
+文档：[Update](/cli/update)、[Updating](/install/updating)。
 
-### What does the onboarding wizard actually do
+### onboarding 向导实际做什么
 
-`moltbot onboard` is the recommended setup path. In **local mode** it walks you through:
+`moltbot onboard` 是推荐的安装路径。在**本地模式**下它会引导你：
 
-- **Model/auth setup** (Anthropic **setup-token** recommended for Claude subscriptions, OpenAI Codex OAuth supported, API keys optional, LM Studio local models supported)
-- **Workspace** location + bootstrap files
-- **Gateway settings** (bind/port/auth/tailscale)
-- **Providers** (WhatsApp, Telegram, Discord, Mattermost (plugin), Signal, iMessage)
-- **Daemon install** (LaunchAgent on macOS; systemd user unit on Linux/WSL2)
-- **Health checks** and **skills** selection
+- **模型/认证设置**（Claude 订阅推荐 Anthropic **setup-token**，支持 OpenAI Codex OAuth，可选 API key，支持 LM Studio 本地模型）
+- **工作区**位置与启动文件
+- **Gateway 设置**（bind/port/auth/tailscale）
+- **提供方**（WhatsApp、Telegram、Discord、Mattermost（插件）、Signal、iMessage）
+- **守护进程安装**（macOS 的 LaunchAgent；Linux/WSL2 的 systemd user unit）
+- **健康检查** 与 **技能**选择
 
-It also warns if your configured model is unknown or missing auth.
+它还会在配置的模型未知或缺少认证时提示你。
 
-### Do I need a Claude or OpenAI subscription to run this
+### 运行需要 Claude 或 OpenAI 订阅吗
 
-No. You can run Moltbot with **API keys** (Anthropic/OpenAI/others) or with
-**local‑only models** so your data stays on your device. Subscriptions (Claude
-Pro/Max or OpenAI Codex) are optional ways to authenticate those providers.
+不需要。你可以用 **API key**（Anthropic/OpenAI/其他）或 **仅本地模型** 运行，数据可留在设备内。订阅（Claude Pro/Max 或 OpenAI Codex）只是认证这些提供方的可选方式。
 
-Docs: [Anthropic](/providers/anthropic), [OpenAI](/providers/openai),
-[Local models](/gateway/local-models), [Models](/concepts/models).
+文档：[Anthropic](/providers/anthropic)、[OpenAI](/providers/openai)、
+[Local models](/gateway/local-models)、[Models](/concepts/models)。
 
-### Can I use Claude Max subscription without an API key
+### 没有 API key 可以用 Claude Max 订阅吗
 
-Yes. You can authenticate with a **setup-token**
-instead of an API key. This is the subscription path.
+可以。你可以用 **setup-token** 而不是 API key。这是订阅路径。
 
-Claude Pro/Max subscriptions **do not include an API key**, so this is the
-correct approach for subscription accounts. Important: you must verify with
-Anthropic that this usage is allowed under their subscription policy and terms.
-If you want the most explicit, supported path, use an Anthropic API key.
+Claude Pro/Max 订阅**不包含 API key**，因此这是订阅账户的正确做法。重要提醒：你需要向 Anthropic 确认该用法符合其订阅政策与条款。如果你想走最明确且支持的路径，请使用 Anthropic API key。
 
-### How does Anthropic setuptoken auth work
+### Anthropic setup-token 认证如何工作
 
-`claude setup-token` generates a **token string** via the Claude Code CLI (it is not available in the web console). You can run it on **any machine**. Choose **Anthropic token (paste setup-token)** in the wizard or paste it with `moltbot models auth paste-token --provider anthropic`. The token is stored as an auth profile for the **anthropic** provider and used like an API key (no auto-refresh). More detail: [OAuth](/concepts/oauth).
+`claude setup-token` 会通过 Claude Code CLI 生成 **token 字符串**（不在网页控制台里）。可以在**任意机器**上运行。向导里选择 **Anthropic token（粘贴 setup-token）**，或用 `moltbot models auth paste-token --provider anthropic` 直接粘贴。该 token 作为 **anthropic** 提供方的认证 profile 保存并像 API key 一样使用（不会自动刷新）。更多细节见 [OAuth](/concepts/oauth)。
 
-### Where do I find an Anthropic setuptoken
+### 在哪里找到 Anthropic setup-token
 
-It is **not** in the Anthropic Console. The setup-token is generated by the **Claude Code CLI** on **any machine**:
+它**不在** Anthropic Console。setup-token 由 **Claude Code CLI** 在**任意机器**生成：
 
 ```bash
 claude setup-token
 ```
 
-Copy the token it prints, then choose **Anthropic token (paste setup-token)** in the wizard. If you want to run it on the gateway host, use `moltbot models auth setup-token --provider anthropic`. If you ran `claude setup-token` elsewhere, paste it on the gateway host with `moltbot models auth paste-token --provider anthropic`. See [Anthropic](/providers/anthropic).
+复制输出的 token，然后在向导中选择 **Anthropic token（粘贴 setup-token）**。如果你想在 gateway 主机上执行，用 `moltbot models auth setup-token --provider anthropic`。如果你在别处执行 `claude setup-token`，就在 gateway 主机上用 `moltbot models auth paste-token --provider anthropic` 粘贴。见 [Anthropic](/providers/anthropic)。
 
-### Do you support Claude subscription auth (Claude Pro/Max)
+### 是否支持 Claude 订阅认证 Claude Code OAuth
 
-Yes — via **setup-token**. Moltbot no longer reuses Claude Code CLI OAuth tokens; use a setup-token or an Anthropic API key. Generate the token anywhere and paste it on the gateway host. See [Anthropic](/providers/anthropic) and [OAuth](/concepts/oauth).
+支持 — 通过 **setup-token**。Moltbot 不再复用 Claude Code CLI OAuth token；请使用 setup-token 或 Anthropic API key。token 可在任意地点生成，然后粘贴到 gateway 主机。见 [Anthropic](/providers/anthropic) 与 [OAuth](/concepts/oauth)。
 
-Note: Claude subscription access is governed by Anthropic’s terms. For production or multi‑user workloads, API keys are usually the safer choice.
+注意：Claude 订阅访问受 Anthropic 条款约束。用于生产或多用户负载时，API key 通常更稳妥。
 
-### Why am I seeing HTTP 429 ratelimiterror from Anthropic
+### 为什么我看到来自 Anthropic 的 HTTP 429 rate_limit_error
 
-That means your **Anthropic quota/rate limit** is exhausted for the current window. If you
-use a **Claude subscription** (setup‑token or Claude Code OAuth), wait for the window to
-reset or upgrade your plan. If you use an **Anthropic API key**, check the Anthropic Console
-for usage/billing and raise limits as needed.
+这说明你的 **Anthropic 配额或限流**在当前窗口已耗尽。如果你使用 **Claude 订阅**（setup-token 或 Claude Code OAuth），等待窗口重置或升级计划即可。如果你使用 **Anthropic API key**，请在 Anthropic Console 查看用量/计费并提升额度。
 
-Tip: set a **fallback model** so Moltbot can keep replying while a provider is rate‑limited.
-See [Models](/cli/models) and [OAuth](/concepts/oauth).
+提示：设置 **fallback 模型**，让 Moltbot 在某提供方限流时继续回复。见 [Models](/cli/models) 与 [OAuth](/concepts/oauth)。
 
-### Is AWS Bedrock supported
+### 是否支持 AWS Bedrock
 
-Yes - via pi‑ai’s **Amazon Bedrock (Converse)** provider with **manual config**. You must supply AWS credentials/region on the gateway host and add a Bedrock provider entry in your models config. See [Amazon Bedrock](/bedrock) and [Model providers](/providers/models). If you prefer a managed key flow, an OpenAI‑compatible proxy in front of Bedrock is still a valid option.
+支持，但需手动配置，通过 pi-ai 的 **Amazon Bedrock（Converse）** 提供方。你必须在 gateway 主机上提供 AWS 凭据与区域，并在模型配置中添加 Bedrock provider 条目。见 [Amazon Bedrock](/bedrock) 与 [Model providers](/providers/models)。如果你希望更托管的密钥流程，在 Bedrock 前放一个 OpenAI 兼容代理也是可行选项。
 
-### How does Codex auth work
+### Codex 认证如何工作
 
-Moltbot supports **OpenAI Code (Codex)** via OAuth (ChatGPT sign-in). The wizard can run the OAuth flow and will set the default model to `openai-codex/gpt-5.2` when appropriate. See [Model providers](/concepts/model-providers) and [Wizard](/start/wizard).
+Moltbot 通过 OAuth（ChatGPT 登录）支持 **OpenAI Code（Codex）**。向导可运行 OAuth 流程，并在合适时把默认模型设置为 `openai-codex/gpt-5.2`。见 [Model providers](/concepts/model-providers) 与 [Wizard](/start/wizard)。
 
-### Do you support OpenAI subscription auth Codex OAuth
+### 是否支持 OpenAI 订阅认证 Codex OAuth
 
-Yes. Moltbot fully supports **OpenAI Code (Codex) subscription OAuth**. The onboarding wizard
-can run the OAuth flow for you.
+支持。Moltbot 完整支持 **OpenAI Code（Codex）订阅 OAuth**。onboarding 向导可替你完成 OAuth 流程。
 
-See [OAuth](/concepts/oauth), [Model providers](/concepts/model-providers), and [Wizard](/start/wizard).
+见 [OAuth](/concepts/oauth)、[Model providers](/concepts/model-providers) 与 [Wizard](/start/wizard)。
 
-### How do I set up Gemini CLI OAuth
+### 如何设置 Gemini CLI OAuth
 
-Gemini CLI uses a **plugin auth flow**, not a client id or secret in `moltbot.json`.
+Gemini CLI 使用**插件认证流程**，而不是在 `moltbot.json` 里写 client id/secret。
 
-Steps:
-1) Enable the plugin: `moltbot plugins enable google-gemini-cli-auth`
-2) Login: `moltbot models auth login --provider google-gemini-cli --set-default`
+步骤：
+1) 启用插件：`moltbot plugins enable google-gemini-cli-auth`
+2) 登录：`moltbot models auth login --provider google-gemini-cli --set-default`
 
-This stores OAuth tokens in auth profiles on the gateway host. Details: [Model providers](/concepts/model-providers).
+这会把 OAuth token 存到 gateway 主机的认证 profile 中。详情见 [Model providers](/concepts/model-providers)。
 
-### Is a local model OK for casual chats
+### 本地模型适合日常聊天吗
 
-Usually no. Moltbot needs large context + strong safety; small cards truncate and leak. If you must, run the **largest** MiniMax M2.1 build you can locally (LM Studio) and see [/gateway/local-models](/gateway/local-models). Smaller/quantized models increase prompt-injection risk - see [Security](/gateway/security).
+通常不适合。Moltbot 需要大上下文与强安全性；小模型容易截断并泄漏。如果必须，本地可运行 **最大** 的 MiniMax M2.1（LM Studio）并参考 [/gateway/local-models](/gateway/local-models)。更小或量化模型会增加提示词注入风险，见 [Security](/gateway/security)。
 
-### How do I keep hosted model traffic in a specific region
+### 如何把托管模型流量限制在特定区域
 
-Pick region-pinned endpoints. OpenRouter exposes US-hosted options for MiniMax, Kimi, and GLM; choose the US-hosted variant to keep data in-region. You can still list Anthropic/OpenAI alongside these by using `models.mode: "merge"` so fallbacks stay available while respecting the regioned provider you select.
+选择绑定区域的端点。OpenRouter 为 MiniMax、Kimi 和 GLM 提供美国托管选项；选择 US 版本即可把数据留在区域内。你仍可通过 `models.mode: "merge"` 把 Anthropic/OpenAI 叠加在列表里，这样在尊重区域提供方的同时仍有可用的 fallback。
 
-### Do I have to buy a Mac Mini to install this
+### 安装是否必须买 Mac Mini
 
-No. Moltbot runs on macOS or Linux (Windows via WSL2). A Mac mini is optional - some people
-buy one as an always‑on host, but a small VPS, home server, or Raspberry Pi‑class box works too.
+不需要。Moltbot 可在 macOS 或 Linux 上运行（Windows 通过 WSL2）。Mac mini 只是可选项，有些人买它当作常开主机；小型 VPS、家庭服务器或树莓派等级设备也可以。
 
-You only need a Mac **for macOS‑only tools**. For iMessage, you can keep the Gateway on Linux
-and run `imsg` on any Mac over SSH by pointing `channels.imessage.cliPath` at an SSH wrapper.
-If you want other macOS‑only tools, run the Gateway on a Mac or pair a macOS node.
+你只在**需要 macOS 专用工具**时才需要 Mac。iMessage 场景下，你可以把 Gateway 放在 Linux 上，并通过 SSH 让 `imsg` 在任意 Mac 上运行，把 `channels.imessage.cliPath` 指向 SSH wrapper。若需要其他 macOS 专用工具，则在 Mac 上跑 Gateway 或配对一个 macOS 节点。
 
-Docs: [iMessage](/channels/imessage), [Nodes](/nodes), [Mac remote mode](/platforms/mac/remote).
+文档：[iMessage](/channels/imessage)、[Nodes](/nodes)、[Mac remote mode](/platforms/mac/remote)。
 
-### Do I need a Mac mini for iMessage support
+### iMessage 支持需要 Mac mini 吗
 
-You need **some macOS device** signed into Messages. It does **not** have to be a Mac mini -
-any Mac works. Moltbot’s iMessage integrations run on macOS (BlueBubbles or `imsg`), while
-the Gateway can run elsewhere.
+需要**任意 macOS 设备**登录 Messages。**不一定**是 Mac mini，任意 Mac 都可以。Moltbot 的 iMessage 集成运行在 macOS（BlueBubbles 或 `imsg`），而 Gateway 可运行在别处。
 
-Common setups:
-- Run the Gateway on Linux/VPS, and point `channels.imessage.cliPath` at an SSH wrapper that
-  runs `imsg` on the Mac.
-- Run everything on the Mac if you want the simplest single‑machine setup.
+常见配置：
+- Gateway 跑在 Linux/VPS，`channels.imessage.cliPath` 指向在 Mac 上运行 `imsg` 的 SSH wrapper。
+- 如果你想最简单的单机方案，就全部运行在 Mac 上。
 
-Docs: [iMessage](/channels/imessage), [BlueBubbles](/channels/bluebubbles),
-[Mac remote mode](/platforms/mac/remote).
+文档：[iMessage](/channels/imessage)、[BlueBubbles](/channels/bluebubbles)、
+[Mac remote mode](/platforms/mac/remote)。
 
-### If I buy a Mac mini to run Moltbot can I connect it to my MacBook Pro
+### 买 Mac mini 跑 Moltbot 后能否连接到 MacBook Pro
 
-Yes. The **Mac mini can run the Gateway**, and your MacBook Pro can connect as a
-**node** (companion device). Nodes don’t run the Gateway - they provide extra
-capabilities like screen/camera/canvas and `system.run` on that device.
+可以。**Mac mini 运行 Gateway**，你的 MacBook Pro 作为**节点**连接（伴随设备）。节点不会运行 Gateway，而是提供该设备上的屏幕/摄像头/画布与 `system.run`。
 
-Common pattern:
-- Gateway on the Mac mini (always‑on).
-- MacBook Pro runs the macOS app or a node host and pairs to the Gateway.
-- Use `moltbot nodes status` / `moltbot nodes list` to see it.
+常见模式：
+- Gateway 在 Mac mini（常开）。
+- MacBook Pro 运行 macOS app 或节点主机并与 Gateway 配对。
+- 用 `moltbot nodes status` / `moltbot nodes list` 查看。
 
-Docs: [Nodes](/nodes), [Nodes CLI](/cli/nodes).
+文档：[Nodes](/nodes)、[Nodes CLI](/cli/nodes)。
 
-### Can I use Bun
+### 可以用 Bun 吗
 
-Bun is **not recommended**. We see runtime bugs, especially with WhatsApp and Telegram.
-Use **Node** for stable gateways.
+**不推荐** Bun。我们观察到运行时 bug，尤其在 WhatsApp 和 Telegram 上。请用 **Node** 保证 Gateway 稳定。
 
-If you still want to experiment with Bun, do it on a non‑production gateway
-without WhatsApp/Telegram.
+如果你仍想体验 Bun，请在非生产的 gateway 上实验，并不要启用 WhatsApp/Telegram。
 
-### Telegram what goes in allowFrom
+### Telegram 的 allowFrom 里填什么
 
-`channels.telegram.allowFrom` is **the human sender’s Telegram user ID** (numeric, recommended) or `@username`. It is not the bot username.
+`channels.telegram.allowFrom` 是**人类发送者的 Telegram 用户 ID**（数字，推荐）或 `@username`，不是 bot 用户名。
 
-Safer (no third-party bot):
-- DM your bot, then run `moltbot logs --follow` and read `from.id`.
+更安全的做法（不依赖第三方 bot）：
+- 私聊你的 bot，然后运行 `moltbot logs --follow`，读取 `from.id`。
 
-Official Bot API:
-- DM your bot, then call `https://api.telegram.org/bot<bot_token>/getUpdates` and read `message.from.id`.
+官方 Bot API：
+- 私聊你的 bot，然后调用 `https://api.telegram.org/bot<bot_token>/getUpdates`，读取 `message.from.id`。
 
-Third-party (less private):
-- DM `@userinfobot` or `@getidsbot`.
+第三方（隐私较弱）：
+- 私聊 `@userinfobot` 或 `@getidsbot`。
 
-See [/channels/telegram](/channels/telegram#access-control-dms--groups).
+见 [/channels/telegram](/channels/telegram#access-control-dms--groups)。
 
-### Can multiple people use one WhatsApp number with different Moltbots
+### 多个人能否用同一个 WhatsApp 号码配不同 Moltbots
 
-Yes, via **multi‑agent routing**. Bind each sender’s WhatsApp **DM** (peer `kind: "dm"`, sender E.164 like `+15551234567`) to a different `agentId`, so each person gets their own workspace and session store. Replies still come from the **same WhatsApp account**, and DM access control (`channels.whatsapp.dmPolicy` / `channels.whatsapp.allowFrom`) is global per WhatsApp account. See [Multi-Agent Routing](/concepts/multi-agent) and [WhatsApp](/channels/whatsapp).
+可以，通过**多 agent 路由**。把每个发送者的 WhatsApp **DM**（peer `kind: "dm"`，发送者 E.164 例如 `+15551234567`）绑定到不同的 `agentId`，这样每个人都有自己的工作区和会话存储。回复仍然来自**同一个 WhatsApp 账号**，DM 访问控制（`channels.whatsapp.dmPolicy` / `channels.whatsapp.allowFrom`）对整个 WhatsApp 账号全局生效。见 [Multi-Agent Routing](/concepts/multi-agent) 与 [WhatsApp](/channels/whatsapp)。
 
-### Can I run a fast chat agent and an Opus for coding agent
+### 能否同时运行快速聊天 agent 和用于编码的 Opus agent
 
-Yes. Use multi‑agent routing: give each agent its own default model, then bind inbound routes (provider account or specific peers) to each agent. Example config lives in [Multi-Agent Routing](/concepts/multi-agent). See also [Models](/concepts/models) and [Configuration](/gateway/configuration).
+可以。使用多 agent 路由：给每个 agent 配置自己的默认模型，然后把入站路由（提供方账号或特定 peer）绑定到对应 agent。示例配置见 [Multi-Agent Routing](/concepts/multi-agent)。另见 [Models](/concepts/models) 与 [Configuration](/gateway/configuration)。
 
-### Does Homebrew work on Linux
+### Homebrew 能在 Linux 上工作吗
 
-Yes. Homebrew supports Linux (Linuxbrew). Quick setup:
+可以。Homebrew 支持 Linux（Linuxbrew）。快速安装：
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -781,25 +729,24 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install <formula>
 ```
 
-If you run Moltbot via systemd, ensure the service PATH includes `/home/linuxbrew/.linuxbrew/bin` (or your brew prefix) so `brew`-installed tools resolve in non‑login shells.
-Recent builds also prepend common user bin dirs on Linux systemd services (for example `~/.local/bin`, `~/.npm-global/bin`, `~/.local/share/pnpm`, `~/.bun/bin`) and honor `PNPM_HOME`, `NPM_CONFIG_PREFIX`, `BUN_INSTALL`, `VOLTA_HOME`, `ASDF_DATA_DIR`, `NVM_DIR`, and `FNM_DIR` when set.
+如果你通过 systemd 运行 Moltbot，请确保 service PATH 包含 `/home/linuxbrew/.linuxbrew/bin`（或你的 brew 前缀），这样 `brew` 安装的工具在非登录 shell 里也能解析。
+最近的构建还会在 Linux systemd services 中预置常见用户 bin 目录（例如 `~/.local/bin`、`~/.npm-global/bin`、`~/.local/share/pnpm`、`~/.bun/bin`），并在设置时读取 `PNPM_HOME`、`NPM_CONFIG_PREFIX`、`BUN_INSTALL`、`VOLTA_HOME`、`ASDF_DATA_DIR`、`NVM_DIR`、`FNM_DIR`。
 
-### Whats the difference between the hackable git install and npm install
+### 可黑客化 git 安装与 npm 安装有何区别
 
-- **Hackable (git) install:** full source checkout, editable, best for contributors.
-  You run builds locally and can patch code/docs.
-- **npm install:** global CLI install, no repo, best for “just run it.”
-  Updates come from npm dist‑tags.
+- **可黑客化（git）安装：** 完整源码检出，可编辑，最适合贡献者。
+  本地构建，可以修改代码/文档。
+- **npm 安装：** 全局 CLI 安装，没有仓库，适合“只想跑起来”。
+  更新通过 npm dist-tag。
 
-Docs: [Getting started](/start/getting-started), [Updating](/install/updating).
+文档：[Getting started](/start/getting-started)、[Updating](/install/updating)。
 
-### Can I switch between npm and git installs later
+### 之后能在 npm 与 git 安装之间切换吗
 
-Yes. Install the other flavor, then run Doctor so the gateway service points at the new entrypoint.
-This **does not delete your data** - it only changes the Moltbot code install. Your state
-(`~/.clawdbot`) and workspace (`~/clawd`) stay untouched.
+可以。安装另一种方式后，运行 Doctor 让 gateway service 指向新的入口。
+这**不会删除数据**，只会更换 Moltbot 代码安装。你的状态（`~/.clawdbot`）和工作区（`~/clawd`）不会被触碰。
 
-From npm → git:
+从 npm → git：
 
 ```bash
 git clone https://github.com/moltbot/moltbot.git
@@ -810,7 +757,7 @@ moltbot doctor
 moltbot gateway restart
 ```
 
-From git → npm:
+从 git → npm：
 
 ```bash
 npm install -g moltbot@latest
@@ -818,192 +765,173 @@ moltbot doctor
 moltbot gateway restart
 ```
 
-Doctor detects a gateway service entrypoint mismatch and offers to rewrite the service config to match the current install (use `--repair` in automation).
+Doctor 会检测 gateway service 的入口不匹配并提示重写服务配置（在自动化里可用 `--repair`）。
 
-Backup tips: see [Backup strategy](/help/faq#whats-the-recommended-backup-strategy).
+备份建议见：[备份策略](#推荐的备份策略)。
 
-### Should I run the Gateway on my laptop or a VPS
+### Gateway 应该跑在笔记本还是 VPS
 
-Short answer: **if you want 24/7 reliability, use a VPS**. If you want the
-lowest friction and you’re okay with sleep/restarts, run it locally.
+简短答案：**想要 24/7 稳定就用 VPS**。如果你追求最低摩擦且能接受休眠/重启，就在本地跑。
 
-**Laptop (local Gateway)**
-- **Pros:** no server cost, direct access to local files, live browser window.
-- **Cons:** sleep/network drops = disconnects, OS updates/reboots interrupt, must stay awake.
+**笔记本（本地 Gateway）**
+- **优点：** 无服务器费用，直接访问本地文件，有可见浏览器窗口。
+- **缺点：** 休眠/断网 = 掉线，系统更新/重启会中断，必须保持唤醒。
 
-**VPS / cloud**
-- **Pros:** always‑on, stable network, no laptop sleep issues, easier to keep running.
-- **Cons:** often run headless (use screenshots), remote file access only, you must SSH for updates.
+**VPS / 云端**
+- **优点：** 常开、网络稳定、不受笔记本休眠影响、易于持续运行。
+- **缺点：** 多数为无头运行（用截图），本地文件只能远程访问，需要 SSH 更新。
 
-**Moltbot-specific note:** WhatsApp/Telegram/Slack/Mattermost (plugin)/Discord all work fine from a VPS. The only real trade-off is **headless browser** vs a visible window. See [Browser](/tools/browser).
+**Moltbot 特定说明：** WhatsApp/Telegram/Slack/Mattermost（插件）/Discord 在 VPS 上都能正常工作。主要取舍是**无头浏览器**与可见窗口的差异。见 [Browser](/tools/browser)。
 
-**Recommended default:** VPS if you had gateway disconnects before. Local is great when you’re actively using the Mac and want local file access or UI automation with a visible browser.
+**推荐默认：** 如果你曾遇到 gateway 断线，优先 VPS。本地适合你在 Mac 上活跃使用且需要本地文件访问或可见浏览器的 UI 自动化。
 
-### How important is it to run Moltbot on a dedicated machine
+### 在专用机器上运行 Moltbot 有多重要
 
-Not required, but **recommended for reliability and isolation**.
+非必须，但**推荐用于可靠性与隔离**。
 
-- **Dedicated host (VPS/Mac mini/Pi):** always‑on, fewer sleep/reboot interruptions, cleaner permissions, easier to keep running.
-- **Shared laptop/desktop:** totally fine for testing and active use, but expect pauses when the machine sleeps or updates.
+- **专用主机（VPS/Mac mini/Pi）：** 常开、少休眠/重启干扰、权限更干净、易于持续运行。
+- **共享笔记本/台式机：** 用于测试或活跃使用完全可以，但机器休眠或更新会中断。
 
-If you want the best of both worlds, keep the Gateway on a dedicated host and pair your laptop as a **node** for local screen/camera/exec tools. See [Nodes](/nodes).
-For security guidance, read [Security](/gateway/security).
+想要两全其美：把 Gateway 放在专用主机上，再把笔记本配成**节点**来提供本地屏幕/摄像头/exec 工具。见 [Nodes](/nodes)。
+安全建议见 [Security](/gateway/security)。
 
-### What are the minimum VPS requirements and recommended OS
+### VPS 最低配置与推荐系统是什么
 
-Moltbot is lightweight. For a basic Gateway + one chat channel:
+Moltbot 很轻量。用于基础 Gateway + 单聊天频道：
 
-- **Absolute minimum:** 1 vCPU, 1GB RAM, ~500MB disk.
-- **Recommended:** 1-2 vCPU, 2GB RAM or more for headroom (logs, media, multiple channels). Node tools and browser automation can be resource hungry.
+- **绝对最低：** 1 vCPU、1GB RAM、约 500MB 磁盘。
+- **推荐：** 1-2 vCPU、2GB RAM 或更多余量（日志、媒体、多频道）。节点工具和浏览器自动化可能更吃资源。
 
-OS: use **Ubuntu LTS** (or any modern Debian/Ubuntu). The Linux install path is best tested there.
+系统：使用 **Ubuntu LTS**（或任何现代 Debian/Ubuntu）。Linux 安装路径在此最稳定。
 
-Docs: [Linux](/platforms/linux), [VPS hosting](/vps).
+文档：[Linux](/platforms/linux)、[VPS hosting](/vps)。
 
-### Can I run Moltbot in a VM and what are the requirements
+### 能否在 VM 里运行 Moltbot 以及要求是什么
 
-Yes. Treat a VM the same as a VPS: it needs to be always on, reachable, and have enough
-RAM for the Gateway and any channels you enable.
+可以。把 VM 当成 VPS：需要常开、可达，并有足够 RAM 供 Gateway 和启用的频道使用。
 
-Baseline guidance:
-- **Absolute minimum:** 1 vCPU, 1GB RAM.
-- **Recommended:** 2GB RAM or more if you run multiple channels, browser automation, or media tools.
-- **OS:** Ubuntu LTS or another modern Debian/Ubuntu.
+基准建议：
+- **绝对最低：** 1 vCPU、1GB RAM。
+- **推荐：** 若运行多个频道、浏览器自动化或媒体工具，建议 2GB RAM 或更多。
+- **系统：** Ubuntu LTS 或其他现代 Debian/Ubuntu。
 
-If you are on Windows, **WSL2 is the easiest VM style setup** and has the best tooling
-compatibility. See [Windows](/platforms/windows), [VPS hosting](/vps).
-If you are running macOS in a VM, see [macOS VM](/platforms/macos-vm).
+如果你在 Windows 上，**WSL2 是最简单的 VM 方案**，并且工具兼容性最好。见 [Windows](/platforms/windows)、[VPS hosting](/vps)。
+如果你在 VM 里运行 macOS，见 [macOS VM](/platforms/macos-vm)。
 
-## What is Moltbot?
+## 什么是 Moltbot
 
-### What is Moltbot in one paragraph
+### 用一段话介绍 Moltbot
 
-Moltbot is a personal AI assistant you run on your own devices. It replies on the messaging surfaces you already use (WhatsApp, Telegram, Slack, Mattermost (plugin), Discord, Google Chat, Signal, iMessage, WebChat) and can also do voice + a live Canvas on supported platforms. The **Gateway** is the always-on control plane; the assistant is the product.
+Moltbot 是一个运行在你自己设备上的个人 AI 助手。它可以在你已经使用的聊天界面中回复（WhatsApp、Telegram、Slack、Mattermost（插件）、Discord、Google Chat、Signal、iMessage、WebChat），并在支持的平台上提供语音与实时 Canvas。**Gateway** 是常开的控制平面；助理是产品本身。
 
-### Whats the value proposition
+### 价值主张是什么
 
-Moltbot is not “just a Claude wrapper.” It’s a **local-first control plane** that lets you run a
-capable assistant on **your own hardware**, reachable from the chat apps you already use, with
-stateful sessions, memory, and tools - without handing control of your workflows to a hosted
-SaaS.
+Moltbot 不是“只是 Claude 的外壳”。它是一个**本地优先的控制平面**，让你在**自己的硬件**上运行强大的助手，通过已有的聊天应用触达，具备会话状态、记忆和工具能力，而无需把工作流控制权交给托管 SaaS。
 
-Highlights:
-- **Your devices, your data:** run the Gateway wherever you want (Mac, Linux, VPS) and keep the
-  workspace + session history local.  
-- **Real channels, not a web sandbox:** WhatsApp/Telegram/Slack/Discord/Signal/iMessage/etc,
-  plus mobile voice and Canvas on supported platforms.  
-- **Model-agnostic:** use Anthropic, OpenAI, MiniMax, OpenRouter, etc., with per‑agent routing
-  and failover.  
-- **Local-only option:** run local models so **all data can stay on your device** if you want.
-- **Multi-agent routing:** separate agents per channel, account, or task, each with its own
-  workspace and defaults.  
-- **Open source and hackable:** inspect, extend, and self-host without vendor lock‑in.
+亮点：
+- **你的设备，你的数据：** Gateway 想跑哪就跑哪（Mac、Linux、VPS），工作区与会话历史留在本地。
+- **真实频道，而不是网页沙箱：** WhatsApp/Telegram/Slack/Discord/Signal/iMessage 等，加上支持平台的移动语音与 Canvas。
+- **模型无关：** Anthropic、OpenAI、MiniMax、OpenRouter 等均可用，并支持按 agent 路由与故障切换。
+- **仅本地选项：** 运行本地模型，**所有数据可留在你的设备**。
+- **多 agent 路由：** 按频道、账号或任务分离 agent，各自独立工作区与默认值。
+- **开源可黑客化：** 可检查、扩展、自托管，无厂商锁定。
 
-Docs: [Gateway](/gateway), [Channels](/channels), [Multi‑agent](/concepts/multi-agent),
-[Memory](/concepts/memory).
+文档：[Gateway](/gateway)、[Channels](/channels)、[Multi-agent](/concepts/multi-agent)、
+[Memory](/concepts/memory)。
 
-### I just set it up what should I do first
+### 刚装好后应该做什么
 
-Good first projects:
-- Build a website (WordPress, Shopify, or a simple static site).
-- Prototype a mobile app (outline, screens, API plan).
-- Organize files and folders (cleanup, naming, tagging).
-- Connect Gmail and automate summaries or follow ups.
+好的首个项目：
+- 搭建网站（WordPress、Shopify 或简单静态站）。
+- 原型化移动应用（大纲、页面、API 方案）。
+- 整理文件与文件夹（清理、命名、标签）。
+- 连接 Gmail 并自动生成摘要或跟进。
 
-It can handle large tasks, but it works best when you split them into phases and
-use sub agents for parallel work.
+它能处理大任务，但当你把任务拆成阶段并用子 agent 并行时效果最好。
 
-### What are the top five everyday use cases for Moltbot
+### Moltbot 的五个日常用例
 
-Everyday wins usually look like:
-- **Personal briefings:** summaries of inbox, calendar, and news you care about.
-- **Research and drafting:** quick research, summaries, and first drafts for emails or docs.
-- **Reminders and follow ups:** cron or heartbeat driven nudges and checklists.
-- **Browser automation:** filling forms, collecting data, and repeating web tasks.
-- **Cross device coordination:** send a task from your phone, let the Gateway run it on a server, and get the result back in chat.
+日常胜利通常是：
+- **个人简报：** 你关心的收件箱、日历、新闻摘要。
+- **研究与写作：** 快速调研、摘要、邮件或文档初稿。
+- **提醒与跟进：** 由 cron 或 heartbeat 驱动的提醒与清单。
+- **浏览器自动化：** 填表、采集数据、重复 Web 任务。
+- **跨设备协作：** 在手机发任务，让 Gateway 在服务器执行，再把结果回到聊天里。
 
-### Can Moltbot help with lead gen outreach ads and blogs for a SaaS
+### Moltbot 能帮助 SaaS 做获客外联广告和博客吗
 
-Yes for **research, qualification, and drafting**. It can scan sites, build shortlists,
-summarize prospects, and write outreach or ad copy drafts.
+可以用于 **研究、资格筛选和草稿**。它能扫描网站、建立名单、总结潜在客户，并写外联或广告文案初稿。
 
-For **outreach or ad runs**, keep a human in the loop. Avoid spam, follow local laws and
-platform policies, and review anything before it is sent. The safest pattern is to let
-Moltbot draft and you approve.
+对于**外联或投放**，请保持人工在环。避免垃圾信息，遵守当地法律与平台政策，并在发送前审阅内容。最安全的模式是 Moltbot 草拟，你来确认。
 
-Docs: [Security](/gateway/security).
+文档：[Security](/gateway/security)。
 
-### What are the advantages vs Claude Code for web development
+### 相比 Claude Code 的 Web 开发优势是什么
 
-Moltbot is a **personal assistant** and coordination layer, not an IDE replacement. Use
-Claude Code or Codex for the fastest direct coding loop inside a repo. Use Moltbot when you
-want durable memory, cross-device access, and tool orchestration.
+Moltbot 是**个人助理**与协调层，不是 IDE 替代品。若要在仓库里获得最快的编码循环，请用 Claude Code 或 Codex。当你需要持久记忆、跨设备访问与工具编排时，用 Moltbot。
 
-Advantages:
-- **Persistent memory + workspace** across sessions
-- **Multi-platform access** (WhatsApp, Telegram, TUI, WebChat)
-- **Tool orchestration** (browser, files, scheduling, hooks)
-- **Always-on Gateway** (run on a VPS, interact from anywhere)
-- **Nodes** for local browser/screen/camera/exec
+优势：
+- **跨会话持久记忆 + 工作区**
+- **多平台接入**（WhatsApp、Telegram、TUI、WebChat）
+- **工具编排**（浏览器、文件、调度、hooks）
+- **常开 Gateway**（在 VPS 上运行，随处交互）
+- **节点**提供本地浏览器/屏幕/摄像头/exec
 
-Showcase: https://molt.bot/showcase
+展示： https://molt.bot/showcase
 
-## Skills and automation
+## 技能与自动化
 
-### How do I customize skills without keeping the repo dirty
+### 如何自定义技能而不弄脏仓库
 
-Use managed overrides instead of editing the repo copy. Put your changes in `~/.clawdbot/skills/<name>/SKILL.md` (or add a folder via `skills.load.extraDirs` in `~/.clawdbot/moltbot.json`). Precedence is `<workspace>/skills` > `~/.clawdbot/skills` > bundled, so managed overrides win without touching git. Only upstream-worthy edits should live in the repo and go out as PRs.
+使用托管覆盖而不是编辑仓库副本。把改动放到 `~/.clawdbot/skills/<name>/SKILL.md`（或通过 `~/.clawdbot/moltbot.json` 的 `skills.load.extraDirs` 添加目录）。优先级为 `<workspace>/skills` > `~/.clawdbot/skills` > 内置，因此托管覆盖可以生效且不动 git。只有值得上游的改动才放进仓库并提 PR。
 
-### Can I load skills from a custom folder
+### 能否从自定义文件夹加载技能
 
-Yes. Add extra directories via `skills.load.extraDirs` in `~/.clawdbot/moltbot.json` (lowest precedence). Default precedence remains: `<workspace>/skills` → `~/.clawdbot/skills` → bundled → `skills.load.extraDirs`. `clawdhub` installs into `./skills` by default, which Moltbot treats as `<workspace>/skills`.
+可以。用 `~/.clawdbot/moltbot.json` 的 `skills.load.extraDirs` 添加额外目录（最低优先级）。默认优先级仍是：`<workspace>/skills` → `~/.clawdbot/skills` → 内置 → `skills.load.extraDirs`。`clawdhub` 默认安装到 `./skills`，Moltbot 会把它视为 `<workspace>/skills`。
 
-### How can I use different models for different tasks
+### 如何为不同任务使用不同模型
 
-Today the supported patterns are:
-- **Cron jobs**: isolated jobs can set a `model` override per job.
-- **Sub-agents**: route tasks to separate agents with different default models.
-- **On-demand switch**: use `/model` to switch the current session model at any time.
+目前支持的模式：
+- **Cron 任务：** 每个任务可设置 `model` 覆盖。
+- **子 agent：** 将任务路由到不同默认模型的 agent。
+- **按需切换：** 用 `/model` 在当前会话随时切换。
 
-See [Cron jobs](/automation/cron-jobs), [Multi-Agent Routing](/concepts/multi-agent), and [Slash commands](/tools/slash-commands).
+见 [Cron jobs](/automation/cron-jobs)、[Multi-Agent Routing](/concepts/multi-agent) 与 [Slash commands](/tools/slash-commands)。
 
-### The bot freezes while doing heavy work How do I offload that
+### 机器人在重活时卡住了怎么卸载负载
 
-Use **sub-agents** for long or parallel tasks. Sub-agents run in their own session,
-return a summary, and keep your main chat responsive.
+用 **子 agent** 处理耗时或并行任务。子 agent 在独立会话运行，返回摘要，并保持主聊天响应。
 
-Ask your bot to "spawn a sub-agent for this task" or use `/subagents`.
-Use `/status` in chat to see what the Gateway is doing right now (and whether it is busy).
+你可以对机器人说“为此任务创建子 agent”，或使用 `/subagents`。
+用 `/status` 查看 Gateway 当前在做什么（是否繁忙）。
 
-Token tip: long tasks and sub-agents both consume tokens. If cost is a concern, set a
-cheaper model for sub-agents via `agents.defaults.subagents.model`.
+Token 提示：长任务与子 agent 都会消耗 token。如果成本敏感，可以用 `agents.defaults.subagents.model` 给子 agent 配更便宜的模型。
 
-Docs: [Sub-agents](/tools/subagents).
+文档：[Sub-agents](/tools/subagents)。
 
-### Cron or reminders do not fire What should I check
+### Cron 或提醒不触发检查什么
 
-Cron runs inside the Gateway process. If the Gateway is not running continuously,
-scheduled jobs will not run.
+Cron 在 Gateway 进程内运行。如果 Gateway 不能持续运行，定时任务就不会触发。
 
-Checklist:
-- Confirm cron is enabled (`cron.enabled`) and `CLAWDBOT_SKIP_CRON` is not set.
-- Check the Gateway is running 24/7 (no sleep/restarts).
-- Verify timezone settings for the job (`--tz` vs host timezone).
+检查清单：
+- 确认 cron 已启用（`cron.enabled`）且未设置 `CLAWDBOT_SKIP_CRON`。
+- 检查 Gateway 是否 24/7 运行（没有休眠/重启）。
+- 校验任务的时区设置（`--tz` 与主机时区）。
 
-Debug:
+调试：
 ```bash
 moltbot cron run <jobId> --force
 moltbot cron runs --id <jobId> --limit 50
 ```
 
-Docs: [Cron jobs](/automation/cron-jobs), [Cron vs Heartbeat](/automation/cron-vs-heartbeat).
+文档：[Cron jobs](/automation/cron-jobs)、[Cron vs Heartbeat](/automation/cron-vs-heartbeat)。
 
-### How do I install skills on Linux
+### 如何在 Linux 上安装技能
 
-Use **ClawdHub** (CLI) or drop skills into your workspace. The macOS Skills UI isn’t available on Linux.
-Browse skills at https://clawdhub.com.
+使用 **ClawdHub**（CLI）或把技能放进工作区。macOS Skills UI 在 Linux 不可用。
+技能列表：https://clawdhub.com。
 
-Install the ClawdHub CLI (pick one package manager):
+安装 ClawdHub CLI（任选一个包管理器）：
 
 ```bash
 npm i -g clawdhub
@@ -1013,40 +941,40 @@ npm i -g clawdhub
 pnpm add -g clawdhub
 ```
 
-### Can Moltbot run tasks on a schedule or continuously in the background
+### Moltbot 能否定时或持续在后台运行任务
 
-Yes. Use the Gateway scheduler:
+可以。使用 Gateway 调度器：
 
-- **Cron jobs** for scheduled or recurring tasks (persist across restarts).
-- **Heartbeat** for “main session” periodic checks.
-- **Isolated jobs** for autonomous agents that post summaries or deliver to chats.
+- **Cron jobs** 用于定时或循环任务（跨重启持久）。
+- **Heartbeat** 用于“主会话”的周期性检查。
+- **隔离任务** 用于自主 agent 汇总或回传到聊天。
 
-Docs: [Cron jobs](/automation/cron-jobs), [Cron vs Heartbeat](/automation/cron-vs-heartbeat),
-[Heartbeat](/gateway/heartbeat).
+文档：[Cron jobs](/automation/cron-jobs)、[Cron vs Heartbeat](/automation/cron-vs-heartbeat)、
+[Heartbeat](/gateway/heartbeat)。
 
-**Can I run Apple macOS only skills from Linux**
+### 能否在 Linux 上运行仅限 Apple 或 macOS 的技能
 
-Not directly. macOS skills are gated by `metadata.moltbot.os` plus required binaries, and skills only appear in the system prompt when they are eligible on the **Gateway host**. On Linux, `darwin`-only skills (like `imsg`, `apple-notes`, `apple-reminders`) will not load unless you override the gating.
+不能直接运行。macOS 技能受 `metadata.moltbot.os` 与所需二进制限制，只有在 **Gateway 主机**满足条件时才会进入系统提示词。在 Linux 上，`darwin` 专用技能（如 `imsg`、`apple-notes`、`apple-reminders`）默认不会加载，除非你覆盖 gating。
 
-You have three supported patterns:
+有三种支持的模式：
 
-**Option A - run the Gateway on a Mac (simplest).**  
-Run the Gateway where the macOS binaries exist, then connect from Linux in [remote mode](#how-do-i-run-moltbot-in-remote-mode-client-connects-to-a-gateway-elsewhere) or over Tailscale. The skills load normally because the Gateway host is macOS.
+**方案 A - 在 Mac 上运行 Gateway（最简单）。**  
+让 Gateway 在 macOS 二进制可用的机器上运行，再从 Linux 通过 [远程模式](#如何运行远程模式客户端连接到别处的-gateway) 或 Tailscale 连接。因为 Gateway 主机是 macOS，技能会正常加载。
 
-**Option B - use a macOS node (no SSH).**  
-Run the Gateway on Linux, pair a macOS node (menubar app), and set **Node Run Commands** to "Always Ask" or "Always Allow" on the Mac. Moltbot can treat macOS-only skills as eligible when the required binaries exist on the node. The agent runs those skills via the `nodes` tool. If you choose "Always Ask", approving "Always Allow" in the prompt adds that command to the allowlist.
+**方案 B - 使用 macOS 节点（无 SSH）。**  
+Gateway 运行在 Linux，上配一个 macOS 节点（菜单栏 app），并在 Mac 上把 **Node Run Commands** 设为 “Always Ask” 或 “Always Allow”。当节点存在所需二进制时，Moltbot 可认为这些 macOS 技能可用。agent 通过 `nodes` 工具调用这些技能。如果选择 “Always Ask”，在提示中批准 “Always Allow” 会把该命令加入 allowlist。
 
-**Option C - proxy macOS binaries over SSH (advanced).**  
-Keep the Gateway on Linux, but make the required CLI binaries resolve to SSH wrappers that run on a Mac. Then override the skill to allow Linux so it stays eligible.
+**方案 C - 通过 SSH 代理 macOS 二进制（高级）。**  
+Gateway 跑在 Linux，但让需要的 CLI 二进制指向在 Mac 上运行的 SSH wrapper。然后覆盖技能以允许 Linux，使其保持可用。
 
-1) Create an SSH wrapper for the binary (example: `imsg`):
+1) 为二进制创建 SSH wrapper（示例 `imsg`）：
    ```bash
    #!/usr/bin/env bash
    set -euo pipefail
    exec ssh -T user@mac-host /opt/homebrew/bin/imsg "$@"
    ```
-2) Put the wrapper on `PATH` on the Linux host (for example `~/bin/imsg`).
-3) Override the skill metadata (workspace or `~/.clawdbot/skills`) to allow Linux:
+2) 把 wrapper 放到 Linux 主机的 `PATH`（例如 `~/bin/imsg`）。
+3) 覆盖技能元数据（工作区或 `~/.clawdbot/skills`）以允许 Linux：
    ```markdown
    ---
    name: imsg
@@ -1054,166 +982,140 @@ Keep the Gateway on Linux, but make the required CLI binaries resolve to SSH wra
    metadata: {"moltbot":{"os":["darwin","linux"],"requires":{"bins":["imsg"]}}}
    ---
    ```
-4) Start a new session so the skills snapshot refreshes.
+4) 重新开始会话，让技能快照刷新。
 
-For iMessage specifically, you can also point `channels.imessage.cliPath` at an SSH wrapper (Moltbot only needs stdio). See [iMessage](/channels/imessage).
+针对 iMessage，也可以把 `channels.imessage.cliPath` 指向 SSH wrapper（Moltbot 只需要 stdio）。见 [iMessage](/channels/imessage)。
 
-### Do you have a Notion or HeyGen integration
+### 是否有 Notion 或 HeyGen 集成
 
-Not built‑in today.
+当前没有内置。
 
-Options:
-- **Custom skill / plugin:** best for reliable API access (Notion/HeyGen both have APIs).
-- **Browser automation:** works without code but is slower and more fragile.
+可选方案：
+- **自定义技能/插件：** 最适合可靠 API 访问（Notion/HeyGen 都有 API）。
+- **浏览器自动化：** 无需代码，但更慢也更脆弱。
 
-If you want to keep context per client (agency workflows), a simple pattern is:
-- One Notion page per client (context + preferences + active work).
-- Ask the agent to fetch that page at the start of a session.
+如果你需要按客户保持上下文（代理/工作流），一种简单模式是：
+- 每个客户一个 Notion 页面（上下文 + 偏好 + 进行中的工作）。
+- 让 agent 在会话开始时获取该页面。
 
-If you want a native integration, open a feature request or build a skill
-targeting those APIs.
+若需要原生集成，请开 feature request 或构建对应 API 的技能。
 
-Install skills:
+安装技能：
 
 ```bash
 clawdhub install <skill-slug>
 clawdhub update --all
 ```
 
-ClawdHub installs into `./skills` under your current directory (or falls back to your configured Moltbot workspace); Moltbot treats that as `<workspace>/skills` on the next session. For shared skills across agents, place them in `~/.clawdbot/skills/<name>/SKILL.md`. Some skills expect binaries installed via Homebrew; on Linux that means Linuxbrew (see the Homebrew Linux FAQ entry above). See [Skills](/tools/skills) and [ClawdHub](/tools/clawdhub).
+ClawdHub 默认安装到当前目录下的 `./skills`（或回退到你的 Moltbot 工作区）；Moltbot 会在下一次会话把它视为 `<workspace>/skills`。若要让多个 agent 共享技能，把它们放到 `~/.clawdbot/skills/<name>/SKILL.md`。部分技能依赖 Homebrew 二进制；在 Linux 上就是 Linuxbrew（见上面的 Homebrew Linux FAQ）。见 [Skills](/tools/skills) 与 [ClawdHub](/tools/clawdhub)。
 
-### How do I install the Chrome extension for browser takeover
+### 如何安装浏览器接管的 Chrome 扩展
 
-Use the built-in installer, then load the unpacked extension in Chrome:
+使用内置安装器，然后在 Chrome 中加载解包扩展：
 
 ```bash
 moltbot browser extension install
 moltbot browser extension path
 ```
 
-Then Chrome → `chrome://extensions` → enable “Developer mode” → “Load unpacked” → pick that folder.
+然后在 Chrome → `chrome://extensions` → 启用 “Developer mode” → “Load unpacked” → 选择该目录。
 
-Full guide (including remote Gateway + security notes): [Chrome extension](/tools/chrome-extension)
+完整指南（包含远程 Gateway + 安全说明）：[Chrome extension](/tools/chrome-extension)
 
-If the Gateway runs on the same machine as Chrome (default setup), you usually **do not** need anything extra.
-If the Gateway runs elsewhere, run a node host on the browser machine so the Gateway can proxy browser actions.
-You still need to click the extension button on the tab you want to control (it doesn’t auto-attach).
+如果 Gateway 与 Chrome 在同一台机器（默认设置），通常**不需要**额外操作。
+如果 Gateway 在别处，请在浏览器机器上运行节点主机，让 Gateway 代理浏览器动作。
+你仍需点击扩展按钮绑定目标标签页（不会自动附着）。
 
-## Sandboxing and memory
+## 沙箱与记忆
 
-### Is there a dedicated sandboxing doc
+### 有专门的沙箱文档吗
 
-Yes. See [Sandboxing](/gateway/sandboxing). For Docker-specific setup (full gateway in Docker or sandbox images), see [Docker](/install/docker).
+有。见 [Sandboxing](/gateway/sandboxing)。Docker 相关（完整 gateway Docker 或沙箱镜像）见 [Docker](/install/docker)。
 
-**Can I keep DMs personal but make groups public sandboxed with one agent**
+**能否让私聊保持个人但群聊用公共沙箱且用一个 agent**
 
-Yes - if your private traffic is **DMs** and your public traffic is **groups**.
+可以，如果你的私密流量是 **DM**，公共流量是 **群聊**。
 
-Use `agents.defaults.sandbox.mode: "non-main"` so group/channel sessions (non-main keys) run in Docker, while the main DM session stays on-host. Then restrict what tools are available in sandboxed sessions via `tools.sandbox.tools`.
+把 `agents.defaults.sandbox.mode: "non-main"`，让群聊或频道会话（非 main key）在 Docker 中运行，而主 DM 会话保留在宿主机。然后用 `tools.sandbox.tools` 限制沙箱会话可用的工具。
 
-Setup walkthrough + example config: [Groups: personal DMs + public groups](/concepts/groups#pattern-personal-dms-public-groups-single-agent)
+配置示例与流程见：[Groups: personal DMs + public groups](/concepts/groups#pattern-personal-dms-public-groups-single-agent)
 
-Key config reference: [Gateway configuration](/gateway/configuration#agentsdefaultssandbox)
+关键配置参考：[Gateway configuration](/gateway/configuration#agentsdefaultssandbox)
 
-### How do I bind a host folder into the sandbox
+### 如何把宿主机文件夹绑定到沙箱
 
-Set `agents.defaults.sandbox.docker.binds` to `["host:path:mode"]` (e.g., `"/home/user/src:/src:ro"`). Global + per-agent binds merge; per-agent binds are ignored when `scope: "shared"`. Use `:ro` for anything sensitive and remember binds bypass the sandbox filesystem walls. See [Sandboxing](/gateway/sandboxing#custom-bind-mounts) and [Sandbox vs Tool Policy vs Elevated](/gateway/sandbox-vs-tool-policy-vs-elevated#bind-mounts-security-quick-check) for examples and safety notes.
+设置 `agents.defaults.sandbox.docker.binds` 为 `"host:path:mode"` 形式（例如 `"/home/user/src:/src:ro"`）。全局与 per-agent binds 会合并；当 `scope: "shared"` 时会忽略 per-agent binds。对敏感内容请用 `:ro`，并记住 bind 会绕过沙箱文件系统隔离。示例与安全说明见 [Sandboxing](/gateway/sandboxing#custom-bind-mounts) 与 [Sandbox vs Tool Policy vs Elevated](/gateway/sandbox-vs-tool-policy-vs-elevated#bind-mounts-security-quick-check)。
 
-### How does memory work
+### 记忆如何工作
 
-Moltbot memory is just Markdown files in the agent workspace:
-- Daily notes in `memory/YYYY-MM-DD.md`
-- Curated long-term notes in `MEMORY.md` (main/private sessions only)
+Moltbot 的记忆本质是 agent 工作区里的 Markdown 文件：
+- 每日笔记在 `memory/YYYY-MM-DD.md`
+- 长期精选笔记在 `MEMORY.md`（仅 main/私密会话）
 
-Moltbot also runs a **silent pre-compaction memory flush** to remind the model
-to write durable notes before auto-compaction. This only runs when the workspace
-is writable (read-only sandboxes skip it). See [Memory](/concepts/memory).
+Moltbot 还会在自动压缩前执行一次**静默记忆刷新**，提醒模型写入持久笔记。仅当工作区可写时运行（只读沙箱会跳过）。见 [Memory](/concepts/memory)。
 
-### Memory keeps forgetting things How do I make it stick
+### 记忆总忘事怎么让它记住
 
-Ask the bot to **write the fact to memory**. Long-term notes belong in `MEMORY.md`,
-short-term context goes into `memory/YYYY-MM-DD.md`.
+让机器人**把事实写入记忆**。长期笔记写进 `MEMORY.md`，短期上下文写进 `memory/YYYY-MM-DD.md`。
 
-This is still an area we are improving. It helps to remind the model to store memories;
-it will know what to do. If it keeps forgetting, verify the Gateway is using the same
-workspace on every run.
+这是我们仍在改进的领域。提醒模型存储记忆很有帮助，它知道该怎么做。如果仍然频繁遗忘，请确认 Gateway 每次运行使用的是同一个工作区。
 
-Docs: [Memory](/concepts/memory), [Agent workspace](/concepts/agent-workspace).
+文档：[Memory](/concepts/memory)、[Agent workspace](/concepts/agent-workspace)。
 
-### Does semantic memory search require an OpenAI API key
+### 语义记忆检索需要 OpenAI API key 吗
 
-Only if you use **OpenAI embeddings**. Codex OAuth covers chat/completions and
-does **not** grant embeddings access, so **signing in with Codex (OAuth or the
-Codex CLI login)** does not help for semantic memory search. OpenAI embeddings
-still need a real API key (`OPENAI_API_KEY` or `models.providers.openai.apiKey`).
+只有当你使用 **OpenAI embeddings** 时才需要。Codex OAuth 只覆盖 chat/completions，**不**包含 embeddings，因此**用 Codex 登录（OAuth 或 Codex CLI）无法用于语义记忆检索**。OpenAI embeddings 仍需要真实 API key（`OPENAI_API_KEY` 或 `models.providers.openai.apiKey`）。
 
-If you don’t set a provider explicitly, Moltbot auto-selects a provider when it
-can resolve an API key (auth profiles, `models.providers.*.apiKey`, or env vars).
-It prefers OpenAI if an OpenAI key resolves, otherwise Gemini if a Gemini key
-resolves. If neither key is available, memory search stays disabled until you
-configure it. If you have a local model path configured and present, Moltbot
-prefers `local`.
+如果你没有显式设置 provider，Moltbot 会在能解析到 API key 时自动选择 provider（认证 profiles、`models.providers.*.apiKey` 或环境变量）。有 OpenAI key 时优先 OpenAI，否则有 Gemini key 时优先 Gemini。若两者都不可用，记忆检索保持关闭，直到你配置它。如果你配置并可用本地模型路径，Moltbot 会优先 `local`。
 
-If you’d rather stay local, set `memorySearch.provider = "local"` (and optionally
-`memorySearch.fallback = "none"`). If you want Gemini embeddings, set
-`memorySearch.provider = "gemini"` and provide `GEMINI_API_KEY` (or
-`memorySearch.remote.apiKey`). We support **OpenAI, Gemini, or local** embedding
-models - see [Memory](/concepts/memory) for the setup details.
+如果你想完全本地，设置 `memorySearch.provider = "local"`（可选 `memorySearch.fallback = "none"`）。如果要 Gemini embeddings，设置 `memorySearch.provider = "gemini"` 并提供 `GEMINI_API_KEY`（或 `memorySearch.remote.apiKey`）。我们支持 **OpenAI、Gemini 或本地** embeddings，详见 [Memory](/concepts/memory)。
 
-### Does memory persist forever What are the limits
+### 记忆会永久保存吗有什么限制
 
-Memory files live on disk and persist until you delete them. The limit is your
-storage, not the model. The **session context** is still limited by the model
-context window, so long conversations can compact or truncate. That is why
-memory search exists - it pulls only the relevant parts back into context.
+记忆文件存放在磁盘上，除非你删除，否则会一直存在。限制来自存储，而不是模型。**会话上下文** 仍受模型上下文窗口限制，所以长对话会被压缩或截断。这就是记忆检索存在的原因：它只把相关部分拉回上下文。
 
-Docs: [Memory](/concepts/memory), [Context](/concepts/context).
+文档：[Memory](/concepts/memory)、[Context](/concepts/context)。
 
-## Where things live on disk
+## 磁盘上的位置
 
-### Is all data used with Moltbot saved locally
+### Moltbot 的数据是否全部保存在本地
 
-No - **Moltbot’s state is local**, but **external services still see what you send them**.
+不是。**Moltbot 的状态是本地的**，但**外部服务仍会看到你发给它们的内容**。
 
-- **Local by default:** sessions, memory files, config, and workspace live on the Gateway host
-  (`~/.clawdbot` + your workspace directory).
-- **Remote by necessity:** messages you send to model providers (Anthropic/OpenAI/etc.) go to
-  their APIs, and chat platforms (WhatsApp/Telegram/Slack/etc.) store message data on their
-  servers.
-- **You control the footprint:** using local models keeps prompts on your machine, but channel
-  traffic still goes through the channel’s servers.
+- **本地默认：** 会话、记忆文件、配置与工作区在 Gateway 主机上（`~/.clawdbot` + 工作区目录）。
+- **远程不可避免：** 你发给模型提供方（Anthropic/OpenAI 等）的消息会到它们的 API，聊天平台（WhatsApp/Telegram/Slack 等）会在服务器上存储消息。
+- **你可控制范围：** 使用本地模型可让提示词留在机器上，但频道流量仍会经过该频道的服务器。
 
-Related: [Agent workspace](/concepts/agent-workspace), [Memory](/concepts/memory).
+相关：[Agent workspace](/concepts/agent-workspace)、[Memory](/concepts/memory)。
 
-### Where does Moltbot store its data
+### Moltbot 把数据存在哪里
 
-Everything lives under `$CLAWDBOT_STATE_DIR` (default: `~/.clawdbot`):
+一切都在 `$CLAWDBOT_STATE_DIR`（默认：`~/.clawdbot`）下：
 
-| Path | Purpose |
-|------|---------|
-| `$CLAWDBOT_STATE_DIR/moltbot.json` | Main config (JSON5) |
-| `$CLAWDBOT_STATE_DIR/credentials/oauth.json` | Legacy OAuth import (copied into auth profiles on first use) |
-| `$CLAWDBOT_STATE_DIR/agents/<agentId>/agent/auth-profiles.json` | Auth profiles (OAuth + API keys) |
-| `$CLAWDBOT_STATE_DIR/agents/<agentId>/agent/auth.json` | Runtime auth cache (managed automatically) |
-| `$CLAWDBOT_STATE_DIR/credentials/` | Provider state (e.g. `whatsapp/<accountId>/creds.json`) |
-| `$CLAWDBOT_STATE_DIR/agents/` | Per‑agent state (agentDir + sessions) |
-| `$CLAWDBOT_STATE_DIR/agents/<agentId>/sessions/` | Conversation history & state (per agent) |
-| `$CLAWDBOT_STATE_DIR/agents/<agentId>/sessions/sessions.json` | Session metadata (per agent) |
+| 路径 | 作用 |
+|------|------|
+| `$CLAWDBOT_STATE_DIR/moltbot.json` | 主配置（JSON5） |
+| `$CLAWDBOT_STATE_DIR/credentials/oauth.json` | 旧版 OAuth 导入（首次使用时复制到认证 profiles） |
+| `$CLAWDBOT_STATE_DIR/agents/<agentId>/agent/auth-profiles.json` | 认证 profiles（OAuth + API keys） |
+| `$CLAWDBOT_STATE_DIR/agents/<agentId>/agent/auth.json` | 运行时认证缓存（自动管理） |
+| `$CLAWDBOT_STATE_DIR/credentials/` | 提供方状态（例如 `whatsapp/<accountId>/creds.json`） |
+| `$CLAWDBOT_STATE_DIR/agents/` | 每个 agent 的状态（agentDir + 会话） |
+| `$CLAWDBOT_STATE_DIR/agents/<agentId>/sessions/` | 会话历史与状态（每个 agent） |
+| `$CLAWDBOT_STATE_DIR/agents/<agentId>/sessions/sessions.json` | 会话元数据（每个 agent） |
 
-Legacy single‑agent path: `~/.clawdbot/agent/*` (migrated by `moltbot doctor`).
+旧版单 agent 路径：`~/.clawdbot/agent/*`（由 `moltbot doctor` 迁移）。
 
-Your **workspace** (AGENTS.md, memory files, skills, etc.) is separate and configured via `agents.defaults.workspace` (default: `~/clawd`).
+你的 **工作区**（AGENTS.md、记忆文件、技能等）是独立的，通过 `agents.defaults.workspace` 配置（默认：`~/clawd`）。
 
-### Where should AGENTSmd SOULmd USERmd MEMORYmd live
+### AGENTS.md SOUL.md USER.md MEMORY.md 应该放在哪里
 
-These files live in the **agent workspace**, not `~/.clawdbot`.
+这些文件应放在 **agent 工作区**，而不是 `~/.clawdbot`。
 
-- **Workspace (per agent)**: `AGENTS.md`, `SOUL.md`, `IDENTITY.md`, `USER.md`,
-  `MEMORY.md` (or `memory.md`), `memory/YYYY-MM-DD.md`, optional `HEARTBEAT.md`.
-- **State dir (`~/.clawdbot`)**: config, credentials, auth profiles, sessions, logs,
-  and shared skills (`~/.clawdbot/skills`).
+- **工作区（每个 agent）**：`AGENTS.md`、`SOUL.md`、`IDENTITY.md`、`USER.md`、
+  `MEMORY.md`（或 `memory.md`）、`memory/YYYY-MM-DD.md`、可选 `HEARTBEAT.md`。
+- **状态目录（`~/.clawdbot`）**：配置、凭据、认证 profiles、会话、日志、共享技能（`~/.clawdbot/skills`）。
 
-Default workspace is `~/clawd`, configurable via:
+默认工作区为 `~/clawd`，可通过以下配置：
 
 ```json5
 {
@@ -1221,42 +1123,29 @@ Default workspace is `~/clawd`, configurable via:
 }
 ```
 
-If the bot “forgets” after a restart, confirm the Gateway is using the same
-workspace on every launch (and remember: remote mode uses the **gateway host’s**
-workspace, not your local laptop).
+如果机器人重启后“遗忘”，请确认 Gateway 每次启动使用同一个工作区（并记住：远程模式使用的是**gateway 主机**的工作区，而不是本地笔记本）。
 
-Tip: if you want a durable behavior or preference, ask the bot to **write it into
-AGENTS.md or MEMORY.md** rather than relying on chat history.
+提示：若你想持久化某个行为或偏好，最好让机器人**写入 AGENTS.md 或 MEMORY.md**，而不是依赖聊天历史。
 
-See [Agent workspace](/concepts/agent-workspace) and [Memory](/concepts/memory).
+见 [Agent workspace](/concepts/agent-workspace) 与 [Memory](/concepts/memory)。
 
-### Whats the recommended backup strategy
+### 推荐的备份策略
 
-Put your **agent workspace** in a **private** git repo and back it up somewhere
-private (for example GitHub private). This captures memory + AGENTS/SOUL/USER
-files, and lets you restore the assistant’s “mind” later.
+把 **agent 工作区** 放进**私有** git 仓库并做私密备份（例如 GitHub 私有仓库）。这样能保存记忆与 AGENTS/SOUL/USER 文件，便于之后恢复助手“心智”。
 
-Do **not** commit anything under `~/.clawdbot` (credentials, sessions, tokens).
-If you need a full restore, back up both the workspace and the state directory
-separately (see the migration question above).
+**不要**提交 `~/.clawdbot` 下的任何内容（凭据、会话、token）。如果你需要完整恢复，请分别备份工作区与状态目录（见上面的迁移问题）。
 
-Docs: [Agent workspace](/concepts/agent-workspace).
+文档：[Agent workspace](/concepts/agent-workspace)。
 
-### How do I completely uninstall Moltbot
+### 如何彻底卸载 Moltbot
 
-See the dedicated guide: [Uninstall](/install/uninstall).
+见专门指南：[Uninstall](/install/uninstall)。
 
-### Can agents work outside the workspace
+### agent 能在工作区之外工作吗
 
-Yes. The workspace is the **default cwd** and memory anchor, not a hard sandbox.
-Relative paths resolve inside the workspace, but absolute paths can access other
-host locations unless sandboxing is enabled. If you need isolation, use
-[`agents.defaults.sandbox`](/gateway/sandboxing) or per‑agent sandbox settings. If you
-want a repo to be the default working directory, point that agent’s
-`workspace` to the repo root. The Moltbot repo is just source code; keep the
-workspace separate unless you intentionally want the agent to work inside it.
+可以。工作区是**默认 cwd** 与记忆锚点，不是硬性沙箱。相对路径会在工作区内解析，但除非启用沙箱，绝对路径仍可访问其他主机位置。需要隔离时使用 [`agents.defaults.sandbox`](/gateway/sandboxing) 或 per-agent 沙箱设置。若你希望某仓库成为默认工作目录，就把 해당 agent 的 `workspace` 指向仓库根目录。Moltbot 仓库只是源码，除非你刻意要在其中工作，否则应将工作区独立。
 
-Example (repo as default cwd):
+示例（仓库作为默认 cwd）：
 
 ```json5
 {
@@ -1268,25 +1157,25 @@ Example (repo as default cwd):
 }
 ```
 
-### Im in remote mode where is the session store
+### 远程模式下会话存储在哪里
 
-Session state is owned by the **gateway host**. If you’re in remote mode, the session store you care about is on the remote machine, not your local laptop. See [Session management](/concepts/session).
+会话状态归 **gateway 主机**所有。处于远程模式时，你关心的会话存储在远程机器上，而不是本地笔记本。见 [Session management](/concepts/session)。
 
-## Config basics
+## 配置基础
 
-### What format is the config Where is it
+### 配置是什么格式在哪里
 
-Moltbot reads an optional **JSON5** config from `$CLAWDBOT_CONFIG_PATH` (default: `~/.clawdbot/moltbot.json`):
+Moltbot 会从 `$CLAWDBOT_CONFIG_PATH`（默认：`~/.clawdbot/moltbot.json`）读取可选的 **JSON5** 配置：
 
 ```
 $CLAWDBOT_CONFIG_PATH
 ```
 
-If the file is missing, it uses safe‑ish defaults (including a default workspace of `~/clawd`).
+如果文件不存在，会使用相对安全的默认值（包括默认工作区 `~/clawd`）。
 
-### I set gatewaybind lan or tailnet and now nothing listens the UI says unauthorized
+### 我设置 gateway.bind lan 或 tailnet 后没有监听或 UI 显示未授权
 
-Non-loopback binds **require auth**. Configure `gateway.auth.mode` + `gateway.auth.token` (or use `CLAWDBOT_GATEWAY_TOKEN`).
+非 loopback 绑定**必须认证**。请配置 `gateway.auth.mode` + `gateway.auth.token`（或使用 `CLAWDBOT_GATEWAY_TOKEN`）。
 
 ```json5
 {
@@ -1300,29 +1189,27 @@ Non-loopback binds **require auth**. Configure `gateway.auth.mode` + `gateway.au
 }
 ```
 
-Notes:
-- `gateway.remote.token` is for **remote CLI calls** only; it does not enable local gateway auth.
-- The Control UI authenticates via `connect.params.auth.token` (stored in app/UI settings). Avoid putting tokens in URLs.
+说明：
+- `gateway.remote.token` 仅用于**远程 CLI 调用**；不会启用本地 gateway 认证。
+- Control UI 通过 `connect.params.auth.token` 认证（保存在 app/UI 设置中）。避免把 token 放进 URL。
 
-### Why do I need a token on localhost now
+### 为什么现在 localhost 也需要 token
 
-The wizard generates a gateway token by default (even on loopback) so **local WS clients must authenticate**. This blocks other local processes from calling the Gateway. Paste the token into the Control UI settings (or your client config) to connect.
+向导默认会生成 gateway token（即便是 loopback），因此**本地 WS 客户端必须认证**。这能阻止其他本地进程调用 Gateway。把 token 粘贴到 Control UI 设置（或你的客户端配置）即可连接。
 
-If you **really** want open loopback, remove `gateway.auth` from your config. Doctor can generate a token for you any time: `moltbot doctor --generate-gateway-token`.
+如果你**确实**想开放 loopback，可以从配置中移除 `gateway.auth`。Doctor 可随时为你生成 token：`moltbot doctor --generate-gateway-token`。
 
-### Do I have to restart after changing config
+### 修改配置后需要重启吗
 
-The Gateway watches the config and supports hot‑reload:
+Gateway 会监视配置并支持热更新：
 
-- `gateway.reload.mode: "hybrid"` (default): hot‑apply safe changes, restart for critical ones
-- `hot`, `restart`, `off` are also supported
+- `gateway.reload.mode: "hybrid"`（默认）：安全变更热应用，关键变更重启
+- 也支持 `hot`、`restart`、`off`
 
-### How do I enable web search and web fetch
+### 如何启用 web search 以及 web fetch
 
-`web_fetch` works without an API key. `web_search` requires a Brave Search API
-key. **Recommended:** run `moltbot configure --section web` to store it in
-`tools.web.search.apiKey`. Environment alternative: set `BRAVE_API_KEY` for the
-Gateway process.
+`web_fetch` 不需要 API key。`web_search` 需要 Brave Search API key。
+**推荐：** 运行 `moltbot configure --section web` 把它写入 `tools.web.search.apiKey`。环境变量替代方案：给 Gateway 进程设置 `BRAVE_API_KEY`。
 
 ```json5
 {
@@ -1341,28 +1228,28 @@ Gateway process.
 }
 ```
 
-Notes:
-- If you use allowlists, add `web_search`/`web_fetch` or `group:web`.
-- `web_fetch` is enabled by default (unless explicitly disabled).
-- Daemons read env vars from `~/.clawdbot/.env` (or the service environment).
+说明：
+- 如果你使用 allowlist，请添加 `web_search`/`web_fetch` 或 `group:web`。
+- `web_fetch` 默认启用（除非显式禁用）。
+- 守护进程会从 `~/.clawdbot/.env` 读取环境变量（或 service 环境）。
 
-Docs: [Web tools](/tools/web).
+文档：[Web tools](/tools/web)。
 
-### How do I run a central Gateway with specialized workers across devices
+### 如何运行一个中心 Gateway 并在多设备上用专用 worker
 
-The common pattern is **one Gateway** (e.g. Raspberry Pi) plus **nodes** and **agents**:
+常见模式是 **一个 Gateway**（例如树莓派）+ **节点** + **agents**：
 
-- **Gateway (central):** owns channels (Signal/WhatsApp), routing, and sessions.
-- **Nodes (devices):** Macs/iOS/Android connect as peripherals and expose local tools (`system.run`, `canvas`, `camera`).
-- **Agents (workers):** separate brains/workspaces for special roles (e.g. “Hetzner ops”, “Personal data”).
-- **Sub‑agents:** spawn background work from a main agent when you want parallelism.
-- **TUI:** connect to the Gateway and switch agents/sessions.
+- **Gateway（中心）：** 持有频道（Signal/WhatsApp）、路由与会话。
+- **节点（设备）：** Mac/iOS/Android 作为外设，暴露本地工具（`system.run`、`canvas`、`camera`）。
+- **agents（工人）：** 为特定角色分离大脑/工作区（例如 “Hetzner ops”、“个人数据”）。
+- **子 agent：** 在你需要并行时由主 agent 生成后台工作。
+- **TUI：** 连接 Gateway 并切换 agent/会话。
 
-Docs: [Nodes](/nodes), [Remote access](/gateway/remote), [Multi-Agent Routing](/concepts/multi-agent), [Sub-agents](/tools/subagents), [TUI](/tui).
+文档：[Nodes](/nodes)、[Remote access](/gateway/remote)、[Multi-Agent Routing](/concepts/multi-agent)、[Sub-agents](/tools/subagents)、[TUI](/tui)。
 
-### Can the Moltbot browser run headless
+### Moltbot 浏览器能无头运行吗
 
-Yes. It’s a config option:
+可以，这是配置项：
 
 ```json5
 {
@@ -1375,158 +1262,135 @@ Yes. It’s a config option:
 }
 ```
 
-Default is `false` (headful). Headless is more likely to trigger anti‑bot checks on some sites. See [Browser](/tools/browser).
+默认 `false`（有头）。无头模式更容易触发某些站点的反机器人检查。见 [Browser](/tools/browser)。
 
-Headless uses the **same Chromium engine** and works for most automation (forms, clicks, scraping, logins). The main differences:
-- No visible browser window (use screenshots if you need visuals).
-- Some sites are stricter about automation in headless mode (CAPTCHAs, anti‑bot).
-  For example, X/Twitter often blocks headless sessions.
+无头使用**相同的 Chromium 引擎**，多数自动化可用（表单、点击、抓取、登录）。主要区别：
+- 没有可见浏览器窗口（需要时用截图）。
+- 某些站点在无头模式更严格（CAPTCHA、反机器人）。
+  例如 X/Twitter 常阻止无头会话。
 
-### How do I use Brave for browser control
+### 如何用 Brave 控制浏览器
 
-Set `browser.executablePath` to your Brave binary (or any Chromium-based browser) and restart the Gateway.
-See the full config examples in [Browser](/tools/browser#use-brave-or-another-chromium-based-browser).
+把 `browser.executablePath` 指向 Brave 二进制（或任意 Chromium 内核浏览器）并重启 Gateway。
+完整配置示例见 [Browser](/tools/browser#use-brave-or-another-chromium-based-browser)。
 
-## Remote gateways + nodes
+## 远程 Gateway 与节点
 
-### How do commands propagate between Telegram the gateway and nodes
+### Telegram gateway 与节点之间的命令如何传播
 
-Telegram messages are handled by the **gateway**. The gateway runs the agent and
-only then calls nodes over the **Gateway WebSocket** when a node tool is needed:
+Telegram 消息由 **gateway** 处理。gateway 先运行 agent，然后在需要节点工具时，通过 **Gateway WebSocket** 调用节点：
 
 Telegram → Gateway → Agent → `node.*` → Node → Gateway → Telegram
 
-Nodes don’t see inbound provider traffic; they only receive node RPC calls.
+节点不会看到入站提供方流量；它们只接收 node RPC 调用。
 
-### How can my agent access my computer if the Gateway is hosted remotely
+### Gateway 远程托管时 agent 如何访问我的电脑
 
-Short answer: **pair your computer as a node**. The Gateway runs elsewhere, but it can
-call `node.*` tools (screen, camera, system) on your local machine over the Gateway WebSocket.
+简短答案：**把你的电脑配对成一个节点**。Gateway 运行在别处，但它可以通过 Gateway WebSocket 调用你本机的 `node.*` 工具（屏幕、摄像头、系统）。
 
-Typical setup:
-1) Run the Gateway on the always‑on host (VPS/home server).
-2) Put the Gateway host + your computer on the same tailnet.
-3) Ensure the Gateway WS is reachable (tailnet bind or SSH tunnel).
-4) Open the macOS app locally and connect in **Remote over SSH** mode (or direct tailnet)
-   so it can register as a node.
-5) Approve the node on the Gateway:
+典型设置：
+1) 在常开主机（VPS/家用服务器）上运行 Gateway。
+2) 将 Gateway 主机与电脑加入同一 tailnet。
+3) 确保 Gateway WS 可达（tailnet bind 或 SSH 隧道）。
+4) 在本地打开 macOS app，并以 **Remote over SSH** 模式（或直接 tailnet）连接，从而注册为节点。
+5) 在 Gateway 上批准该节点：
    ```bash
    moltbot nodes pending
    moltbot nodes approve <requestId>
    ```
 
-No separate TCP bridge is required; nodes connect over the Gateway WebSocket.
+无需单独的 TCP 桥接；节点通过 Gateway WebSocket 连接。
 
-Security reminder: pairing a macOS node allows `system.run` on that machine. Only
-pair devices you trust, and review [Security](/gateway/security).
+安全提醒：配对 macOS 节点会允许在该机器上执行 `system.run`。只配对可信设备，并阅读 [Security](/gateway/security)。
 
-Docs: [Nodes](/nodes), [Gateway protocol](/gateway/protocol), [macOS remote mode](/platforms/mac/remote), [Security](/gateway/security).
+文档：[Nodes](/nodes)、[Gateway protocol](/gateway/protocol)、[macOS remote mode](/platforms/mac/remote)、[Security](/gateway/security)。
 
-### Tailscale is connected but I get no replies What now
+### Tailscale 已连接但没回复怎么办
 
-Check the basics:
-- Gateway is running: `moltbot gateway status`
-- Gateway health: `moltbot status`
-- Channel health: `moltbot channels status`
+先检查基础项：
+- Gateway 在运行：`moltbot gateway status`
+- Gateway 健康：`moltbot status`
+- 频道健康：`moltbot channels status`
 
-Then verify auth and routing:
-- If you use Tailscale Serve, make sure `gateway.auth.allowTailscale` is set correctly.
-- If you connect via SSH tunnel, confirm the local tunnel is up and points at the right port.
-- Confirm your allowlists (DM or group) include your account.
+再检查认证与路由：
+- 如果用 Tailscale Serve，确认 `gateway.auth.allowTailscale` 设置正确。
+- 如果通过 SSH 隧道连接，确认本地隧道正常且端口正确。
+- 确认 allowlist（DM 或群）包含你的账号。
 
-Docs: [Tailscale](/gateway/tailscale), [Remote access](/gateway/remote), [Channels](/channels).
+文档：[Tailscale](/gateway/tailscale)、[Remote access](/gateway/remote)、[Channels](/channels)。
 
-### Can two Moltbots talk to each other local VPS
+### 两个 Moltbot 能互相对话吗 本地加 VPS
 
-Yes. There is no built-in "bot-to-bot" bridge, but you can wire it up in a few
-reliable ways:
+可以。没有内置“bot-to-bot”桥，但你可以用几种可靠方式连起来：
 
-**Simplest:** use a normal chat channel both bots can access (Telegram/Slack/WhatsApp).
-Have Bot A send a message to Bot B, then let Bot B reply as usual.
+**最简单：** 用两个 bot 都能访问的普通聊天渠道（Telegram/Slack/WhatsApp）。让 Bot A 发消息给 Bot B，Bot B 正常回复。
 
-**CLI bridge (generic):** run a script that calls the other Gateway with
-`moltbot agent --message ... --deliver`, targeting a chat where the other bot
-listens. If one bot is on a remote VPS, point your CLI at that remote Gateway
-via SSH/Tailscale (see [Remote access](/gateway/remote)).
+**CLI 桥（通用）：** 运行脚本调用另一个 Gateway：
+`moltbot agent --message ... --deliver`，目标是另一个 bot 监听的聊天。如果其中一个 bot 在远程 VPS，请把 CLI 指向远程 Gateway（SSH/Tailscale，见 [Remote access](/gateway/remote)）。
 
-Example pattern (run from a machine that can reach the target Gateway):
+示例模式（在能访问目标 Gateway 的机器上运行）：
 ```bash
 moltbot agent --message "Hello from local bot" --deliver --channel telegram --reply-to <chat-id>
 ```
 
-Tip: add a guardrail so the two bots do not loop endlessly (mention-only, channel
-allowlists, or a "do not reply to bot messages" rule).
+提示：加个防护，避免两个 bot 无休止互相循环（仅提及回复、频道 allowlist、或“不回复 bot 消息”规则）。
 
-Docs: [Remote access](/gateway/remote), [Agent CLI](/cli/agent), [Agent send](/tools/agent-send).
+文档：[Remote access](/gateway/remote)、[Agent CLI](/cli/agent)、[Agent send](/tools/agent-send)。
 
-### Do I need separate VPSes for multiple agents
+### 多个 agent 需要单独的 VPS 吗
 
-No. One Gateway can host multiple agents, each with its own workspace, model defaults,
-and routing. That is the normal setup and it is much cheaper and simpler than running
-one VPS per agent.
+不需要。一个 Gateway 可以托管多个 agent，每个都有自己的工作区、默认模型和路由。这是正常配置，比每个 agent 一台 VPS 更便宜也更简单。
 
-Use separate VPSes only when you need hard isolation (security boundaries) or very
-different configs that you do not want to share. Otherwise, keep one Gateway and
-use multiple agents or sub-agents.
+仅当你需要硬隔离（安全边界）或完全不同且不想共享的配置时，才用多个 VPS。否则保持一个 Gateway + 多个 agent/子 agent。
 
-### Is there a benefit to using a node on my personal laptop instead of SSH from a VPS
+### 用本地笔记本做节点而不是从 VPS 用 SSH 有好处吗
 
-Yes - nodes are the first‑class way to reach your laptop from a remote Gateway, and they
-unlock more than shell access. The Gateway runs on macOS/Linux (Windows via WSL2) and is
-lightweight (a small VPS or Raspberry Pi-class box is fine; 4 GB RAM is plenty), so a common
-setup is an always‑on host plus your laptop as a node.
+有。节点是从远程 Gateway 访问笔记本的一级方式，不止是 shell 访问。Gateway 跑在 macOS/Linux（Windows 通过 WSL2），很轻量（小型 VPS 或树莓派级机器即可；4GB RAM 足够），常见模式是常开主机 + 笔记本作为节点。
 
-- **No inbound SSH required.** Nodes connect out to the Gateway WebSocket and use device pairing.
-- **Safer execution controls.** `system.run` is gated by node allowlists/approvals on that laptop.
-- **More device tools.** Nodes expose `canvas`, `camera`, and `screen` in addition to `system.run`.
-- **Local browser automation.** Keep the Gateway on a VPS, but run Chrome locally and relay control
-  with the Chrome extension + a node host on the laptop.
+- **无需入站 SSH。** 节点主动连接 Gateway WebSocket 并使用设备配对。
+- **更安全的执行控制。** `system.run` 受该笔记本上的节点 allowlist/审批控制。
+- **更多设备工具。** 节点除 `system.run` 外还暴露 `canvas`、`camera`、`screen`。
+- **本地浏览器自动化。** Gateway 放在 VPS，本地跑 Chrome，通过扩展 + 节点主机中继控制。
 
-SSH is fine for ad‑hoc shell access, but nodes are simpler for ongoing agent workflows and
-device automation.
+SSH 适合临时 shell 访问，但节点更适合持续的 agent 工作流与设备自动化。
 
-Docs: [Nodes](/nodes), [Nodes CLI](/cli/nodes), [Chrome extension](/tools/chrome-extension).
+文档：[Nodes](/nodes)、[Nodes CLI](/cli/nodes)、[Chrome extension](/tools/chrome-extension)。
 
-### Should I install on a second laptop or just add a node
+### 应该在第二台笔记本上安装还是只加节点
 
-If you only need **local tools** (screen/camera/exec) on the second laptop, add it as a
-**node**. That keeps a single Gateway and avoids duplicated config. Local node tools are
-currently macOS-only, but we plan to extend them to other OSes.
+如果你只需要第二台笔记本的**本地工具**（屏幕/摄像头/exec），就把它当**节点**。这样保持单一 Gateway，避免配置重复。本地节点工具当前仅 macOS 支持，但我们计划扩展到其他 OS。
 
-Install a second Gateway only when you need **hard isolation** or two fully separate bots.
+只有当你需要**硬隔离**或两个完全独立的机器人时，才安装第二个 Gateway。
 
-Docs: [Nodes](/nodes), [Nodes CLI](/cli/nodes), [Multiple gateways](/gateway/multiple-gateways).
+文档：[Nodes](/nodes)、[Nodes CLI](/cli/nodes)、[Multiple gateways](/gateway/multiple-gateways)。
 
-### Do nodes run a gateway service
+### 节点会运行 gateway 服务吗
 
-No. Only **one gateway** should run per host unless you intentionally run isolated profiles (see [Multiple gateways](/gateway/multiple-gateways)). Nodes are peripherals that connect
-to the gateway (iOS/Android nodes, or macOS “node mode” in the menubar app). For headless node
-hosts and CLI control, see [Node host CLI](/cli/node).
+不会。除非你刻意运行隔离 profile（见 [Multiple gateways](/gateway/multiple-gateways)），每台主机只应运行**一个 gateway**。节点是连接到 gateway 的外设（iOS/Android 节点，或 macOS 菜单栏 app 的“node 模式”）。无头节点主机与 CLI 控制见 [Node host CLI](/cli/node)。
 
-A full restart is required for `gateway`, `discovery`, and `canvasHost` changes.
+`gateway`、`discovery` 与 `canvasHost` 的变更需要完全重启。
 
-### Is there an API RPC way to apply config
+### 是否有 API 或 RPC 方式应用配置
 
-Yes. `config.apply` validates + writes the full config and restarts the Gateway as part of the operation.
+有。`config.apply` 会验证并写入完整配置，并在操作中重启 Gateway。
 
-### configapply wiped my config How do I recover and avoid this
+### config.apply 清空了我的配置如何恢复并避免
 
-`config.apply` replaces the **entire config**. If you send a partial object, everything
-else is removed.
+`config.apply` 会替换**整个配置**。如果你发送部分对象，其余内容会被移除。
 
-Recover:
-- Restore from backup (git or a copied `~/.clawdbot/moltbot.json`).
-- If you have no backup, re-run `moltbot doctor` and reconfigure channels/models.
-- If this was unexpected, file a bug and include your last known config or any backup.
-- A local coding agent can often reconstruct a working config from logs or history.
+恢复：
+- 从备份恢复（git 或复制的 `~/.clawdbot/moltbot.json`）。
+- 如果没有备份，重新运行 `moltbot doctor` 并重新配置频道/模型。
+- 如果这是意外行为，请提交 bug 并附上最后可用配置或任何备份。
+- 本地编程 agent 往往能从日志或历史中重建可用配置。
 
-Avoid it:
-- Use `moltbot config set` for small changes.
-- Use `moltbot configure` for interactive edits.
+避免：
+- 小改动用 `moltbot config set`。
+- 交互式编辑用 `moltbot configure`。
 
-Docs: [Config](/cli/config), [Configure](/cli/configure), [Doctor](/gateway/doctor).
+文档：[Config](/cli/config)、[Configure](/cli/configure)、[Doctor](/gateway/doctor)。
 
-### Whats a minimal sane config for a first install
+### 首次安装的最小合理配置是什么
 
 ```json5
 {
@@ -1535,59 +1399,59 @@ Docs: [Config](/cli/config), [Configure](/cli/configure), [Doctor](/gateway/doct
 }
 ```
 
-This sets your workspace and restricts who can trigger the bot.
+这会设置工作区并限制谁可以触发机器人。
 
-### How do I set up Tailscale on a VPS and connect from my Mac
+### 如何在 VPS 上设置 Tailscale 并从 Mac 连接
 
-Minimal steps:
+最小步骤：
 
-1) **Install + login on the VPS**
+1) **在 VPS 上安装并登录**
    ```bash
    curl -fsSL https://tailscale.com/install.sh | sh
    sudo tailscale up
    ```
-2) **Install + login on your Mac**
-   - Use the Tailscale app and sign in to the same tailnet.
-3) **Enable MagicDNS (recommended)**
-   - In the Tailscale admin console, enable MagicDNS so the VPS has a stable name.
-4) **Use the tailnet hostname**
-   - SSH: `ssh user@your-vps.tailnet-xxxx.ts.net`
-   - Gateway WS: `ws://your-vps.tailnet-xxxx.ts.net:18789`
+2) **在 Mac 上安装并登录**
+   - 使用 Tailscale app 并登录同一 tailnet。
+3) **启用 MagicDNS（推荐）**
+   - 在 Tailscale 管理后台启用 MagicDNS，使 VPS 有稳定名称。
+4) **使用 tailnet 主机名**
+   - SSH：`ssh user@your-vps.tailnet-xxxx.ts.net`
+   - Gateway WS：`ws://your-vps.tailnet-xxxx.ts.net:18789`
 
-If you want the Control UI without SSH, use Tailscale Serve on the VPS:
+若要不用 SSH 访问 Control UI，可在 VPS 上启用 Tailscale Serve：
 ```bash
 moltbot gateway --tailscale serve
 ```
-This keeps the gateway bound to loopback and exposes HTTPS via Tailscale. See [Tailscale](/gateway/tailscale).
+这会让 gateway 保持 loopback 绑定，并通过 Tailscale 暴露 HTTPS。见 [Tailscale](/gateway/tailscale)。
 
-### How do I connect a Mac node to a remote Gateway Tailscale Serve
+### 如何把 Mac 节点连接到远程 Gateway Tailscale Serve
 
-Serve exposes the **Gateway Control UI + WS**. Nodes connect over the same Gateway WS endpoint.
+Serve 会暴露 **Gateway Control UI + WS**。节点通过同一 Gateway WS 端点连接。
 
-Recommended setup:
-1) **Make sure the VPS + Mac are on the same tailnet**.
-2) **Use the macOS app in Remote mode** (SSH target can be the tailnet hostname).
-   The app will tunnel the Gateway port and connect as a node.
-3) **Approve the node** on the gateway:
+推荐步骤：
+1) **确保 VPS 与 Mac 在同一 tailnet**。
+2) **用 macOS app 的 Remote 模式**（SSH 目标可为 tailnet 主机名）。
+   app 会隧道 Gateway 端口并作为节点连接。
+3) **在 gateway 上批准节点**：
    ```bash
    moltbot nodes pending
    moltbot nodes approve <requestId>
    ```
 
-Docs: [Gateway protocol](/gateway/protocol), [Discovery](/gateway/discovery), [macOS remote mode](/platforms/mac/remote).
+文档：[Gateway protocol](/gateway/protocol)、[Discovery](/gateway/discovery)、[macOS remote mode](/platforms/mac/remote)。
 
-## Env vars and .env loading
+## 环境变量与 .env 加载
 
-### How does Moltbot load environment variables
+### Moltbot 如何加载环境变量
 
-Moltbot reads env vars from the parent process (shell, launchd/systemd, CI, etc.) and additionally loads:
+Moltbot 从父进程读取环境变量（shell、launchd/systemd、CI 等），并额外加载：
 
-- `.env` from the current working directory
-- a global fallback `.env` from `~/.clawdbot/.env` (aka `$CLAWDBOT_STATE_DIR/.env`)
+- 当前工作目录的 `.env`
+- 全局兜底的 `~/.clawdbot/.env`（也就是 `$CLAWDBOT_STATE_DIR/.env`）
 
-Neither `.env` file overrides existing env vars.
+两个 `.env` 都不会覆盖已有环境变量。
 
-You can also define inline env vars in config (applied only if missing from the process env):
+你也可以在配置中定义内联环境变量（仅当进程 env 中缺失时才应用）：
 
 ```json5
 {
@@ -1598,14 +1462,14 @@ You can also define inline env vars in config (applied only if missing from the 
 }
 ```
 
-See [/environment](/environment) for full precedence and sources.
+完整优先级与来源见 [/environment](/environment)。
 
-### I started the Gateway via the service and my env vars disappeared What now
+### 我通过 service 启动 Gateway 后环境变量消失了怎么办
 
-Two common fixes:
+两种常见修复：
 
-1) Put the missing keys in `~/.clawdbot/.env` so they’re picked up even when the service doesn’t inherit your shell env.
-2) Enable shell import (opt‑in convenience):
+1) 把缺失的 key 放到 `~/.clawdbot/.env`，这样即使 service 不继承 shell env 也能加载。
+2) 启用 shell 导入（可选便利功能）：
 
 ```json5
 {
@@ -1618,44 +1482,39 @@ Two common fixes:
 }
 ```
 
-This runs your login shell and imports only missing expected keys (never overrides). Env var equivalents:
-`CLAWDBOT_LOAD_SHELL_ENV=1`, `CLAWDBOT_SHELL_ENV_TIMEOUT_MS=15000`.
+这会运行你的登录 shell 并仅导入缺失的预期 key（不会覆盖）。对应环境变量：
+`CLAWDBOT_LOAD_SHELL_ENV=1`、`CLAWDBOT_SHELL_ENV_TIMEOUT_MS=15000`。
 
-### I set COPILOTGITHUBTOKEN but models status shows Shell env off Why
+### 我设置了 COPILOT_GITHUB_TOKEN 但 models status 显示 Shell env off 为什么
 
-`moltbot models status` reports whether **shell env import** is enabled. “Shell env: off”
-does **not** mean your env vars are missing - it just means Moltbot won’t load
-your login shell automatically.
+`moltbot models status` 显示**是否启用 shell env 导入**。“Shell env: off”并不代表 env 缺失，只表示 Moltbot 不会自动加载你的登录 shell。
 
-If the Gateway runs as a service (launchd/systemd), it won’t inherit your shell
-environment. Fix by doing one of these:
+如果 Gateway 作为 service 运行（launchd/systemd），它不会继承 shell 环境。解决方式：
 
-1) Put the token in `~/.clawdbot/.env`:
+1) 把 token 放入 `~/.clawdbot/.env`：
    ```
    COPILOT_GITHUB_TOKEN=...
    ```
-2) Or enable shell import (`env.shellEnv.enabled: true`).
-3) Or add it to your config `env` block (applies only if missing).
+2) 或启用 shell 导入（`env.shellEnv.enabled: true`）。
+3) 或把它加入配置的 `env` 块（仅在缺失时应用）。
 
-Then restart the gateway and recheck:
+然后重启 gateway 并再次检查：
 ```bash
 moltbot models status
 ```
 
-Copilot tokens are read from `COPILOT_GITHUB_TOKEN` (also `GH_TOKEN` / `GITHUB_TOKEN`).
-See [/concepts/model-providers](/concepts/model-providers) and [/environment](/environment).
+Copilot token 来自 `COPILOT_GITHUB_TOKEN`（也支持 `GH_TOKEN` / `GITHUB_TOKEN`）。
+见 [/concepts/model-providers](/concepts/model-providers) 与 [/environment](/environment)。
 
-## Sessions & multiple chats
+## 会话与多聊天
 
-### How do I start a fresh conversation
+### 如何开启新对话
 
-Send `/new` or `/reset` as a standalone message. See [Session management](/concepts/session).
+发送 `/new` 或 `/reset` 作为单独消息。见 [Session management](/concepts/session)。
 
-### Do sessions reset automatically if I never send new
+### 不发 /new 会自动重置会话吗
 
-Yes. Sessions expire after `session.idleMinutes` (default **60**). The **next**
-message starts a fresh session id for that chat key. This does not delete
-transcripts - it just starts a new session.
+会。会话在 `session.idleMinutes`（默认 **60**）后过期。**下一条**消息会为该聊天 key 创建新的会话 ID。这不会删除记录，只是开启新会话。
 
 ```json5
 {
@@ -1665,113 +1524,103 @@ transcripts - it just starts a new session.
 }
 ```
 
-### Is there a way to make a team of Moltbots one CEO and many agents
+### 是否可以让 Moltbot 团队一个 CEO 多个 agent
 
-Yes, via **multi-agent routing** and **sub-agents**. You can create one coordinator
-agent and several worker agents with their own workspaces and models.
+可以，通过 **多 agent 路由** 与 **子 agent**。你可以创建一个协调 agent 和多个各自拥有工作区与模型的 worker。
 
-That said, this is best seen as a **fun experiment**. It is token heavy and often
-less efficient than using one bot with separate sessions. The typical model we
-envision is one bot you talk to, with different sessions for parallel work. That
-bot can also spawn sub-agents when needed.
+但这最好视为**有趣的实验**。它耗费 token，且通常不如一个 bot + 多个会话高效。我们设想的典型模型是一只你对话的 bot，它通过多个会话并行工作，并在需要时生成子 agent。
 
-Docs: [Multi-agent routing](/concepts/multi-agent), [Sub-agents](/tools/subagents), [Agents CLI](/cli/agents).
+文档：[Multi-agent routing](/concepts/multi-agent)、[Sub-agents](/tools/subagents)、[Agents CLI](/cli/agents)。
 
-### Why did context get truncated midtask How do I prevent it
+### 为什么上下文在任务中途被截断如何避免
 
-Session context is limited by the model window. Long chats, large tool outputs, or many
-files can trigger compaction or truncation.
+会话上下文受模型窗口限制。长聊天、大量工具输出或大量文件都会触发压缩或截断。
 
-What helps:
-- Ask the bot to summarize the current state and write it to a file.
-- Use `/compact` before long tasks, and `/new` when switching topics.
-- Keep important context in the workspace and ask the bot to read it back.
-- Use sub-agents for long or parallel work so the main chat stays smaller.
-- Pick a model with a larger context window if this happens often.
+有帮助的做法：
+- 让机器人总结当前状态并写入文件。
+- 长任务前用 `/compact`，切换话题时用 `/new`。
+- 把重要上下文放进工作区，让机器人读回来。
+- 使用子 agent 处理长任务或并行工作，保持主聊天更小。
+- 如果经常发生，选择更大上下文窗口的模型。
 
-### How do I completely reset Moltbot but keep it installed
+### 如何完全重置 Moltbot 但保留安装
 
-Use the reset command:
+使用 reset 命令：
 
 ```bash
 moltbot reset
 ```
 
-Non-interactive full reset:
+非交互式全量重置：
 
 ```bash
 moltbot reset --scope full --yes --non-interactive
 ```
 
-Then re-run onboarding:
+然后重新运行 onboarding：
 
 ```bash
 moltbot onboard --install-daemon
 ```
 
-Notes:
-- The onboarding wizard also offers **Reset** if it sees an existing config. See [Wizard](/start/wizard).
-- If you used profiles (`--profile` / `CLAWDBOT_PROFILE`), reset each state dir (defaults are `~/.clawdbot-<profile>`).
-- Dev reset: `moltbot gateway --dev --reset` (dev-only; wipes dev config + credentials + sessions + workspace).
+说明：
+- onboarding 向导在发现已有配置时也提供 **Reset**。见 [Wizard](/start/wizard)。
+- 如使用 profiles（`--profile` / `CLAWDBOT_PROFILE`），请重置每个 state dir（默认 `~/.clawdbot-<profile>`）。
+- 开发重置：`moltbot gateway --dev --reset`（仅 dev；清空 dev 配置 + 凭据 + 会话 + 工作区）。
 
-### Im getting context too large errors how do I reset or compact
+### 我遇到 context too large 错误如何重置或压缩
 
-Use one of these:
+可用以下方式：
 
-- **Compact** (keeps the conversation but summarizes older turns):
+- **压缩**（保留对话但总结较旧内容）：
   ```
   /compact
   ```
-  or `/compact <instructions>` to guide the summary.
+  或 `/compact <instructions>` 指定摘要方向。
 
-- **Reset** (fresh session ID for the same chat key):
+- **重置**（同一聊天 key 使用新的会话 ID）：
   ```
   /new
   /reset
   ```
 
-If it keeps happening:
-- Enable or tune **session pruning** (`agents.defaults.contextPruning`) to trim old tool output.
-- Use a model with a larger context window.
+如果仍频繁发生：
+- 启用或调整 **会话裁剪**（`agents.defaults.contextPruning`）以截断旧工具输出。
+- 选择更大上下文窗口的模型。
 
-Docs: [Compaction](/concepts/compaction), [Session pruning](/concepts/session-pruning), [Session management](/concepts/session).
+文档：[Compaction](/concepts/compaction)、[Session pruning](/concepts/session-pruning)、[Session management](/concepts/session)。
 
-### Why am I seeing LLM request rejected messagesNcontentXtooluseinput Field required
+### 为什么我看到 LLM request rejected messages N content X tool_use input Field required
 
-This is a provider validation error: the model emitted a `tool_use` block without the required
-`input`. It usually means the session history is stale or corrupted (often after long threads
-or a tool/schema change).
+这是提供方的校验错误：模型输出了 `tool_use` 块但缺少必需的 `input`。通常意味着会话历史陈旧或被破坏（常见于长线程或工具/模式变更后）。
 
-Fix: start a fresh session with `/new` (standalone message).
+修复：用 `/new` 开始一个新会话（单独发送）。
 
-### Why am I getting heartbeat messages every 30 minutes
+### 为什么每 30 分钟会收到 heartbeat 消息
 
-Heartbeats run every **30m** by default. Tune or disable them:
+Heartbeat 默认每 **30 分钟**运行一次。可调整或禁用：
 
 ```json5
 {
   agents: {
     defaults: {
       heartbeat: {
-        every: "2h"   // or "0m" to disable
+        every: "2h"   // 或 "0m" 以禁用
       }
     }
   }
 }
 ```
 
-If `HEARTBEAT.md` exists but is effectively empty (only blank lines and markdown
-headers like `# Heading`), Moltbot skips the heartbeat run to save API calls.
-If the file is missing, the heartbeat still runs and the model decides what to do.
+如果 `HEARTBEAT.md` 存在但实际上为空（只有空行与 Markdown 标题如 `# Heading`），Moltbot 会跳过 heartbeat 以节省 API 调用。如果文件缺失，heartbeat 仍会运行，由模型决定做什么。
 
-Per-agent overrides use `agents.list[].heartbeat`. Docs: [Heartbeat](/gateway/heartbeat).
+per-agent 覆盖使用 `agents.list[].heartbeat`。文档：[Heartbeat](/gateway/heartbeat)。
 
-### Do I need to add a bot account to a WhatsApp group
+### 我需要把 bot 账号加到 WhatsApp 群吗
 
-No. Moltbot runs on **your own account**, so if you’re in the group, Moltbot can see it.
-By default, group replies are blocked until you allow senders (`groupPolicy: "allowlist"`).
+不需要。Moltbot 运行在**你的账号**上，所以只要你在群里，Moltbot 就能看到。默认情况下，群回复被阻止，直到你允许发送者（`groupPolicy: "allowlist"`）。
 
-If you want only **you** to be able to trigger group replies:
+如果你只希望**你**能触发群回复：
 
 ```json5
 {
@@ -1784,136 +1633,127 @@ If you want only **you** to be able to trigger group replies:
 }
 ```
 
-### How do I get the JID of a WhatsApp group
+### 如何获取 WhatsApp 群的 JID
 
-Option 1 (fastest): tail logs and send a test message in the group:
+方案 1（最快）：跟踪日志并在群里发一条测试消息：
 
 ```bash
 moltbot logs --follow --json
 ```
 
-Look for `chatId` (or `from`) ending in `@g.us`, like:
-`1234567890-1234567890@g.us`.
+查找以 `@g.us` 结尾的 `chatId`（或 `from`），例如：
+`1234567890-1234567890@g.us`。
 
-Option 2 (if already configured/allowlisted): list groups from config:
+方案 2（已配置/allowlist）：从配置里列出群：
 
 ```bash
 moltbot directory groups list --channel whatsapp
 ```
 
-Docs: [WhatsApp](/channels/whatsapp), [Directory](/cli/directory), [Logs](/cli/logs).
+文档：[WhatsApp](/channels/whatsapp)、[Directory](/cli/directory)、[Logs](/cli/logs)。
 
-### Why doesnt Moltbot reply in a group
+### 为什么 Moltbot 在群里不回复
 
-Two common causes:
-- Mention gating is on (default). You must @mention the bot (or match `mentionPatterns`).
-- You configured `channels.whatsapp.groups` without `"*"` and the group isn’t allowlisted.
+两类常见原因：
+- 默认开启提及门控。你必须 @ 提及机器人（或匹配 `mentionPatterns`）。
+- 你配置了 `channels.whatsapp.groups` 且未包含 `"*"`，该群未被 allowlist。
 
-See [Groups](/concepts/groups) and [Group messages](/concepts/group-messages).
+见 [Groups](/concepts/groups) 与 [Group messages](/concepts/group-messages)。
 
-### Do groupsthreads share context with DMs
+### 群或线程与私聊共享上下文吗
 
-Direct chats collapse to the main session by default. Groups/channels have their own session keys, and Telegram topics / Discord threads are separate sessions. See [Groups](/concepts/groups) and [Group messages](/concepts/group-messages).
+私聊默认会折叠到主会话。群/频道有各自的会话 key，Telegram 话题/Discord 线程是独立会话。见 [Groups](/concepts/groups) 与 [Group messages](/concepts/group-messages)。
 
-### How many workspaces and agents can I create
+### 可以创建多少工作区和 agent
 
-No hard limits. Dozens (even hundreds) are fine, but watch for:
+没有硬限制。几十个甚至上百个都行，但注意：
 
-- **Disk growth:** sessions + transcripts live under `~/.clawdbot/agents/<agentId>/sessions/`.
-- **Token cost:** more agents means more concurrent model usage.
-- **Ops overhead:** per-agent auth profiles, workspaces, and channel routing.
+- **磁盘增长：** 会话与记录在 `~/.clawdbot/agents/<agentId>/sessions/`。
+- **token 成本：** agent 越多并发模型使用越多。
+- **运维成本：** 每个 agent 的认证 profiles、工作区与频道路由。
 
-Tips:
-- Keep one **active** workspace per agent (`agents.defaults.workspace`).
-- Prune old sessions (delete JSONL or store entries) if disk grows.
-- Use `moltbot doctor` to spot stray workspaces and profile mismatches.
+提示：
+- 每个 agent 保持一个**活跃**工作区（`agents.defaults.workspace`）。
+- 磁盘变大时裁剪旧会话（删除 JSONL 或存档条目）。
+- 用 `moltbot doctor` 发现游离工作区与 profile 不匹配。
 
-### Can I run multiple bots or chats at the same time Slack and how should I set that up
+### Slack 能否同时运行多个 bot 或聊天如何设置
 
-Yes. Use **Multi‑Agent Routing** to run multiple isolated agents and route inbound messages by
-channel/account/peer. Slack is supported as a channel and can be bound to specific agents.
+可以。使用 **Multi-Agent Routing** 运行多个隔离 agent，并按频道/账号/peer 路由入站消息。Slack 作为频道支持，且可绑定到指定 agent。
 
-Browser access is powerful but not “do anything a human can” - anti‑bot, CAPTCHAs, and MFA can
-still block automation. For the most reliable browser control, use the Chrome extension relay
-on the machine that runs the browser (and keep the Gateway anywhere).
+浏览器访问很强，但并非“人类能做的都行”——反机器人、CAPTCHA、MFA 仍会阻挡自动化。最可靠的浏览器控制方式是在浏览器所在机器上使用 Chrome 扩展中继（Gateway 可在任意位置）。
 
-Best‑practice setup:
-- Always‑on Gateway host (VPS/Mac mini).
-- One agent per role (bindings).
-- Slack channel(s) bound to those agents.
-- Local browser via extension relay (or a node) when needed.
+最佳实践：
+- 常开 Gateway 主机（VPS/Mac mini）。
+- 每个角色一个 agent（绑定）。
+- Slack 频道绑定到对应 agent。
+- 需要时用扩展中继本地浏览器（或节点）。
 
-Docs: [Multi‑Agent Routing](/concepts/multi-agent), [Slack](/channels/slack),
-[Browser](/tools/browser), [Chrome extension](/tools/chrome-extension), [Nodes](/nodes).
+文档：[Multi-Agent Routing](/concepts/multi-agent)、[Slack](/channels/slack)、
+[Browser](/tools/browser)、[Chrome extension](/tools/chrome-extension)、[Nodes](/nodes)。
 
-## Models: defaults, selection, aliases, switching
+## 模型：默认、选择、别名与切换
 
-### What is the default model
+### 什么是默认模型
 
-Moltbot’s default model is whatever you set as:
+Moltbot 的默认模型就是你设置的：
 
 ```
 agents.defaults.model.primary
 ```
 
-Models are referenced as `provider/model` (example: `anthropic/claude-opus-4-5`). If you omit the provider, Moltbot currently assumes `anthropic` as a temporary deprecation fallback - but you should still **explicitly** set `provider/model`.
+模型以 `provider/model` 引用（例如 `anthropic/claude-opus-4-5`）。如果省略 provider，Moltbot 目前会临时假定 `anthropic` 作为弃用兜底，但你仍应**显式**设置 `provider/model`。
 
-### What model do you recommend
+### 推荐什么模型
 
-**Recommended default:** `anthropic/claude-opus-4-5`.  
-**Good alternative:** `anthropic/claude-sonnet-4-5`.  
-**Reliable (less character):** `openai/gpt-5.2` - nearly as good as Opus, just less personality.  
-**Budget:** `zai/glm-4.7`.
+**推荐默认：** `anthropic/claude-opus-4-5`。  
+**不错的替代：** `anthropic/claude-sonnet-4-5`。  
+**稳定可靠（更少个性）：** `openai/gpt-5.2`，几乎和 Opus 一样好，只是个性更少。  
+**预算优先：** `zai/glm-4.7`。
 
-MiniMax M2.1 has its own docs: [MiniMax](/providers/minimax) and
-[Local models](/gateway/local-models).
+MiniMax M2.1 有单独文档：[MiniMax](/providers/minimax) 与
+[Local models](/gateway/local-models)。
 
-Rule of thumb: use the **best model you can afford** for high-stakes work, and a cheaper
-model for routine chat or summaries. You can route models per agent and use sub-agents to
-parallelize long tasks (each sub-agent consumes tokens). See [Models](/concepts/models) and
-[Sub-agents](/tools/subagents).
+经验法则：对高风险任务使用你能负担的**最好模型**，对日常聊天/摘要使用便宜模型。你可以按 agent 路由模型，并用子 agent 并行长任务（每个子 agent 会消耗 token）。见 [Models](/concepts/models) 与
+[Sub-agents](/tools/subagents)。
 
-Strong warning: weaker/over-quantized models are more vulnerable to prompt
-injection and unsafe behavior. See [Security](/gateway/security).
+强烈警告：弱模型或过度量化模型更容易遭受提示词注入与不安全行为。见 [Security](/gateway/security)。
 
-More context: [Models](/concepts/models).
+更多背景：[Models](/concepts/models)。
 
-### Can I use selfhosted models llamacpp vLLM Ollama
+### 可以使用自托管模型吗 llama.cpp vLLM Ollama
 
-Yes. If your local server exposes an OpenAI-compatible API, you can point a
-custom provider at it. Ollama is supported directly and is the easiest path.
+可以。如果你的本地服务器提供 OpenAI 兼容 API，你就可以配置自定义 provider 指向它。Ollama 直接支持且最简单。
 
-Security note: smaller or heavily quantized models are more vulnerable to prompt
-injection. We strongly recommend **large models** for any bot that can use tools.
-If you still want small models, enable sandboxing and strict tool allowlists.
+安全提示：较小或高度量化模型更容易遭受提示词注入。我们强烈建议任何能调用工具的 bot 使用**大模型**。若仍要小模型，请启用沙箱并使用严格工具 allowlist。
 
-Docs: [Ollama](/providers/ollama), [Local models](/gateway/local-models),
-[Model providers](/concepts/model-providers), [Security](/gateway/security),
-[Sandboxing](/gateway/sandboxing).
+文档：[Ollama](/providers/ollama)、[Local models](/gateway/local-models)、
+[Model providers](/concepts/model-providers)、[Security](/gateway/security)、
+[Sandboxing](/gateway/sandboxing)。
 
-### How do I switch models without wiping my config
+### 如何切换模型而不清空配置
 
-Use **model commands** or edit only the **model** fields. Avoid full config replaces.
+使用**模型命令**或只编辑**模型字段**。避免整份配置替换。
 
-Safe options:
-- `/model` in chat (quick, per-session)
-- `moltbot models set ...` (updates just model config)
-- `moltbot configure --section models` (interactive)
-- edit `agents.defaults.model` in `~/.clawdbot/moltbot.json`
+安全方式：
+- 聊天里 `/model`（按会话快速切换）
+- `moltbot models set ...`（只更新模型配置）
+- `moltbot configure --section models`（交互式）
+- 编辑 `~/.clawdbot/moltbot.json` 的 `agents.defaults.model`
 
-Avoid `config.apply` with a partial object unless you intend to replace the whole config.
-If you did overwrite config, restore from backup or re-run `moltbot doctor` to repair.
+避免用部分对象执行 `config.apply`，除非你打算替换整份配置。
+如果误覆盖了配置，请从备份恢复或运行 `moltbot doctor` 修复。
 
-Docs: [Models](/concepts/models), [Configure](/cli/configure), [Config](/cli/config), [Doctor](/gateway/doctor).
+文档：[Models](/concepts/models)、[Configure](/cli/configure)、[Config](/cli/config)、[Doctor](/gateway/doctor)。
 
-### What do Clawd Flawd and Krill use for models
+### Clawd Flawd Krill 用什么模型
 
-- **Clawd + Flawd:** Anthropic Opus (`anthropic/claude-opus-4-5`) - see [Anthropic](/providers/anthropic).
-- **Krill:** MiniMax M2.1 (`minimax/MiniMax-M2.1`) - see [MiniMax](/providers/minimax).
+- **Clawd + Flawd：** Anthropic Opus（`anthropic/claude-opus-4-5`）— 见 [Anthropic](/providers/anthropic)。
+- **Krill：** MiniMax M2.1（`minimax/MiniMax-M2.1`）— 见 [MiniMax](/providers/minimax)。
 
-### How do I switch models on the fly without restarting
+### 如何在不重启的情况下切换模型
 
-Use the `/model` command as a standalone message:
+把 `/model` 当作单独消息发送：
 
 ```
 /model sonnet
@@ -1925,83 +1765,77 @@ Use the `/model` command as a standalone message:
 /model gemini-flash
 ```
 
-You can list available models with `/model`, `/model list`, or `/model status`.
+可用 `/model`、`/model list` 或 `/model status` 列出模型。
 
-`/model` (and `/model list`) shows a compact, numbered picker. Select by number:
+`/model`（以及 `/model list`）会显示紧凑的编号选择器，通过编号选择：
 
 ```
 /model 3
 ```
 
-You can also force a specific auth profile for the provider (per session):
+你也可以为该 provider 强制指定认证 profile（按会话）：
 
 ```
 /model opus@anthropic:default
 /model opus@anthropic:work
 ```
 
-Tip: `/model status` shows which agent is active, which `auth-profiles.json` file is being used, and which auth profile will be tried next.
-It also shows the configured provider endpoint (`baseUrl`) and API mode (`api`) when available.
+提示：`/model status` 会显示当前 agent、正在使用的 `auth-profiles.json` 文件，以及下一次会尝试的 profile。
+它还会在可用时显示配置的 provider 端点（`baseUrl`）与 API 模式（`api`）。
 
-**How do I unpin a profile I set with profile**
+**如何取消 profile 绑定**
 
-Re-run `/model` **without** the `@profile` suffix:
+重新运行不带 `@profile` 后缀的 `/model`：
 
 ```
 /model anthropic/claude-opus-4-5
 ```
 
-If you want to return to the default, pick it from `/model` (or send `/model <default provider/model>`).
-Use `/model status` to confirm which auth profile is active.
+如果要回到默认值，从 `/model` 中选择默认（或发送 `/model <默认 provider/model>`）。
+用 `/model status` 确认当前使用的 profile。
 
-### Can I use GPT 5.2 for daily tasks and Codex 5.2 for coding
+### 能否用 GPT 5.2 做日常 Codex 5.2 做编码
 
-Yes. Set one as default and switch as needed:
+可以。设置一个为默认，按需切换：
 
-- **Quick switch (per session):** `/model gpt-5.2` for daily tasks, `/model gpt-5.2-codex` for coding.
-- **Default + switch:** set `agents.defaults.model.primary` to `openai-codex/gpt-5.2`, then switch to `openai-codex/gpt-5.2-codex` when coding (or the other way around).
-- **Sub-agents:** route coding tasks to sub-agents with a different default model.
+- **快速切换（按会话）：** 日常用 `/model gpt-5.2`，编码用 `/model gpt-5.2-codex`。
+- **默认 + 切换：** 将 `agents.defaults.model.primary` 设为 `openai-codex/gpt-5.2`，编码时切到 `openai-codex/gpt-5.2-codex`（或反过来）。
+- **子 agent：** 把编码任务路由到使用不同默认模型的子 agent。
 
-See [Models](/concepts/models) and [Slash commands](/tools/slash-commands).
+见 [Models](/concepts/models) 与 [Slash commands](/tools/slash-commands)。
 
-### Why do I see Model is not allowed and then no reply
+### 为什么看到 Model is not allowed 然后无回复
 
-If `agents.defaults.models` is set, it becomes the **allowlist** for `/model` and any
-session overrides. Choosing a model that isn’t in that list returns:
+如果设置了 `agents.defaults.models`，它会成为 `/model` 与会话覆盖的**allowlist**。选择不在列表里的模型会返回：
 
 ```
 Model "provider/model" is not allowed. Use /model to list available models.
 ```
 
-That error is returned **instead of** a normal reply. Fix: add the model to
-`agents.defaults.models`, remove the allowlist, or pick a model from `/model list`.
+该错误会**代替**正常回复。解决：把该模型加入 `agents.defaults.models`，移除 allowlist，或从 `/model list` 选择。
 
-### Why do I see Unknown model minimaxMiniMaxM21
+### 为什么看到 Unknown model minimax MiniMax M2.1
 
-This means the **provider isn’t configured** (no MiniMax provider config or auth
-profile was found), so the model can’t be resolved. A fix for this detection is
-in **2026.1.12** (unreleased at the time of writing).
+这表示**provider 未配置**（没有 MiniMax provider 配置或认证 profile），因此无法解析模型。用于该检测的修复在 **2026.1.12**（撰写时尚未发布）。
 
-Fix checklist:
-1) Upgrade to **2026.1.12** (or run from source `main`), then restart the gateway.
-2) Make sure MiniMax is configured (wizard or JSON), or that a MiniMax API key
-   exists in env/auth profiles so the provider can be injected.
-3) Use the exact model id (case‑sensitive): `minimax/MiniMax-M2.1` or
-   `minimax/MiniMax-M2.1-lightning`.
-4) Run:
+修复清单：
+1) 升级到 **2026.1.12**（或从源码 `main` 运行），然后重启 gateway。
+2) 确保已配置 MiniMax（向导或 JSON），或环境/认证 profiles 中存在 MiniMax API key，从而注入 provider。
+3) 使用精确模型 id（区分大小写）：`minimax/MiniMax-M2.1` 或
+   `minimax/MiniMax-M2.1-lightning`。
+4) 运行：
    ```bash
    moltbot models list
    ```
-   and pick from the list (or `/model list` in chat).
+   并从列表中选择（或聊天中 `/model list`）。
 
-See [MiniMax](/providers/minimax) and [Models](/concepts/models).
+见 [MiniMax](/providers/minimax) 与 [Models](/concepts/models)。
 
-### Can I use MiniMax as my default and OpenAI for complex tasks
+### 能否把 MiniMax 作为默认 OpenAI 做复杂任务
 
-Yes. Use **MiniMax as the default** and switch models **per session** when needed.
-Fallbacks are for **errors**, not “hard tasks,” so use `/model` or a separate agent.
+可以。**MiniMax 作为默认**，需要时**按会话**切换模型。Fallback 用于**错误**，不是“难任务”，因此使用 `/model` 或单独 agent。
 
-**Option A: switch per session**
+**方案 A：按会话切换**
 ```json5
 {
   env: { MINIMAX_API_KEY: "sk-...", OPENAI_API_KEY: "sk-..." },
@@ -2017,21 +1851,21 @@ Fallbacks are for **errors**, not “hard tasks,” so use `/model` or a separat
 }
 ```
 
-Then:
+然后：
 ```
 /model gpt
 ```
 
-**Option B: separate agents**
-- Agent A default: MiniMax
-- Agent B default: OpenAI
-- Route by agent or use `/agent` to switch
+**方案 B：分离 agent**
+- Agent A 默认：MiniMax
+- Agent B 默认：OpenAI
+- 按 agent 路由或用 `/agent` 切换
 
-Docs: [Models](/concepts/models), [Multi-Agent Routing](/concepts/multi-agent), [MiniMax](/providers/minimax), [OpenAI](/providers/openai).
+文档：[Models](/concepts/models)、[Multi-Agent Routing](/concepts/multi-agent)、[MiniMax](/providers/minimax)、[OpenAI](/providers/openai)。
 
-### Are opus sonnet gpt builtin shortcuts
+### opus sonnet gpt 是内置快捷方式吗
 
-Yes. Moltbot ships a few default shorthands (only applied when the model exists in `agents.defaults.models`):
+是。Moltbot 内置一些默认简写（仅当模型存在于 `agents.defaults.models` 时生效）：
 
 - `opus` → `anthropic/claude-opus-4-5`
 - `sonnet` → `anthropic/claude-sonnet-4-5`
@@ -2040,11 +1874,11 @@ Yes. Moltbot ships a few default shorthands (only applied when the model exists 
 - `gemini` → `google/gemini-3-pro-preview`
 - `gemini-flash` → `google/gemini-3-flash-preview`
 
-If you set your own alias with the same name, your value wins.
+如果你用同名 alias 覆盖，则以你的配置为准。
 
-### How do I defineoverride model shortcuts aliases
+### 如何定义或覆盖模型快捷方式别名
 
-Aliases come from `agents.defaults.models.<modelId>.alias`. Example:
+别名来自 `agents.defaults.models.<modelId>.alias`。示例：
 
 ```json5
 {
@@ -2061,11 +1895,11 @@ Aliases come from `agents.defaults.models.<modelId>.alias`. Example:
 }
 ```
 
-Then `/model sonnet` (or `/<alias>` when supported) resolves to that model ID.
+然后 `/model sonnet`（或支持时 `/<alias>`）会解析到对应 model id。
 
-### How do I add models from other providers like OpenRouter or ZAI
+### 如何添加来自 OpenRouter 或 Z.AI 的模型
 
-OpenRouter (pay‑per‑token; many models):
+OpenRouter（按 token 计费，多模型）：
 
 ```json5
 {
@@ -2079,7 +1913,7 @@ OpenRouter (pay‑per‑token; many models):
 }
 ```
 
-Z.AI (GLM models):
+Z.AI（GLM 模型）：
 
 ```json5
 {
@@ -2093,181 +1927,178 @@ Z.AI (GLM models):
 }
 ```
 
-If you reference a provider/model but the required provider key is missing, you’ll get a runtime auth error (e.g. `No API key found for provider "zai"`).
+如果你引用了 provider/model，但缺少相应 provider key，会出现运行时认证错误（例如 `No API key found for provider "zai"`）。
 
-**No API key found for provider after adding a new agent**
+**添加新 agent 后提示 No API key found for provider**
 
-This usually means the **new agent** has an empty auth store. Auth is per-agent and
-stored in:
+这通常意味着**新 agent**的认证存储为空。认证是按 agent 存储的，位置在：
 
 ```
 ~/.clawdbot/agents/<agentId>/agent/auth-profiles.json
 ```
 
-Fix options:
-- Run `moltbot agents add <id>` and configure auth during the wizard.
-- Or copy `auth-profiles.json` from the main agent’s `agentDir` into the new agent’s `agentDir`.
+修复方式：
+- 运行 `moltbot agents add <id>` 并在向导中配置认证。
+- 或把主 agent 的 `auth-profiles.json` 复制到新 agent 的 `agentDir`。
 
-Do **not** reuse `agentDir` across agents; it causes auth/session collisions.
+不要在多个 agent 间复用 `agentDir`，否则会造成认证/会话冲突。
 
-## Model failover and “All models failed”
+## 模型故障切换与所有模型失败
 
-### How does failover work
+### 故障切换如何工作
 
-Failover happens in two stages:
+故障切换分两级：
 
-1) **Auth profile rotation** within the same provider.
-2) **Model fallback** to the next model in `agents.defaults.model.fallbacks`.
+1) **同一 provider 内的认证 profile 轮换**。
+2) **模型 fallback** 到 `agents.defaults.model.fallbacks` 中的下一个模型。
 
-Cooldowns apply to failing profiles (exponential backoff), so Moltbot can keep responding even when a provider is rate‑limited or temporarily failing.
+对失败 profile 会应用冷却期（指数退避），因此即使某个 provider 被限流或暂时失败，Moltbot 仍能继续回应。
 
-### What does this error mean
+### 这个错误是什么意思
 
 ```
 No credentials found for profile "anthropic:default"
 ```
 
-It means the system attempted to use the auth profile ID `anthropic:default`, but could not find credentials for it in the expected auth store.
+意思是系统尝试使用认证 profile ID `anthropic:default`，但在预期的认证存储中找不到它。
 
-### Fix checklist for No credentials found for profile anthropicdefault
+### No credentials found for profile anthropic default 修复清单
 
-- **Confirm where auth profiles live** (new vs legacy paths)
-  - Current: `~/.clawdbot/agents/<agentId>/agent/auth-profiles.json`
-  - Legacy: `~/.clawdbot/agent/*` (migrated by `moltbot doctor`)
-- **Confirm your env var is loaded by the Gateway**
-  - If you set `ANTHROPIC_API_KEY` in your shell but run the Gateway via systemd/launchd, it may not inherit it. Put it in `~/.clawdbot/.env` or enable `env.shellEnv`.
-- **Make sure you’re editing the correct agent**
-  - Multi‑agent setups mean there can be multiple `auth-profiles.json` files.
-- **Sanity‑check model/auth status**
-  - Use `moltbot models status` to see configured models and whether providers are authenticated.
+- **确认认证 profiles 存放位置**（新旧路径）
+  - 当前：`~/.clawdbot/agents/<agentId>/agent/auth-profiles.json`
+  - 旧版：`~/.clawdbot/agent/*`（由 `moltbot doctor` 迁移）
+- **确认 Gateway 已加载你的环境变量**
+  - 若你在 shell 中设置 `ANTHROPIC_API_KEY` 但通过 systemd/launchd 运行 Gateway，可能未继承。请放到 `~/.clawdbot/.env` 或启用 `env.shellEnv`。
+- **确认你在编辑正确的 agent**
+  - 多 agent 配置会产生多个 `auth-profiles.json`。
+- **检查模型/认证状态**
+  - 用 `moltbot models status` 查看已配置模型与认证是否成功。
 
-**Fix checklist for No credentials found for profile anthropic**
+**No credentials found for profile anthropic 修复清单**
 
-This means the run is pinned to an Anthropic auth profile, but the Gateway
-can’t find it in its auth store.
+这表示运行被绑定到某个 Anthropic 认证 profile，但 Gateway 在认证存储中找不到它。
 
-- **Use a setup-token**
-  - Run `claude setup-token`, then paste it with `moltbot models auth setup-token --provider anthropic`.
-  - If the token was created on another machine, use `moltbot models auth paste-token --provider anthropic`.
-- **If you want to use an API key instead**
-  - Put `ANTHROPIC_API_KEY` in `~/.clawdbot/.env` on the **gateway host**.
-  - Clear any pinned order that forces a missing profile:
+- **使用 setup-token**
+  - 运行 `claude setup-token`，然后用 `moltbot models auth setup-token --provider anthropic` 粘贴。
+  - 若 token 在另一台机器生成，用 `moltbot models auth paste-token --provider anthropic` 粘贴。
+- **如果你要用 API key**
+  - 把 `ANTHROPIC_API_KEY` 放到 **gateway 主机**的 `~/.clawdbot/.env`。
+  - 清除强制顺序的绑定：
     ```bash
     moltbot models auth order clear --provider anthropic
     ```
-- **Confirm you’re running commands on the gateway host**
-  - In remote mode, auth profiles live on the gateway machine, not your laptop.
+- **确认你在 gateway 主机上运行命令**
+  - 远程模式下，认证 profiles 在 gateway 机器上，而不是本地笔记本。
 
-### Why did it also try Google Gemini and fail
+### 为什么也尝试了 Google Gemini 并失败
 
-If your model config includes Google Gemini as a fallback (or you switched to a Gemini shorthand), Moltbot will try it during model fallback. If you haven’t configured Google credentials, you’ll see `No API key found for provider "google"`.
+如果你的模型配置包含 Google Gemini 作为 fallback（或你切到 Gemini 简写），Moltbot 会在 fallback 时尝试它。如果你未配置 Google 认证，会看到 `No API key found for provider "google"`。
 
-Fix: either provide Google auth, or remove/avoid Google models in `agents.defaults.model.fallbacks` / aliases so fallback doesn’t route there.
+修复：提供 Google 认证，或从 `agents.defaults.model.fallbacks` / alias 中移除 Google 模型，避免 fallback 路由过去。
 
 **LLM request rejected message thinking signature required google antigravity**
 
-Cause: the session history contains **thinking blocks without signatures** (often from
-an aborted/partial stream). Google Antigravity requires signatures for thinking blocks.
+原因：会话历史包含**没有签名的 thinking block**（常见于中止或部分流式）。Google Antigravity 要求 thinking block 有签名。
 
-Fix: Moltbot now strips unsigned thinking blocks for Google Antigravity Claude. If it still appears, start a **new session** or set `/thinking off` for that agent.
+修复：Moltbot 现在会为 Google Antigravity Claude 去掉未签名 thinking block。如果仍出现，请开始**新会话**或对该 agent 设置 `/thinking off`。
 
-## Auth profiles: what they are and how to manage them
+## 认证 profile 含义与管理
 
-Related: [/concepts/oauth](/concepts/oauth) (OAuth flows, token storage, multi-account patterns)
+相关：[ /concepts/oauth ](/concepts/oauth)（OAuth 流程、token 存储、多账号模式）
 
-### What is an auth profile
+### 什么是认证 profile
 
-An auth profile is a named credential record (OAuth or API key) tied to a provider. Profiles live in:
+认证 profile 是绑定到 provider 的具名凭据记录（OAuth 或 API key）。profile 存放在：
 
 ```
 ~/.clawdbot/agents/<agentId>/agent/auth-profiles.json
 ```
 
-### What are typical profile IDs
+### 常见 profile ID 是什么
 
-Moltbot uses provider‑prefixed IDs like:
+Moltbot 使用 provider 前缀的 ID，例如：
 
-- `anthropic:default` (common when no email identity exists)
-- `anthropic:<email>` for OAuth identities
-- custom IDs you choose (e.g. `anthropic:work`)
+- `anthropic:default`（常见于没有 email 身份时）
+- `anthropic:<email>` 用于 OAuth 身份
+- 你自定义的 ID（例如 `anthropic:work`）
 
-### Can I control which auth profile is tried first
+### 可以控制优先尝试的 profile 吗
 
-Yes. Config supports optional metadata for profiles and an ordering per provider (`auth.order.<provider>`). This does **not** store secrets; it maps IDs to provider/mode and sets rotation order.
+可以。配置支持 profile 的可选元数据与 provider 的排序（`auth.order.<provider>`）。它**不**存储密钥，只映射 ID 到 provider/mode 并设置轮换顺序。
 
-Moltbot may temporarily skip a profile if it’s in a short **cooldown** (rate limits/timeouts/auth failures) or a longer **disabled** state (billing/insufficient credits). To inspect this, run `moltbot models status --json` and check `auth.unusableProfiles`. Tuning: `auth.cooldowns.billingBackoffHours*`.
+当 profile 处于短期**冷却**（限流/超时/认证失败）或更长的**禁用**（计费/额度不足）状态时，Moltbot 可能暂时跳过。可运行 `moltbot models status --json` 查看 `auth.unusableProfiles`。调整项：`auth.cooldowns.billingBackoffHours*`。
 
-You can also set a **per-agent** order override (stored in that agent’s `auth-profiles.json`) via the CLI:
+你也可以通过 CLI 设置**每个 agent**的顺序覆盖（存储在该 agent 的 `auth-profiles.json`）：
 
 ```bash
-# Defaults to the configured default agent (omit --agent)
+# 默认是配置的默认 agent（省略 --agent）
 moltbot models auth order get --provider anthropic
 
-# Lock rotation to a single profile (only try this one)
+# 锁定轮换到单一 profile（只尝试这一个）
 moltbot models auth order set --provider anthropic anthropic:default
 
-# Or set an explicit order (fallback within provider)
+# 或设置显式顺序（provider 内 fallback）
 moltbot models auth order set --provider anthropic anthropic:work anthropic:default
 
-# Clear override (fall back to config auth.order / round-robin)
+# 清除覆盖（回退到 config auth.order / 轮询）
 moltbot models auth order clear --provider anthropic
 ```
 
-To target a specific agent:
+指定特定 agent：
 
 ```bash
 moltbot models auth order set --provider anthropic --agent main anthropic:default
 ```
 
-### OAuth vs API key whats the difference
+### OAuth 与 API key 有何区别
 
-Moltbot supports both:
+Moltbot 两者都支持：
 
-- **OAuth** often leverages subscription access (where applicable).
-- **API keys** use pay‑per‑token billing.
+- **OAuth** 通常可利用订阅访问（在适用时）。
+- **API keys** 按 token 计费。
 
-The wizard explicitly supports Anthropic setup-token and OpenAI Codex OAuth and can store API keys for you.
+向导明确支持 Anthropic setup-token 与 OpenAI Codex OAuth，并可为你保存 API key。
 
-## Gateway: ports, “already running”, and remote mode
+## Gateway 端口已在运行与远程模式
 
-### What port does the Gateway use
+### Gateway 用什么端口
 
-`gateway.port` controls the single multiplexed port for WebSocket + HTTP (Control UI, hooks, etc.).
+`gateway.port` 控制 WebSocket + HTTP（Control UI、hooks 等）复用的单一端口。
 
-Precedence:
+优先级：
 
 ```
 --port > CLAWDBOT_GATEWAY_PORT > gateway.port > default 18789
 ```
 
-### Why does moltbot gateway status say Runtime running but RPC probe failed
+### 为什么 moltbot gateway status 说 Runtime running 但 RPC probe failed
 
-Because “running” is the **supervisor’s** view (launchd/systemd/schtasks). The RPC probe is the CLI actually connecting to the gateway WebSocket and calling `status`.
+因为“running”是 **supervisor** 视角（launchd/systemd/schtasks）。RPC probe 是 CLI 真正连接 gateway WebSocket 并调用 `status`。
 
-Use `moltbot gateway status` and trust these lines:
-- `Probe target:` (the URL the probe actually used)
-- `Listening:` (what’s actually bound on the port)
-- `Last gateway error:` (common root cause when the process is alive but the port isn’t listening)
+请使用 `moltbot gateway status` 并关注：
+- `Probe target:`（探测实际使用的 URL）
+- `Listening:`（端口实际绑定情况）
+- `Last gateway error:`（进程活着但端口没监听时常见根因）
 
-### Why does moltbot gateway status show Config cli and Config service different
+### 为什么 moltbot gateway status 显示 Config cli 与 Config service 不同
 
-You’re editing one config file while the service is running another (often a `--profile` / `CLAWDBOT_STATE_DIR` mismatch).
+你在编辑一个配置文件，而 service 在跑另一个（通常是 `--profile` / `CLAWDBOT_STATE_DIR` 不匹配）。
 
-Fix:
+修复：
 ```bash
 moltbot gateway install --force
 ```
-Run that from the same `--profile` / environment you want the service to use.
+在你希望 service 使用的同一 `--profile` / 环境下执行。
 
-### What does another gateway instance is already listening mean
+### 另一个 gateway 实例已在监听是什么意思
 
-Moltbot enforces a runtime lock by binding the WebSocket listener immediately on startup (default `ws://127.0.0.1:18789`). If the bind fails with `EADDRINUSE`, it throws `GatewayLockError` indicating another instance is already listening.
+Moltbot 启动时会立即绑定 WebSocket 监听器（默认 `ws://127.0.0.1:18789`）。如果绑定失败且返回 `EADDRINUSE`，会抛出 `GatewayLockError` 表示已有实例在监听。
 
-Fix: stop the other instance, free the port, or run with `moltbot gateway --port <port>`.
+修复：停止另一个实例、释放端口，或用 `moltbot gateway --port <port>` 运行。
 
-### How do I run Moltbot in remote mode client connects to a Gateway elsewhere
+### 如何运行远程模式客户端连接到别处的 Gateway
 
-Set `gateway.mode: "remote"` and point to a remote WebSocket URL, optionally with a token/password:
+设置 `gateway.mode: "remote"` 并指向远程 WebSocket URL，可选 token/password：
 
 ```json5
 {
@@ -2282,121 +2113,121 @@ Set `gateway.mode: "remote"` and point to a remote WebSocket URL, optionally wit
 }
 ```
 
-Notes:
-- `moltbot gateway` only starts when `gateway.mode` is `local` (or you pass the override flag).
-- The macOS app watches the config file and switches modes live when these values change.
+说明：
+- 只有在 `gateway.mode` 为 `local` 时 `moltbot gateway` 才会启动（或你手动传 override）。
+- macOS app 会监听配置并在这些值变化时动态切换模式。
 
-### The Control UI says unauthorized or keeps reconnecting What now
+### Control UI 显示未授权或不停重连怎么办
 
-Your gateway is running with auth enabled (`gateway.auth.*`), but the UI is not sending the matching token/password.
+你的 gateway 开启了认证（`gateway.auth.*`），但 UI 没有发送匹配的 token/password。
 
-Facts (from code):
-- The Control UI stores the token in browser localStorage key `moltbot.control.settings.v1`.
-- The UI can import `?token=...` (and/or `?password=...`) once, then strips it from the URL.
+事实（来自代码）：
+- Control UI 把 token 存在浏览器 localStorage 的 `moltbot.control.settings.v1`。
+- UI 可一次性从 `?token=...`（和或 `?password=...`）导入，然后从 URL 中移除。
 
-Fix:
-- Fastest: `moltbot dashboard` (prints + copies tokenized link, tries to open; shows SSH hint if headless).
-- If you don’t have a token yet: `moltbot doctor --generate-gateway-token`.
-- If remote, tunnel first: `ssh -N -L 18789:127.0.0.1:18789 user@host` then open `http://127.0.0.1:18789/?token=...`.
-- Set `gateway.auth.token` (or `CLAWDBOT_GATEWAY_TOKEN`) on the gateway host.
-- In the Control UI settings, paste the same token (or refresh with a one-time `?token=...` link).
-- Still stuck? Run `moltbot status --all` and follow [Troubleshooting](/gateway/troubleshooting). See [Dashboard](/web/dashboard) for auth details.
+修复：
+- 最快方式：`moltbot dashboard`（打印并复制带 token 链接，尝试打开；若无头会提示 SSH）。
+- 如果你还没有 token：`moltbot doctor --generate-gateway-token`。
+- 若在远程，先隧道：`ssh -N -L 18789:127.0.0.1:18789 user@host`，然后打开 `http://127.0.0.1:18789/?token=...`。
 
-### I set gatewaybind tailnet but it cant bind nothing listens
+- 若在远程，先隧道：`ssh -N -L 18789:127.0.0.1:18789 user@host`，然后打开 `http://127.0.0.1:18789/?token=...`。
+- 在 gateway 主机上设置 `gateway.auth.token`（或 `CLAWDBOT_GATEWAY_TOKEN`）。
+- 在 Control UI 设置中粘贴相同的 token（或用一次性 `?token=...` 链接刷新）。
+- 仍卡住？运行 `moltbot status --all` 并按 [Troubleshooting](/gateway/troubleshooting) 排查。认证细节见 [Dashboard](/web/dashboard)。
 
-`tailnet` bind picks a Tailscale IP from your network interfaces (100.64.0.0/10). If the machine isn’t on Tailscale (or the interface is down), there’s nothing to bind to.
+### 我设置 gateway.bind tailnet 但无法绑定或没有监听
 
-Fix:
-- Start Tailscale on that host (so it has a 100.x address), or
-- Switch to `gateway.bind: "loopback"` / `"lan"`.
-  
-Note: `tailnet` is explicit. `auto` prefers loopback; use `gateway.bind: "tailnet"` when you want a tailnet-only bind.
+`tailnet` 绑定会从你的网络接口中选择 Tailscale IP（100.64.0.0/10）。如果机器未加入 Tailscale（或接口不可用），就没有可绑定的地址。
 
-### Can I run multiple Gateways on the same host
+修复：
+- 在该主机上启动 Tailscale（获得 100.x 地址），或
+- 切换到 `gateway.bind: "loopback"` / `"lan"`。
 
-Usually no - one Gateway can run multiple messaging channels and agents. Use multiple Gateways only when you need redundancy (ex: rescue bot) or hard isolation.
+注意：`tailnet` 是显式绑定。`auto` 会偏向 loopback；当你需要只在 tailnet 监听时使用 `gateway.bind: "tailnet"`。
 
-Yes, but you must isolate:
+### 同一主机能跑多个 Gateway 吗
 
-- `CLAWDBOT_CONFIG_PATH` (per‑instance config)
-- `CLAWDBOT_STATE_DIR` (per‑instance state)
-- `agents.defaults.workspace` (workspace isolation)
-- `gateway.port` (unique ports)
+通常不需要，一个 Gateway 可以跑多个消息频道与 agent。只有当你需要冗余（例如救援 bot）或硬隔离时才运行多个 Gateway。
 
-Quick setup (recommended):
-- Use `moltbot --profile <name> …` per instance (auto-creates `~/.clawdbot-<name>`).
-- Set a unique `gateway.port` in each profile config (or pass `--port` for manual runs).
-- Install a per-profile service: `moltbot --profile <name> gateway install`.
+可以，但必须隔离：
 
-Profiles also suffix service names (`bot.molt.<profile>`; legacy `com.clawdbot.*`, `moltbot-gateway-<profile>.service`, `Moltbot Gateway (<profile>)`).
-Full guide: [Multiple gateways](/gateway/multiple-gateways).
+- `CLAWDBOT_CONFIG_PATH`（每实例配置）
+- `CLAWDBOT_STATE_DIR`（每实例状态）
+- `agents.defaults.workspace`（工作区隔离）
+- `gateway.port`（唯一端口）
 
-### What does invalid handshake code 1008 mean
+快速方案（推荐）：
+- 每个实例用 `moltbot --profile <name> …`（会自动创建 `~/.clawdbot-<name>`）。
+- 在每个 profile 配置中设置唯一 `gateway.port`（或手动运行时用 `--port`）。
+- 为每个 profile 安装 service：`moltbot --profile <name> gateway install`。
 
-The Gateway is a **WebSocket server**, and it expects the very first message to
-be a `connect` frame. If it receives anything else, it closes the connection
-with **code 1008** (policy violation).
+Profiles 也会给 service 名称加后缀（`bot.molt.<profile>`；旧版 `com.clawdbot.*`、`moltbot-gateway-<profile>.service`、`Moltbot Gateway (<profile>)`）。
+完整指南：[Multiple gateways](/gateway/multiple-gateways)。
 
-Common causes:
-- You opened the **HTTP** URL in a browser (`http://...`) instead of a WS client.
-- You used the wrong port or path.
-- A proxy or tunnel stripped auth headers or sent a non‑Gateway request.
+### invalid handshake 或 code 1008 是什么意思
 
-Quick fixes:
-1) Use the WS URL: `ws://<host>:18789` (or `wss://...` if HTTPS).
-2) Don’t open the WS port in a normal browser tab.
-3) If auth is on, include the token/password in the `connect` frame.
+Gateway 是一个 **WebSocket 服务器**，它期望第一条消息就是 `connect` 帧。如果收到其他内容，会以 **1008**（策略违规）关闭连接。
 
-If you’re using the CLI or TUI, the URL should look like:
+常见原因：
+- 你用浏览器打开 **HTTP** URL（`http://...`），而不是 WS 客户端。
+- 端口或路径错误。
+- 代理或隧道剥离了认证头或发送了非 Gateway 请求。
+
+快速修复：
+1) 使用 WS URL：`ws://<host>:18789`（或 HTTPS 场景 `wss://...`）。
+2) 不要在普通浏览器标签页打开 WS 端口。
+3) 若启用认证，在 `connect` 帧中携带 token/password。
+
+如果你使用 CLI 或 TUI，URL 应类似：
 ```
 moltbot tui --url ws://<host>:18789 --token <token>
 ```
 
-Protocol details: [Gateway protocol](/gateway/protocol).
+协议细节：[Gateway protocol](/gateway/protocol)。
 
-## Logging and debugging
+## 日志与调试
 
-### Where are logs
+### 日志在哪里
 
-File logs (structured):
+文件日志（结构化）：
 
 ```
 /tmp/moltbot/moltbot-YYYY-MM-DD.log
 ```
 
-You can set a stable path via `logging.file`. File log level is controlled by `logging.level`. Console verbosity is controlled by `--verbose` and `logging.consoleLevel`.
+可用 `logging.file` 设置稳定路径。文件日志级别由 `logging.level` 控制。控制台详细度由 `--verbose` 与 `logging.consoleLevel` 控制。
 
-Fastest log tail:
+最快日志跟踪：
 
 ```bash
 moltbot logs --follow
 ```
 
-Service/supervisor logs (when the gateway runs via launchd/systemd):
-- macOS: `$CLAWDBOT_STATE_DIR/logs/gateway.log` and `gateway.err.log` (default: `~/.clawdbot/logs/...`; profiles use `~/.clawdbot-<profile>/logs/...`)
-- Linux: `journalctl --user -u moltbot-gateway[-<profile>].service -n 200 --no-pager`
-- Windows: `schtasks /Query /TN "Moltbot Gateway (<profile>)" /V /FO LIST`
+service/supervisor 日志（gateway 通过 launchd/systemd 运行时）：
+- macOS：`$CLAWDBOT_STATE_DIR/logs/gateway.log` 与 `gateway.err.log`（默认 `~/.clawdbot/logs/...`；profile 使用 `~/.clawdbot-<profile>/logs/...`）
+- Linux：`journalctl --user -u moltbot-gateway[-<profile>].service -n 200 --no-pager`
+- Windows：`schtasks /Query /TN "Moltbot Gateway (<profile>)" /V /FO LIST`
 
-See [Troubleshooting](/gateway/troubleshooting#log-locations) for more.
+更多见 [Troubleshooting](/gateway/troubleshooting#log-locations)。
 
-### How do I startstoprestart the Gateway service
+### 如何启动停止重启 Gateway 服务
 
-Use the gateway helpers:
+使用 gateway helper：
 
 ```bash
 moltbot gateway status
 moltbot gateway restart
 ```
 
-If you run the gateway manually, `moltbot gateway --force` can reclaim the port. See [Gateway](/gateway).
+如果你手动运行 gateway，`moltbot gateway --force` 可回收端口。见 [Gateway](/gateway)。
 
-### I closed my terminal on Windows how do I restart Moltbot
+### Windows 关闭终端后如何重启 Moltbot
 
-There are **two Windows install modes**:
+Windows 有**两种安装模式**：
 
-**1) WSL2 (recommended):** the Gateway runs inside Linux.
+**1) WSL2（推荐）：** Gateway 在 Linux 中运行。
 
-Open PowerShell, enter WSL, then restart:
+打开 PowerShell，进入 WSL，然后重启：
 
 ```powershell
 wsl
@@ -2404,32 +2235,32 @@ moltbot gateway status
 moltbot gateway restart
 ```
 
-If you never installed the service, start it in the foreground:
+如果你没有安装 service，就在前台启动：
 
 ```bash
 moltbot gateway run
 ```
 
-**2) Native Windows (not recommended):** the Gateway runs directly in Windows.
+**2) 原生 Windows（不推荐）：** Gateway 直接在 Windows 运行。
 
-Open PowerShell and run:
+打开 PowerShell 并运行：
 
 ```powershell
 moltbot gateway status
 moltbot gateway restart
 ```
 
-If you run it manually (no service), use:
+如果手动运行（无 service）：
 
 ```powershell
 moltbot gateway run
 ```
 
-Docs: [Windows (WSL2)](/platforms/windows), [Gateway service runbook](/gateway).
+文档：[Windows (WSL2)](/platforms/windows)、[Gateway service runbook](/gateway)。
 
-### The Gateway is up but replies never arrive What should I check
+### Gateway 在跑但回复不到达检查什么
 
-Start with a quick health sweep:
+先做快速健康检查：
 
 ```bash
 moltbot status
@@ -2438,50 +2269,49 @@ moltbot channels status
 moltbot logs --follow
 ```
 
-Common causes:
-- Model auth not loaded on the **gateway host** (check `models status`).
-- Channel pairing/allowlist blocking replies (check channel config + logs).
-- WebChat/Dashboard is open without the right token.
+常见原因：
+- 模型认证没有加载到**gateway 主机**（检查 `models status`）。
+- 频道配对/allowlist 阻止回复（检查频道配置 + 日志）。
+- WebChat/仪表板未带正确 token。
 
-If you are remote, confirm the tunnel/Tailscale connection is up and that the
-Gateway WebSocket is reachable.
+如果你在远程，请确认隧道/Tailscale 连接正常，并确保 Gateway WebSocket 可达。
 
-Docs: [Channels](/channels), [Troubleshooting](/gateway/troubleshooting), [Remote access](/gateway/remote).
+文档：[Channels](/channels)、[Troubleshooting](/gateway/troubleshooting)、[Remote access](/gateway/remote)。
 
-### Disconnected from gateway no reason what now
+### Disconnected from gateway no reason 怎么办
 
-This usually means the UI lost the WebSocket connection. Check:
+这通常表示 UI 失去 WebSocket 连接。检查：
 
-1) Is the Gateway running? `moltbot gateway status`
-2) Is the Gateway healthy? `moltbot status`
-3) Does the UI have the right token? `moltbot dashboard`
-4) If remote, is the tunnel/Tailscale link up?
+1) Gateway 是否运行？`moltbot gateway status`
+2) Gateway 是否健康？`moltbot status`
+3) UI 是否有正确 token？`moltbot dashboard`
+4) 若为远程，隧道/Tailscale 是否正常？
 
-Then tail logs:
+然后跟踪日志：
 
 ```bash
 moltbot logs --follow
 ```
 
-Docs: [Dashboard](/web/dashboard), [Remote access](/gateway/remote), [Troubleshooting](/gateway/troubleshooting).
+文档：[Dashboard](/web/dashboard)、[Remote access](/gateway/remote)、[Troubleshooting](/gateway/troubleshooting)。
 
-### Telegram setMyCommands fails with network errors What should I check
+### Telegram setMyCommands 失败有网络错误检查什么
 
-Start with logs and channel status:
+先看日志与频道状态：
 
 ```bash
 moltbot channels status
 moltbot channels logs --channel telegram
 ```
 
-If you are on a VPS or behind a proxy, confirm outbound HTTPS is allowed and DNS works.
-If the Gateway is remote, make sure you are looking at logs on the Gateway host.
+如果你在 VPS 或代理后，请确认出站 HTTPS 允许且 DNS 正常。
+如果 Gateway 在远程，确保你查看的是 Gateway 主机的日志。
 
-Docs: [Telegram](/channels/telegram), [Channel troubleshooting](/channels/troubleshooting).
+文档：[Telegram](/channels/telegram)、[Channel troubleshooting](/channels/troubleshooting)。
 
-### TUI shows no output What should I check
+### TUI 没输出检查什么
 
-First confirm the Gateway is reachable and the agent can run:
+先确认 Gateway 可达且 agent 能运行：
 
 ```bash
 moltbot status
@@ -2489,171 +2319,153 @@ moltbot models status
 moltbot logs --follow
 ```
 
-In the TUI, use `/status` to see the current state. If you expect replies in a chat
-channel, make sure delivery is enabled (`/deliver on`).
+在 TUI 中用 `/status` 查看当前状态。如果你期望在聊天频道收到回复，请确保启用投递（`/deliver on`）。
 
-Docs: [TUI](/tui), [Slash commands](/tools/slash-commands).
+文档：[TUI](/tui)、[Slash commands](/tools/slash-commands)。
 
-### How do I completely stop then start the Gateway
+### 如何完全停止再启动 Gateway
 
-If you installed the service:
+如果安装了 service：
 
 ```bash
 moltbot gateway stop
 moltbot gateway start
 ```
 
-This stops/starts the **supervised service** (launchd on macOS, systemd on Linux).
-Use this when the Gateway runs in the background as a daemon.
+这会停止/启动**受监管的 service**（macOS 的 launchd、Linux 的 systemd）。当 Gateway 在后台守护进程运行时使用。
 
-If you’re running in the foreground, stop with Ctrl‑C, then:
+如果在前台运行，用 Ctrl‑C 停止，然后：
 
 ```bash
 moltbot gateway run
 ```
 
-Docs: [Gateway service runbook](/gateway).
+文档：[Gateway service runbook](/gateway)。
 
 ### ELI5 moltbot gateway restart vs moltbot gateway
 
-- `moltbot gateway restart`: restarts the **background service** (launchd/systemd).
-- `moltbot gateway`: runs the gateway **in the foreground** for this terminal session.
+- `moltbot gateway restart`：重启**后台 service**（launchd/systemd）。
+- `moltbot gateway`：在**前台**运行 gateway（当前终端会话）。
 
-If you installed the service, use the gateway commands. Use `moltbot gateway` when
-you want a one-off, foreground run.
+如果你安装了 service，用 gateway 命令组。需要一次性的前台运行时才用 `moltbot gateway`。
 
-### Whats the fastest way to get more details when something fails
+### 出错时最快获取更多细节的方法是什么
 
-Start the Gateway with `--verbose` to get more console detail. Then inspect the log file for channel auth, model routing, and RPC errors.
+用 `--verbose` 启动 Gateway 以获得更多控制台细节。然后查看日志文件里的频道认证、模型路由和 RPC 错误。
 
-## Media & attachments
+## 媒体与附件
 
-### My skill generated an imagePDF but nothing was sent
+### 技能生成图片或 PDF 但未发送
 
-Outbound attachments from the agent must include a `MEDIA:<path-or-url>` line (on its own line). See [Moltbot assistant setup](/start/clawd) and [Agent send](/tools/agent-send).
+agent 发出的附件必须包含一行 `MEDIA:<path-or-url>`（单独一行）。见 [Moltbot assistant setup](/start/clawd) 与 [Agent send](/tools/agent-send)。
 
-CLI sending:
+CLI 发送：
 
 ```bash
 moltbot message send --target +15555550123 --message "Here you go" --media /path/to/file.png
 ```
 
-Also check:
-- The target channel supports outbound media and isn’t blocked by allowlists.
-- The file is within the provider’s size limits (images are resized to max 2048px).
+还要检查：
+- 目标频道支持外发媒体且未被 allowlist 阻止。
+- 文件在提供方大小限制内（图片会被缩放到最大 2048px）。
 
-See [Images](/nodes/images).
+见 [Images](/nodes/images)。
 
-## Security and access control
+## 安全与访问控制
 
-### Is it safe to expose Moltbot to inbound DMs
+### 对外暴露 Moltbot 的私信入口安全吗
 
-Treat inbound DMs as untrusted input. Defaults are designed to reduce risk:
+把入站私信当作不可信输入。默认配置用来降低风险：
 
-- Default behavior on DM‑capable channels is **pairing**:
-  - Unknown senders receive a pairing code; the bot does not process their message.
-  - Approve with: `moltbot pairing approve <channel> <code>`
-  - Pending requests are capped at **3 per channel**; check `moltbot pairing list <channel>` if a code didn’t arrive.
-- Opening DMs publicly requires explicit opt‑in (`dmPolicy: "open"` and allowlist `"*"`).
+- 可私信频道的默认行为是**配对**：
+  - 未知发送者只会收到配对码，机器人不会处理其消息。
+  - 用 `moltbot pairing approve <channel> <code>` 批准。
+  - 待处理请求每个频道上限 **3** 个；若没收到配对码，检查 `moltbot pairing list <channel>`。
+- 公开开启私信需要显式 opt-in（`dmPolicy: "open"` 且 allowlist 为 `"*"`）。
 
-Run `moltbot doctor` to surface risky DM policies.
+运行 `moltbot doctor` 以发现危险的 DM 策略。
 
-### Is prompt injection only a concern for public bots
+### 提示词注入是否只对公共 bot 需要关注
 
-No. Prompt injection is about **untrusted content**, not just who can DM the bot.
-If your assistant reads external content (web search/fetch, browser pages, emails,
-docs, attachments, pasted logs), that content can include instructions that try
-to hijack the model. This can happen even if **you are the only sender**.
+不是。提示词注入针对的是**不可信内容**，而不仅是能否私信 bot。
+如果助手读取外部内容（web search/fetch、浏览器页面、邮件、文档、附件、粘贴日志），这些内容可能包含试图劫持模型的指令。即使**只有你是发送者**也会发生。
 
-The biggest risk is when tools are enabled: the model can be tricked into
-exfiltrating context or calling tools on your behalf. Reduce the blast radius by:
-- using a read-only or tool-disabled "reader" agent to summarize untrusted content
-- keeping `web_search` / `web_fetch` / `browser` off for tool-enabled agents
-- sandboxing and strict tool allowlists
+最大风险来自工具启用：模型可能被诱导外泄上下文或代表你调用工具。降低风险：
+- 用只读或禁用工具的 “reader” agent 总结不可信内容
+- 对启用工具的 agent 关闭 `web_search` / `web_fetch` / `browser`
+- 启用沙箱与严格工具 allowlist
 
-Details: [Security](/gateway/security).
+细节见 [Security](/gateway/security)。
 
-### Should my bot have its own email GitHub account or phone number
+### 机器人要不要单独的邮箱 GitHub 账号或手机号
 
-Yes, for most setups. Isolating the bot with separate accounts and phone numbers
-reduces the blast radius if something goes wrong. This also makes it easier to rotate
-credentials or revoke access without impacting your personal accounts.
+多数设置都建议单独账号。把机器人与个人账号隔离可以降低出问题时的影响面，也更容易轮换凭据或撤销访问而不影响个人账号。
 
-Start small. Give access only to the tools and accounts you actually need, and expand
-later if required.
+从小做起，只给必要工具与账号权限，按需扩展。
 
-Docs: [Security](/gateway/security), [Pairing](/start/pairing).
+文档：[Security](/gateway/security)、[Pairing](/start/pairing)。
 
-### Can I give it autonomy over my text messages and is that safe
+### 让它自动处理短信是否安全
 
-We do **not** recommend full autonomy over your personal messages. The safest pattern is:
-- Keep DMs in **pairing mode** or a tight allowlist.
-- Use a **separate number or account** if you want it to message on your behalf.
-- Let it draft, then **approve before sending**.
+我们**不推荐**让它完全自主处理个人消息。最安全的模式是：
+- 让私信保持**配对模式**或严格 allowlist。
+- 如果要它代发，请使用**独立号码或账号**。
+- 让它起草，然后**人工确认再发送**。
 
-If you want to experiment, do it on a dedicated account and keep it isolated. See
-[Security](/gateway/security).
+如果要实验，请用专用账号并保持隔离。见 [Security](/gateway/security)。
 
-### Can I use cheaper models for personal assistant tasks
+### 个人助理任务能否用更便宜的模型
 
-Yes, **if** the agent is chat-only and the input is trusted. Smaller tiers are
-more susceptible to instruction hijacking, so avoid them for tool-enabled agents
-or when reading untrusted content. If you must use a smaller model, lock down
-tools and run inside a sandbox. See [Security](/gateway/security).
+可以，**前提是** agent 仅聊天且输入可信。小模型更容易被指令劫持，所以在启用工具或读取不可信内容时避免使用。若必须用小模型，锁定工具并运行在沙箱内。见 [Security](/gateway/security)。
 
-### I ran start in Telegram but didnt get a pairing code
+### 我在 Telegram 里运行 start 但没得到配对码
 
-Pairing codes are sent **only** when an unknown sender messages the bot and
-`dmPolicy: "pairing"` is enabled. `/start` by itself doesn’t generate a code.
+配对码只有在未知发送者给 bot 发消息且启用 `dmPolicy: "pairing"` 时才发送。单独的 `/start` 不会生成配对码。
 
-Check pending requests:
+检查待处理请求：
 ```bash
 moltbot pairing list telegram
 ```
 
-If you want immediate access, allowlist your sender id or set `dmPolicy: "open"`
-for that account.
+如果要立即访问，请把发送者 id 加入 allowlist 或把 `dmPolicy` 设为 `open`。
 
-### WhatsApp will it message my contacts How does pairing work
+### WhatsApp 会给联系人发消息吗配对如何工作
 
-No. Default WhatsApp DM policy is **pairing**. Unknown senders only get a pairing code and their message is **not processed**. Moltbot only replies to chats it receives or to explicit sends you trigger.
+不会。默认 WhatsApp DM 策略是**配对**。未知发送者只会收到配对码，消息**不会处理**。Moltbot 只回复它收到的聊天，或你显式触发的发送。
 
-Approve pairing with:
+批准配对：
 
 ```bash
 moltbot pairing approve whatsapp <code>
 ```
 
-List pending requests:
+列出待处理请求：
 
 ```bash
 moltbot pairing list whatsapp
 ```
 
-Wizard phone number prompt: it’s used to set your **allowlist/owner** so your own DMs are permitted. It’s not used for auto-sending. If you run on your personal WhatsApp number, use that number and enable `channels.whatsapp.selfChatMode`.
+向导里的手机号提示用于设置你的**allowlist/owner**，并不用于自动发送。如果你运行在个人 WhatsApp 号码上，请用该号码并启用 `channels.whatsapp.selfChatMode`。
 
-## Chat commands, aborting tasks, and “it won’t stop”
+## 聊天命令终止任务与停不下来
 
-### How do I stop internal system messages from showing in chat
+### 如何阻止内部系统消息显示在聊天中
 
-Most internal or tool messages only appear when **verbose** or **reasoning** is enabled
-for that session.
+多数内部或工具消息只在该会话启用 **verbose** 或 **reasoning** 时出现。
 
-Fix in the chat where you see it:
+在出现问题的聊天中修复：
 ```
 /verbose off
 /reasoning off
 ```
 
-If it is still noisy, check the session settings in the Control UI and set verbose
-to **inherit**. Also confirm you are not using a bot profile with `verboseDefault` set
-to `on` in config.
+若仍然很吵，请检查 Control UI 会话设置并把 verbose 设为 **inherit**。同时确认你没有在配置里把 `verboseDefault` 设为 `on` 的 bot profile。
 
-Docs: [Thinking and verbose](/tools/thinking), [Security](/gateway/security#reasoning--verbose-output-in-groups).
+文档：[Thinking and verbose](/tools/thinking)、[Security](/gateway/security#reasoning--verbose-output-in-groups)。
 
-### How do I stopcancel a running task
+### 如何停止或取消运行中的任务
 
-Send any of these **as a standalone message** (no slash):
+发送以下任意一条**单独消息**（不带斜杠）：
 
 ```
 stop
@@ -2664,24 +2476,23 @@ exit
 interrupt
 ```
 
-These are abort triggers (not slash commands).
+这些是终止触发词（不是斜杠命令）。
 
-For background processes (from the exec tool), you can ask the agent to run:
+对于 exec 工具产生的后台进程，可以让 agent 运行：
 
 ```
 process action:kill sessionId:XXX
 ```
 
-Slash commands overview: see [Slash commands](/tools/slash-commands).
+斜杠命令概览见 [Slash commands](/tools/slash-commands)。
 
-Most commands must be sent as a **standalone** message that starts with `/`, but a few shortcuts (like `/status`) also work inline for allowlisted senders.
+大多数命令必须以 `/` 开头单独发送，但少数快捷命令（如 `/status`）对 allowlist 发送者也可内联使用。
 
-### How do I send a Discord message from Telegram Crosscontext messaging denied
+### 如何从 Telegram 发送 Discord 消息 Cross-context messaging denied
 
-Moltbot blocks **cross‑provider** messaging by default. If a tool call is bound
-to Telegram, it won’t send to Discord unless you explicitly allow it.
+Moltbot 默认阻止**跨提供方**消息。若工具调用绑定到 Telegram，它不会发送到 Discord，除非你显式允许。
 
-Enable cross‑provider messaging for the agent:
+为该 agent 启用跨提供方：
 
 ```json5
 {
@@ -2700,27 +2511,26 @@ Enable cross‑provider messaging for the agent:
 }
 ```
 
-Restart the gateway after editing config. If you only want this for a single
-agent, set it under `agents.list[].tools.message` instead.
+修改配置后重启 gateway。如果只想针对单一 agent，在 `agents.list[].tools.message` 下设置。
 
-### Why does it feel like the bot ignores rapidfire messages
+### 为什么机器人看起来忽略快速连续消息
 
-Queue mode controls how new messages interact with an in‑flight run. Use `/queue` to change modes:
+队列模式控制新消息如何与正在运行的任务交互。用 `/queue` 切换模式：
 
-- `steer` - new messages redirect the current task
-- `followup` - run messages one at a time
-- `collect` - batch messages and reply once (default)
-- `steer-backlog` - steer now, then process backlog
-- `interrupt` - abort current run and start fresh
+- `steer` - 新消息重定向当前任务
+- `followup` - 按顺序逐条运行
+- `collect` - 批量收集后回复一次（默认）
+- `steer-backlog` - 先重定向，再处理 backlog
+- `interrupt` - 中断当前任务并重新开始
 
-You can add options like `debounce:2s cap:25 drop:summarize` for followup modes.
+可添加选项如 `debounce:2s cap:25 drop:summarize` 用于 followup 模式。
 
-## Answer the exact question from the screenshot/chat log
+## 只回答截图或聊天记录中的具体问题
 
-**Q: “What’s the default model for Anthropic with an API key?”**
+**问：**“Anthropic 使用 API key 时默认模型是什么？”
 
-**A:** In Moltbot, credentials and model selection are separate. Setting `ANTHROPIC_API_KEY` (or storing an Anthropic API key in auth profiles) enables authentication, but the actual default model is whatever you configure in `agents.defaults.model.primary` (for example, `anthropic/claude-sonnet-4-5` or `anthropic/claude-opus-4-5`). If you see `No credentials found for profile "anthropic:default"`, it means the Gateway couldn’t find Anthropic credentials in the expected `auth-profiles.json` for the agent that’s running.
+**答：** 在 Moltbot 中，认证与模型选择是分开的。设置 `ANTHROPIC_API_KEY`（或在认证 profiles 中存储 Anthropic API key）仅是启用认证，实际默认模型取决于你在 `agents.defaults.model.primary` 中配置的值（例如 `anthropic/claude-sonnet-4-5` 或 `anthropic/claude-opus-4-5`）。如果你看到 `No credentials found for profile "anthropic:default"`，说明 Gateway 在运行的 agent 的 `auth-profiles.json` 里找不到 Anthropic 凭据。
 
 ---
 
-Still stuck? Ask in [Discord](https://discord.com/invite/clawd) or open a [GitHub discussion](https://github.com/moltbot/moltbot/discussions).
+仍然卡住？在 [Discord](https://discord.com/invite/clawd) 提问或在 [GitHub discussion](https://github.com/moltbot/moltbot/discussions) 发起讨论。

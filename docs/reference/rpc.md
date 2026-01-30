@@ -1,35 +1,35 @@
 ---
-summary: "RPC adapters for external CLIs (signal-cli, imsg) and gateway patterns"
+summary: "外部 CLI 的 RPC 适配器（signal-cli、imsg）与 gateway 模式"
 read_when:
-  - Adding or changing external CLI integrations
-  - Debugging RPC adapters (signal-cli, imsg)
+  - 添加或修改外部 CLI 集成
+  - 排查 RPC 适配器（signal-cli、imsg）
 ---
-# RPC adapters
+# RPC 适配器
 
-Moltbot integrates external CLIs via JSON-RPC. Two patterns are used today.
+Moltbot 通过 JSON-RPC 集成外部 CLI。目前有两种模式。
 
-## Pattern A: HTTP daemon (signal-cli)
-- `signal-cli` runs as a daemon with JSON-RPC over HTTP.
-- Event stream is SSE (`/api/v1/events`).
-- Health probe: `/api/v1/check`.
-- Moltbot owns lifecycle when `channels.signal.autoStart=true`.
+## 模式 A：HTTP 守护进程（signal-cli）
+- `signal-cli` 以守护进程运行，通过 HTTP 提供 JSON-RPC。
+- 事件流为 SSE（`/api/v1/events`）。
+- 健康探测：`/api/v1/check`。
+- 当 `channels.signal.autoStart=true` 时由 Moltbot 接管生命周期。
 
-See [Signal](/channels/signal) for setup and endpoints.
+设置与端点见 [Signal](/channels/signal)。
 
-## Pattern B: stdio child process (imsg)
-- Moltbot spawns `imsg rpc` as a child process.
-- JSON-RPC is line-delimited over stdin/stdout (one JSON object per line).
-- No TCP port, no daemon required.
+## 模式 B：stdio 子进程（imsg）
+- Moltbot 以子进程方式启动 `imsg rpc`。
+- JSON-RPC 通过 stdin/stdout 逐行传输（每行一个 JSON）。
+- 无需 TCP 端口，也不需要守护进程。
 
-Core methods used:
-- `watch.subscribe` → notifications (`method: "message"`)
+核心方法：
+- `watch.subscribe` -> 通知（`method: "message"`）
 - `watch.unsubscribe`
 - `send`
-- `chats.list` (probe/diagnostics)
+- `chats.list`（探测或诊断）
 
-See [iMessage](/channels/imessage) for setup and addressing (`chat_id` preferred).
+设置与寻址见 [iMessage](/channels/imessage)（优先 `chat_id`）。
 
-## Adapter guidelines
-- Gateway owns the process (start/stop tied to provider lifecycle).
-- Keep RPC clients resilient: timeouts, restart on exit.
-- Prefer stable IDs (e.g., `chat_id`) over display strings.
+## 适配器指南
+- Gateway 负责进程生命周期（与 provider 生命周期绑定）。
+- RPC 客户端要有韧性：超时、退出后重启。
+- 优先使用稳定 ID（如 `chat_id`），避免使用显示字符串。
