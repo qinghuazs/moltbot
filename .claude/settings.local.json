@@ -5,7 +5,8 @@
       "Bash(wc:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(xargs:*)"
     ]
   }
 }
