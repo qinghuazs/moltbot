@@ -9,7 +9,9 @@
       "Bash(xargs:*)",
       "Bash(for file in canvas coding-agent clawdhub eightctl food-order gemini gifgrep gog goplaces imsg)",
       "Bash(do echo:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
