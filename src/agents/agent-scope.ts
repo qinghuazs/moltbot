@@ -1,3 +1,7 @@
+/**
+ * Agent 作用域模块
+ * 管理 Agent 的 ID 解析、配置查找、工作目录等作用域相关功能
+ */
 import os from "node:os";
 import path from "node:path";
 
@@ -13,8 +17,10 @@ import { DEFAULT_AGENT_WORKSPACE_DIR } from "./workspace.js";
 
 export { resolveAgentIdFromSessionKey } from "../routing/session-key.js";
 
+/** Agent 配置条目类型 */
 type AgentEntry = NonNullable<NonNullable<MoltbotConfig["agents"]>["list"]>[number];
 
+/** 解析后的 Agent 配置 */
 type ResolvedAgentConfig = {
   name?: string;
   workspace?: string;
@@ -30,14 +36,25 @@ type ResolvedAgentConfig = {
   tools?: AgentEntry["tools"];
 };
 
+/** 默认 Agent 警告标志，避免重复警告 */
 let defaultAgentWarned = false;
 
+/**
+ * 从配置中获取 Agent 列表
+ * @param cfg - Moltbot 配置
+ * @returns Agent 条目数组
+ */
 function listAgents(cfg: MoltbotConfig): AgentEntry[] {
   const list = cfg.agents?.list;
   if (!Array.isArray(list)) return [];
   return list.filter((entry): entry is AgentEntry => Boolean(entry && typeof entry === "object"));
 }
 
+/**
+ * 获取所有 Agent ID 列表
+ * @param cfg - Moltbot 配置
+ * @returns Agent ID 数组
+ */
 export function listAgentIds(cfg: MoltbotConfig): string[] {
   const agents = listAgents(cfg);
   if (agents.length === 0) return [DEFAULT_AGENT_ID];
@@ -52,6 +69,12 @@ export function listAgentIds(cfg: MoltbotConfig): string[] {
   return ids.length > 0 ? ids : [DEFAULT_AGENT_ID];
 }
 
+/**
+ * 解析默认 Agent ID
+ * 优先使用标记为 default=true 的 Agent，否则使用第一个
+ * @param cfg - Moltbot 配置
+ * @returns 默认 Agent ID
+ */
 export function resolveDefaultAgentId(cfg: MoltbotConfig): string {
   const agents = listAgents(cfg);
   if (agents.length === 0) return DEFAULT_AGENT_ID;
@@ -64,6 +87,11 @@ export function resolveDefaultAgentId(cfg: MoltbotConfig): string {
   return normalizeAgentId(chosen || DEFAULT_AGENT_ID);
 }
 
+/**
+ * 从会话键解析 Agent ID
+ * @param params - 参数对象
+ * @returns 默认和会话 Agent ID
+ */
 export function resolveSessionAgentIds(params: { sessionKey?: string; config?: MoltbotConfig }): {
   defaultAgentId: string;
   sessionAgentId: string;
@@ -76,6 +104,11 @@ export function resolveSessionAgentIds(params: { sessionKey?: string; config?: M
   return { defaultAgentId, sessionAgentId };
 }
 
+/**
+ * 从会话键解析单个 Agent ID
+ * @param params - 参数对象
+ * @returns Agent ID
+ */
 export function resolveSessionAgentId(params: {
   sessionKey?: string;
   config?: MoltbotConfig;
@@ -83,11 +116,23 @@ export function resolveSessionAgentId(params: {
   return resolveSessionAgentIds(params).sessionAgentId;
 }
 
+/**
+ * 根据 Agent ID 查找配置条目
+ * @param cfg - Moltbot 配置
+ * @param agentId - Agent ID
+ * @returns Agent 配置条目
+ */
 function resolveAgentEntry(cfg: MoltbotConfig, agentId: string): AgentEntry | undefined {
   const id = normalizeAgentId(agentId);
   return listAgents(cfg).find((entry) => normalizeAgentId(entry.id) === id);
 }
 
+/**
+ * 解析 Agent 完整配置
+ * @param cfg - Moltbot 配置
+ * @param agentId - Agent ID
+ * @returns 解析后的 Agent 配置
+ */
 export function resolveAgentConfig(
   cfg: MoltbotConfig,
   agentId: string,
