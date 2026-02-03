@@ -1,19 +1,31 @@
+/**
+ * 渠道插件注册表模块
+ * 管理渠道插件的注册、查找和配置
+ *
+ * 此模块是"重量级"的（插件可能导入渠道监控、Web 登录等）。
+ * 共享代码路径（回复流程、命令认证、沙箱解释）应依赖 `src/channels/dock.ts`，
+ * 仅在执行边界调用 `getChannelPlugin()`。
+ *
+ * 渠道插件由插件加载器注册（extensions/ 或配置的路径）。
+ */
 import { CHAT_CHANNEL_ORDER, type ChatChannelId, normalizeAnyChannelId } from "../registry.js";
 import type { ChannelId, ChannelPlugin } from "./types.js";
 import { requireActivePluginRegistry } from "../../plugins/runtime.js";
 
-// Channel plugins registry (runtime).
-//
-// This module is intentionally "heavy" (plugins may import channel monitors, web login, etc).
-// Shared code paths (reply flow, command auth, sandbox explain) should depend on `src/channels/dock.ts`
-// instead, and only call `getChannelPlugin()` at execution boundaries.
-//
-// Channel plugins are registered by the plugin loader (extensions/ or configured paths).
+/**
+ * 列出所有插件渠道
+ * @returns 渠道插件数组
+ */
 function listPluginChannels(): ChannelPlugin[] {
   const registry = requireActivePluginRegistry();
   return registry.channels.map((entry) => entry.plugin);
 }
 
+/**
+ * 去重渠道列表
+ * @param channels - 渠道插件数组
+ * @returns 去重后的渠道插件数组
+ */
 function dedupeChannels(channels: ChannelPlugin[]): ChannelPlugin[] {
   const seen = new Set<string>();
   const resolved: ChannelPlugin[] = [];
@@ -26,6 +38,10 @@ function dedupeChannels(channels: ChannelPlugin[]): ChannelPlugin[] {
   return resolved;
 }
 
+/**
+ * 列出所有渠道插件（已排序）
+ * @returns 排序后的渠道插件数组
+ */
 export function listChannelPlugins(): ChannelPlugin[] {
   const combined = dedupeChannels(listPluginChannels());
   return combined.sort((a, b) => {
@@ -38,17 +54,29 @@ export function listChannelPlugins(): ChannelPlugin[] {
   });
 }
 
+/**
+ * 根据 ID 获取渠道插件
+ * @param id - 渠道 ID
+ * @returns 渠道插件，未找到返回 undefined
+ */
 export function getChannelPlugin(id: ChannelId): ChannelPlugin | undefined {
   const resolvedId = String(id).trim();
   if (!resolvedId) return undefined;
   return listChannelPlugins().find((plugin) => plugin.id === resolvedId);
 }
 
+/**
+ * 规范化渠道 ID
+ * 渠道对接：保持输入规范化集中在 src/channels/registry.ts
+ * 调用前必须初始化插件注册表
+ * @param raw - 原始渠道 ID
+ * @returns 规范化后的渠道 ID
+ */
 export function normalizeChannelId(raw?: string | null): ChannelId | null {
-  // Channel docking: keep input normalization centralized in src/channels/registry.ts.
-  // Plugin registry must be initialized before calling.
   return normalizeAnyChannelId(raw);
 }
+
+// 目录配置导出
 export {
   listDiscordDirectoryGroupsFromConfig,
   listDiscordDirectoryPeersFromConfig,
@@ -59,6 +87,8 @@ export {
   listWhatsAppDirectoryGroupsFromConfig,
   listWhatsAppDirectoryPeersFromConfig,
 } from "./directory-config.js";
+
+// 渠道配置导出
 export {
   applyChannelMatchMeta,
   buildChannelKeyCandidates,
@@ -70,9 +100,13 @@ export {
   type ChannelEntryMatch,
   type ChannelMatchSource,
 } from "./channel-config.js";
+
+// 允许列表匹配导出
 export {
   formatAllowlistMatchMeta,
   type AllowlistMatch,
   type AllowlistMatchSource,
 } from "./allowlist-match.js";
+
+// 类型导出
 export type { ChannelId, ChannelPlugin } from "./types.js";

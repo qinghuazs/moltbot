@@ -1,3 +1,7 @@
+/**
+ * 会话键处理模块
+ * 提供会话键的解析、规范化和转换功能
+ */
 import { parseAgentSessionKey, type ParsedAgentSessionKey } from "../sessions/session-key-utils.js";
 
 export {
@@ -7,31 +11,58 @@ export {
   type ParsedAgentSessionKey,
 } from "../sessions/session-key-utils.js";
 
+/** 默认 Agent ID */
 export const DEFAULT_AGENT_ID = "main";
+/** 默认主键 */
 export const DEFAULT_MAIN_KEY = "main";
+/** 默认账户 ID */
 export const DEFAULT_ACCOUNT_ID = "default";
 
-// Pre-compiled regex
+// 预编译的正则表达式
+/** 有效 ID 正则 */
 const VALID_ID_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
+/** 无效字符正则 */
 const INVALID_CHARS_RE = /[^a-z0-9_-]+/g;
+/** 前导连字符正则 */
 const LEADING_DASH_RE = /^-+/;
+/** 尾随连字符正则 */
 const TRAILING_DASH_RE = /-+$/;
 
+/**
+ * 规范化令牌
+ * @param value - 输入值
+ * @returns 小写并去除空白的字符串
+ */
 function normalizeToken(value: string | undefined | null): string {
   return (value ?? "").trim().toLowerCase();
 }
 
+/**
+ * 规范化主键
+ * @param value - 输入值
+ * @returns 规范化后的主键，默认为 "main"
+ */
 export function normalizeMainKey(value: string | undefined | null): string {
   const trimmed = (value ?? "").trim();
   return trimmed ? trimmed.toLowerCase() : DEFAULT_MAIN_KEY;
 }
 
+/**
+ * 将存储键转换为 Agent 请求会话键
+ * @param storeKey - 存储键
+ * @returns 请求会话键
+ */
 export function toAgentRequestSessionKey(storeKey: string | undefined | null): string | undefined {
   const raw = (storeKey ?? "").trim();
   if (!raw) return undefined;
   return parseAgentSessionKey(raw)?.rest ?? raw;
 }
 
+/**
+ * 将请求键转换为 Agent 存储会话键
+ * @param params - 参数对象
+ * @returns 存储会话键
+ */
 export function toAgentStoreSessionKey(params: {
   agentId: string;
   requestKey: string | undefined | null;
@@ -49,17 +80,28 @@ export function toAgentStoreSessionKey(params: {
   return `agent:${normalizeAgentId(params.agentId)}:${lowered}`;
 }
 
+/**
+ * 从会话键解析 Agent ID
+ * @param sessionKey - 会话键
+ * @returns Agent ID
+ */
 export function resolveAgentIdFromSessionKey(sessionKey: string | undefined | null): string {
   const parsed = parseAgentSessionKey(sessionKey);
   return normalizeAgentId(parsed?.agentId ?? DEFAULT_AGENT_ID);
 }
 
+/**
+ * 规范化 Agent ID
+ * 保持路径安全和 shell 友好
+ * @param value - 输入值
+ * @returns 规范化后的 Agent ID
+ */
 export function normalizeAgentId(value: string | undefined | null): string {
   const trimmed = (value ?? "").trim();
   if (!trimmed) return DEFAULT_AGENT_ID;
-  // Keep it path-safe + shell-friendly.
+  // 保持路径安全和 shell 友好
   if (VALID_ID_RE.test(trimmed)) return trimmed.toLowerCase();
-  // Best-effort fallback: collapse invalid characters to "-"
+  // 尽力回退：将无效字符折叠为 "-"
   return (
     trimmed
       .toLowerCase()
@@ -70,6 +112,11 @@ export function normalizeAgentId(value: string | undefined | null): string {
   );
 }
 
+/**
+ * 清理 Agent ID
+ * @param value - 输入值
+ * @returns 清理后的 Agent ID
+ */
 export function sanitizeAgentId(value: string | undefined | null): string {
   const trimmed = (value ?? "").trim();
   if (!trimmed) return DEFAULT_AGENT_ID;
@@ -84,6 +131,11 @@ export function sanitizeAgentId(value: string | undefined | null): string {
   );
 }
 
+/**
+ * 规范化账户 ID
+ * @param value - 输入值
+ * @returns 规范化后的账户 ID
+ */
 export function normalizeAccountId(value: string | undefined | null): string {
   const trimmed = (value ?? "").trim();
   if (!trimmed) return DEFAULT_ACCOUNT_ID;
