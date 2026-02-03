@@ -1,3 +1,7 @@
+/**
+ * 路由解析模块
+ * 提供 Agent 路由解析功能，根据渠道、账户、对等方等信息确定目标 Agent
+ */
 import { resolveDefaultAgentId } from "../agents/agent-scope.js";
 import type { MoltbotConfig } from "../config/config.js";
 import { listBindings } from "./bindings.js";
@@ -10,31 +14,46 @@ import {
   sanitizeAgentId,
 } from "./session-key.js";
 
+/** 路由对等方类型 */
 export type RoutePeerKind = "dm" | "group" | "channel";
 
+/** 路由对等方 */
 export type RoutePeer = {
+  /** 对等方类型 */
   kind: RoutePeerKind;
+  /** 对等方 ID */
   id: string;
 };
 
+/** Agent 路由解析输入 */
 export type ResolveAgentRouteInput = {
+  /** Moltbot 配置 */
   cfg: MoltbotConfig;
+  /** 渠道 */
   channel: string;
+  /** 账户 ID */
   accountId?: string | null;
+  /** 对等方 */
   peer?: RoutePeer | null;
+  /** Guild ID（Discord） */
   guildId?: string | null;
+  /** Team ID（Slack） */
   teamId?: string | null;
 };
 
+/** 解析后的 Agent 路由 */
 export type ResolvedAgentRoute = {
+  /** Agent ID */
   agentId: string;
+  /** 渠道 */
   channel: string;
+  /** 账户 ID */
   accountId: string;
-  /** Internal session key used for persistence + concurrency. */
+  /** 内部会话键，用于持久化和并发控制 */
   sessionKey: string;
-  /** Convenience alias for direct-chat collapse. */
+  /** 便捷别名，用于直接聊天折叠 */
   mainSessionKey: string;
-  /** Match description for debugging/logging. */
+  /** 匹配描述，用于调试/日志 */
   matchedBy:
     | "binding.peer"
     | "binding.guild"
@@ -46,19 +65,31 @@ export type ResolvedAgentRoute = {
 
 export { DEFAULT_ACCOUNT_ID, DEFAULT_AGENT_ID } from "./session-key.js";
 
+/**
+ * 规范化令牌（小写）
+ */
 function normalizeToken(value: string | undefined | null): string {
   return (value ?? "").trim().toLowerCase();
 }
 
+/**
+ * 规范化 ID（保留大小写）
+ */
 function normalizeId(value: string | undefined | null): string {
   return (value ?? "").trim();
 }
 
+/**
+ * 规范化账户 ID
+ */
 function normalizeAccountId(value: string | undefined | null): string {
   const trimmed = (value ?? "").trim();
   return trimmed ? trimmed : DEFAULT_ACCOUNT_ID;
 }
 
+/**
+ * 检查账户 ID 是否匹配
+ */
 function matchesAccountId(match: string | undefined, actual: string): boolean {
   const trimmed = (match ?? "").trim();
   if (!trimmed) return actual === DEFAULT_ACCOUNT_ID;
@@ -66,12 +97,17 @@ function matchesAccountId(match: string | undefined, actual: string): boolean {
   return trimmed === actual;
 }
 
+/**
+ * 构建 Agent 会话键
+ * @param params - 参数
+ * @returns 会话键
+ */
 export function buildAgentSessionKey(params: {
   agentId: string;
   channel: string;
   accountId?: string | null;
   peer?: RoutePeer | null;
-  /** DM session scope. */
+  /** DM 会话范围 */
   dmScope?: "main" | "per-peer" | "per-channel-peer" | "per-account-channel-peer";
   identityLinks?: Record<string, string[]>;
 }): string {
@@ -89,11 +125,17 @@ export function buildAgentSessionKey(params: {
   });
 }
 
+/**
+ * 列出配置中的所有 Agent
+ */
 function listAgents(cfg: MoltbotConfig) {
   const agents = cfg.agents?.list;
   return Array.isArray(agents) ? agents : [];
 }
 
+/**
+ * 选择第一个存在的 Agent ID
+ */
 function pickFirstExistingAgentId(cfg: MoltbotConfig, agentId: string): string {
   const trimmed = (agentId ?? "").trim();
   if (!trimmed) return sanitizeAgentId(resolveDefaultAgentId(cfg));
@@ -105,6 +147,9 @@ function pickFirstExistingAgentId(cfg: MoltbotConfig, agentId: string): string {
   return sanitizeAgentId(resolveDefaultAgentId(cfg));
 }
 
+/**
+ * 检查渠道是否匹配
+ */
 function matchesChannel(
   match: { channel?: string | undefined } | undefined,
   channel: string,
@@ -114,6 +159,9 @@ function matchesChannel(
   return key === channel;
 }
 
+/**
+ * 检查对等方是否匹配
+ */
 function matchesPeer(
   match: { peer?: { kind?: string; id?: string } | undefined } | undefined,
   peer: RoutePeer,
@@ -126,6 +174,9 @@ function matchesPeer(
   return kind === peer.kind && id === peer.id;
 }
 
+/**
+ * 检查 Guild 是否匹配
+ */
 function matchesGuild(
   match: { guildId?: string | undefined } | undefined,
   guildId: string,
@@ -135,12 +186,21 @@ function matchesGuild(
   return id === guildId;
 }
 
+/**
+ * 检查 Team 是否匹配
+ */
 function matchesTeam(match: { teamId?: string | undefined } | undefined, teamId: string): boolean {
   const id = normalizeId(match?.teamId);
   if (!id) return false;
   return id === teamId;
 }
 
+/**
+ * 解析 Agent 路由
+ * 根据输入参数匹配绑定配置，确定目标 Agent
+ * @param input - 路由解析输入
+ * @returns 解析后的 Agent 路由
+ */
 export function resolveAgentRoute(input: ResolveAgentRouteInput): ResolvedAgentRoute {
   const channel = normalizeToken(input.channel);
   const accountId = normalizeAccountId(input.accountId);
