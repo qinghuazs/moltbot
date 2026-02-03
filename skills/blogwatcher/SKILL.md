@@ -7,24 +7,24 @@ metadata: {"moltbot":{"emoji":"📰","requires":{"bins":["blogwatcher"]},"instal
 
 # blogwatcher
 
-Track blog and RSS/Atom feed updates with the `blogwatcher` CLI.
+使用 `blogwatcher` CLI 跟踪博客和 RSS/Atom 订阅源更新。
 
-Install
-- Go: `go install github.com/Hyaxia/blogwatcher/cmd/blogwatcher@latest`
+安装
+- Go：`go install github.com/Hyaxia/blogwatcher/cmd/blogwatcher@latest`
 
-Quick start
+快速开始
 - `blogwatcher --help`
 
-Common commands
-- Add a blog: `blogwatcher add "My Blog" https://example.com`
-- List blogs: `blogwatcher blogs`
-- Scan for updates: `blogwatcher scan`
-- List articles: `blogwatcher articles`
-- Mark an article read: `blogwatcher read 1`
-- Mark all articles read: `blogwatcher read-all`
-- Remove a blog: `blogwatcher remove "My Blog"`
+常用命令
+- 添加博客：`blogwatcher add "My Blog" https://example.com`
+- 列出博客：`blogwatcher blogs`
+- 扫描更新：`blogwatcher scan`
+- 列出文章：`blogwatcher articles`
+- 标记文章为已读：`blogwatcher read 1`
+- 标记所有文章为已读：`blogwatcher read-all`
+- 删除博客：`blogwatcher remove "My Blog"`
 
-Example output
+示例输出
 ```
 $ blogwatcher blogs
 Tracked blogs (1):
@@ -42,5 +42,5 @@ Scanning 1 blog(s)...
 Found 4 new article(s) total!
 ```
 
-Notes
-- Use `blogwatcher <command> --help` to discover flags and options.
+注意事项
+- 使用 `blogwatcher <command> --help` 来发现标志和选项。

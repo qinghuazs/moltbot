@@ -7,21 +7,21 @@ metadata: {"moltbot":{"emoji":"🫐","requires":{"bins":["blu"]},"install":[{"id
 
 # blucli (blu)
 
-Use `blu` to control Bluesound/NAD players.
+使用 `blu` 控制 Bluesound/NAD 播放器。
 
-Quick start
-- `blu devices` (pick target)
+快速开始
+- `blu devices`（选择目标）
 - `blu --device <id> status`
 - `blu play|pause|stop`
 - `blu volume set 15`
 
-Target selection (in priority order)
+目标选择（按优先级顺序）
 - `--device <id|name|alias>`
 - `BLU_DEVICE`
-- config default (if set)
+- 配置默认值（如果已设置）
 
-Common tasks
-- Grouping: `blu group status|add|remove`
-- TuneIn search/play: `blu tunein search "query"`, `blu tunein play "query"`
+常见任务
+- 分组：`blu group status|add|remove`
+- TuneIn 搜索/播放：`blu tunein search "query"`、`blu tunein play "query"`
 
-Prefer `--json` for scripts. Confirm the target device before changing playback.
+脚本中优先使用 `--json`。在更改播放之前确认目标设备。

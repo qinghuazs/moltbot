@@ -6,7 +6,10 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(for file in canvas coding-agent clawdhub eightctl food-order gemini gifgrep gog goplaces imsg)",
+      "Bash(do echo:*)",
+      "Bash(done)"
     ]
   }
 }
