@@ -7,14 +7,14 @@ metadata: {"moltbot":{"emoji":"📄","requires":{"bins":["nano-pdf"]},"install":
 
 # nano-pdf
 
-Use `nano-pdf` to apply edits to a specific page in a PDF using a natural-language instruction.
+使用 `nano-pdf` 通过自然语言指令对 PDF 的特定页面进行编辑。
 
-## Quick start
+## 快速开始
 
 ```bash
 nano-pdf edit deck.pdf 1 "Change the title to 'Q3 Results' and fix the typo in the subtitle"
 ```
 
-Notes:
-- Page numbers are 0-based or 1-based depending on the tool’s version/config; if the result looks off by one, retry with the other.
-- Always sanity-check the output PDF before sending it out.
+注意事项:
+- 页码可能是从 0 开始或从 1 开始,具体取决于工具的版本/配置;如果结果看起来差了一页,请尝试另一种方式。
+- 在发送之前,务必检查输出的 PDF 文件。

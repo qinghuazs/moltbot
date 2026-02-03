@@ -7,28 +7,28 @@ metadata: {"moltbot":{"emoji":"🔐","requires":{"bins":["op"]},"install":[{"id"
 
 # 1Password CLI
 
-Follow the official CLI get-started steps. Don't guess install commands.
+遵循官方 CLI 入门步骤。不要猜测安装命令。
 
-## References
+## 参考资料
 
-- `references/get-started.md` (install + app integration + sign-in flow)
-- `references/cli-examples.md` (real `op` examples)
+- `references/get-started.md`（安装 + 应用集成 + 登录流程）
+- `references/cli-examples.md`（真实的 `op` 示例）
 
-## Workflow
+## 工作流程
 
-1. Check OS + shell.
-2. Verify CLI present: `op --version`.
-3. Confirm desktop app integration is enabled (per get-started) and the app is unlocked.
-4. REQUIRED: create a fresh tmux session for all `op` commands (no direct `op` calls outside tmux).
-5. Sign in / authorize inside tmux: `op signin` (expect app prompt).
-6. Verify access inside tmux: `op whoami` (must succeed before any secret read).
-7. If multiple accounts: use `--account` or `OP_ACCOUNT`.
+1. 检查操作系统 + shell。
+2. 验证 CLI 存在：`op --version`。
+3. 确认桌面应用集成已启用（按入门指南）且应用已解锁。
+4. 必需：为所有 `op` 命令创建新的 tmux 会话（不要在 tmux 外直接调用 `op`）。
+5. 在 tmux 内登录/授权：`op signin`（期望应用提示）。
+6. 在 tmux 内验证访问：`op whoami`（在读取任何秘密之前必须成功）。
+7. 如果有多个账户：使用 `--account` 或 `OP_ACCOUNT`。
 
-## REQUIRED tmux session (T-Max)
+## 必需的 tmux 会话（T-Max）
 
-The shell tool uses a fresh TTY per command. To avoid re-prompts and failures, always run `op` inside a dedicated tmux session with a fresh socket/session name.
+shell 工具每个命令使用新的 TTY。为避免重复提示和失败，始终在专用的 tmux 会话中运行 `op`，使用新的套接字/会话名称。
 
-Example (see `tmux` skill for socket conventions, do not reuse old session names):
+示例（参见 `tmux` 技能了解套接字约定，不要重用旧会话名称）：
 
 ```bash
 SOCKET_DIR="${CLAWDBOT_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/moltbot-tmux-sockets}"
@@ -44,10 +44,10 @@ tmux -S "$SOCKET" capture-pane -p -J -t "$SESSION":0.0 -S -200
 tmux -S "$SOCKET" kill-session -t "$SESSION"
 ```
 
-## Guardrails
+## 防护措施
 
-- Never paste secrets into logs, chat, or code.
-- Prefer `op run` / `op inject` over writing secrets to disk.
-- If sign-in without app integration is needed, use `op account add`.
-- If a command returns "account is not signed in", re-run `op signin` inside tmux and authorize in the app.
-- Do not run `op` outside tmux; stop and ask if tmux is unavailable.
+- 永远不要将秘密粘贴到日志、聊天或代码中。
+- 优先使用 `op run` / `op inject` 而不是将秘密写入磁盘。
+- 如果需要不使用应用集成的登录，使用 `op account add`。
+- 如果命令返回"account is not signed in"，在 tmux 内重新运行 `op signin` 并在应用中授权。
+- 不要在 tmux 外运行 `op`；如果 tmux 不可用，请停止并询问。

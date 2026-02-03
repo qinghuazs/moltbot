@@ -4,33 +4,33 @@ description: Use when you need to control Slack from Moltbot via the slack tool,
 metadata: {"moltbot":{"emoji":"💬","requires":{"config":["channels.slack"]}}}
 ---
 
-# Slack Actions
+# Slack 操作
 
-## Overview
+## 概述
 
-Use `slack` to react, manage pins, send/edit/delete messages, and fetch member info. The tool uses the bot token configured for Moltbot.
+使用 `slack` 来反应、管理置顶、发送/编辑/删除消息，以及获取成员信息。该工具使用为 Moltbot 配置的机器人令牌。
 
-## Inputs to collect
+## 需要收集的输入
 
-- `channelId` and `messageId` (Slack message timestamp, e.g. `1712023032.1234`).
-- For reactions, an `emoji` (Unicode or `:name:`).
-- For message sends, a `to` target (`channel:<id>` or `user:<id>`) and `content`.
+- `channelId` 和 `messageId`（Slack 消息时间戳，例如 `1712023032.1234`）。
+- 对于反应，需要一个 `emoji`（Unicode 或 `:name:`）。
+- 对于发送消息，需要一个 `to` 目标（`channel:<id>` 或 `user:<id>`）和 `content`。
 
-Message context lines include `slack message id` and `channel` fields you can reuse directly.
+消息上下文行包含您可以直接重用的 `slack message id` 和 `channel` 字段。
 
-## Actions
+## 操作
 
-### Action groups
+### 操作组
 
-| Action group | Default | Notes |
+| 操作组 | 默认 | 注释 |
 | --- | --- | --- |
-| reactions | enabled | React + list reactions |
-| messages | enabled | Read/send/edit/delete |
-| pins | enabled | Pin/unpin/list |
-| memberInfo | enabled | Member info |
-| emojiList | enabled | Custom emoji list |
+| reactions | 启用 | 反应 + 列出反应 |
+| messages | 启用 | 读取/发送/编辑/删除 |
+| pins | 启用 | 置顶/取消置顶/列出 |
+| memberInfo | 启用 | 成员信息 |
+| emojiList | 启用 | 自定义表情符号列表 |
 
-### React to a message
+### 对消息做出反应
 
 ```json
 {
@@ -41,7 +41,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### List reactions
+### 列出反应
 
 ```json
 {
@@ -51,7 +51,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Send a message
+### 发送消息
 
 ```json
 {
@@ -61,7 +61,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Edit a message
+### 编辑消息
 
 ```json
 {
@@ -72,7 +72,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Delete a message
+### 删除消息
 
 ```json
 {
@@ -82,7 +82,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Read recent messages
+### 读取最近消息
 
 ```json
 {
@@ -92,7 +92,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Pin a message
+### 置顶消息
 
 ```json
 {
@@ -102,7 +102,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Unpin a message
+### 取消置顶消息
 
 ```json
 {
@@ -112,7 +112,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### List pinned items
+### 列出置顶项目
 
 ```json
 {
@@ -121,7 +121,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Member info
+### 成员信息
 
 ```json
 {
@@ -130,7 +130,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-### Emoji list
+### 表情符号列表
 
 ```json
 {
@@ -138,7 +138,7 @@ Message context lines include `slack message id` and `channel` fields you can re
 }
 ```
 
-## Ideas to try
+## 尝试的想法
 
-- React with ✅ to mark completed tasks.
-- Pin key decisions or weekly status updates.
+- 用 ✅ 反应来标记已完成的任务。
+- 置顶关键决策或每周状态更新。
