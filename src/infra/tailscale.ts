@@ -1,3 +1,7 @@
+/**
+ * Tailscale 集成模块
+ * 提供 Tailscale VPN 的状态查询、二进制文件查找和网络配置功能
+ */
 import { existsSync } from "node:fs";
 import { promptYesNo } from "../cli/prompt.js";
 import { danger, info, logVerbose, shouldLogVerbose, warn } from "../globals.js";
@@ -7,6 +11,11 @@ import { colorize, isRich, theme } from "../terminal/theme.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import { ensureBinary } from "./binaries.js";
 
+/**
+ * 解析可能包含噪声的 JSON 对象
+ * @param stdout - 标准输出内容
+ * @returns 解析后的对象
+ */
 function parsePossiblyNoisyJsonObject(stdout: string): Record<string, unknown> {
   const trimmed = stdout.trim();
   const start = trimmed.indexOf("{");
@@ -18,20 +27,21 @@ function parsePossiblyNoisyJsonObject(stdout: string): Record<string, unknown> {
 }
 
 /**
- * Locate Tailscale binary using multiple strategies:
- * 1. PATH lookup (via which command)
- * 2. Known macOS app path
- * 3. find /Applications for Tailscale.app
- * 4. locate database (if available)
+ * 查找 Tailscale 二进制文件
+ * 使用多种策略定位：
+ * 1. PATH 查找（通过 which 命令）
+ * 2. 已知的 macOS 应用路径
+ * 3. 在 /Applications 中查找 Tailscale.app
+ * 4. locate 数据库（如果可用）
  *
- * @returns Path to Tailscale binary or null if not found
+ * @returns Tailscale 二进制文件路径，未找到返回 null
  */
 export async function findTailscaleBinary(): Promise<string | null> {
-  // Helper to check if a binary exists and is executable
+  // 辅助函数：检查二进制文件是否存在且可执行
   const checkBinary = async (path: string): Promise<boolean> => {
     if (!path || !existsSync(path)) return false;
     try {
-      // Use Promise.race with runExec to implement timeout
+      // 使用 Promise.race 和 runExec 实现超时
       await Promise.race([
         runExec(path, ["--version"], { timeoutMs: 3000 }),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 3000)),
@@ -42,7 +52,7 @@ export async function findTailscaleBinary(): Promise<string | null> {
     }
   };
 
-  // Strategy 1: which command
+  // 策略 1：which 命令
   try {
     const { stdout } = await runExec("which", ["tailscale"]);
     const fromPath = stdout.trim();
@@ -50,16 +60,16 @@ export async function findTailscaleBinary(): Promise<string | null> {
       return fromPath;
     }
   } catch {
-    // which failed, continue
+    // which 失败，继续尝试
   }
 
-  // Strategy 2: Known macOS app path
+  // 策略 2：已知的 macOS 应用路径
   const macAppPath = "/Applications/Tailscale.app/Contents/MacOS/Tailscale";
   if (await checkBinary(macAppPath)) {
     return macAppPath;
   }
 
-  // Strategy 3: find command in /Applications
+  // 策略 3：在 /Applications 中使用 find 命令
   try {
     const { stdout } = await runExec(
       "find",

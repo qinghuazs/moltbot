@@ -1,3 +1,7 @@
+/**
+ * 更新检查模块
+ * 提供 Git 仓库状态、依赖状态和 npm 注册表版本检查功能
+ */
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -5,49 +9,86 @@ import { runCommandWithTimeout } from "../process/exec.js";
 import { parseSemver } from "./runtime-guard.js";
 import { channelToNpmTag, type UpdateChannel } from "./update-channels.js";
 
+/** 包管理器类型 */
 export type PackageManager = "pnpm" | "bun" | "npm" | "unknown";
 
+/** Git 更新状态类型 */
 export type GitUpdateStatus = {
+  /** 仓库根目录 */
   root: string;
+  /** 当前 SHA */
   sha: string | null;
+  /** 当前标签 */
   tag: string | null;
+  /** 当前分支 */
   branch: string | null;
+  /** 上游分支 */
   upstream: string | null;
+  /** 是否有未提交更改 */
   dirty: boolean | null;
+  /** 领先提交数 */
   ahead: number | null;
+  /** 落后提交数 */
   behind: number | null;
+  /** fetch 是否成功 */
   fetchOk: boolean | null;
+  /** 错误信息 */
   error?: string;
 };
 
+/** 依赖状态类型 */
 export type DepsStatus = {
+  /** 包管理器 */
   manager: PackageManager;
+  /** 状态 */
   status: "ok" | "missing" | "stale" | "unknown";
+  /** 锁文件路径 */
   lockfilePath: string | null;
+  /** 标记文件路径 */
   markerPath: string | null;
+  /** 原因 */
   reason?: string;
 };
 
+/** 注册表状态类型 */
 export type RegistryStatus = {
+  /** 最新版本 */
   latestVersion: string | null;
+  /** 错误信息 */
   error?: string;
 };
 
+/** npm 标签状态类型 */
 export type NpmTagStatus = {
+  /** 标签名 */
   tag: string;
+  /** 版本号 */
   version: string | null;
+  /** 错误信息 */
   error?: string;
 };
 
+/** 更新检查结果类型 */
 export type UpdateCheckResult = {
+  /** 项目根目录 */
   root: string | null;
+  /** 安装类型 */
   installKind: "git" | "package" | "unknown";
+  /** 包管理器 */
   packageManager: PackageManager;
+  /** Git 状态 */
   git?: GitUpdateStatus;
+  /** 依赖状态 */
   deps?: DepsStatus;
+  /** 注册表状态 */
   registry?: RegistryStatus;
 };
 
+/**
+ * 检查路径是否存在
+ * @param p - 路径
+ * @returns 是否存在
+ */
 async function exists(p: string): Promise<boolean> {
   try {
     await fs.access(p);
@@ -57,6 +98,11 @@ async function exists(p: string): Promise<boolean> {
   }
 }
 
+/**
+ * 检测包管理器类型
+ * @param root - 项目根目录
+ * @returns 包管理器类型
+ */
 async function detectPackageManager(root: string): Promise<PackageManager> {
   try {
     const raw = await fs.readFile(path.join(root, "package.json"), "utf-8");
@@ -64,9 +110,10 @@ async function detectPackageManager(root: string): Promise<PackageManager> {
     const pm = parsed?.packageManager?.split("@")[0]?.trim();
     if (pm === "pnpm" || pm === "bun" || pm === "npm") return pm;
   } catch {
-    // ignore
+    // 忽略
   }
 
+  // 根据锁文件检测
   const files = await fs.readdir(root).catch((): string[] => []);
   if (files.includes("pnpm-lock.yaml")) return "pnpm";
   if (files.includes("bun.lockb")) return "bun";
@@ -74,6 +121,11 @@ async function detectPackageManager(root: string): Promise<PackageManager> {
   return "unknown";
 }
 
+/**
+ * 检测 Git 仓库根目录
+ * @param root - 起始目录
+ * @returns Git 根目录路径
+ */
 async function detectGitRoot(root: string): Promise<string | null> {
   const res = await runCommandWithTimeout(["git", "-C", root, "rev-parse", "--show-toplevel"], {
     timeoutMs: 4000,
