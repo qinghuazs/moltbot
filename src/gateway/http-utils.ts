@@ -1,8 +1,18 @@
+/**
+ * HTTP 工具模块
+ * 提供 HTTP 请求头解析、Agent ID 解析、会话键解析等功能
+ */
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 
 import { buildAgentMainSessionKey, normalizeAgentId } from "../routing/session-key.js";
 
+/**
+ * 获取请求头值
+ * @param req - HTTP 请求对象
+ * @param name - 请求头名称
+ * @returns 请求头值
+ */
 export function getHeader(req: IncomingMessage, name: string): string | undefined {
   const raw = req.headers[name.toLowerCase()];
   if (typeof raw === "string") return raw;
@@ -10,6 +20,11 @@ export function getHeader(req: IncomingMessage, name: string): string | undefine
   return undefined;
 }
 
+/**
+ * 获取 Bearer Token
+ * @param req - HTTP 请求对象
+ * @returns Bearer Token
+ */
 export function getBearerToken(req: IncomingMessage): string | undefined {
   const raw = getHeader(req, "authorization")?.trim() ?? "";
   if (!raw.toLowerCase().startsWith("bearer ")) return undefined;
@@ -17,6 +32,11 @@ export function getBearerToken(req: IncomingMessage): string | undefined {
   return token || undefined;
 }
 
+/**
+ * 从请求头解析 Agent ID
+ * @param req - HTTP 请求对象
+ * @returns Agent ID
+ */
 export function resolveAgentIdFromHeader(req: IncomingMessage): string | undefined {
   const raw =
     getHeader(req, "x-moltbot-agent-id")?.trim() || getHeader(req, "x-moltbot-agent")?.trim() || "";
@@ -24,6 +44,12 @@ export function resolveAgentIdFromHeader(req: IncomingMessage): string | undefin
   return normalizeAgentId(raw);
 }
 
+/**
+ * 从模型名称解析 Agent ID
+ * 支持格式：moltbot:<agentId> 或 agent:<agentId>
+ * @param model - 模型名称
+ * @returns Agent ID
+ */
 export function resolveAgentIdFromModel(model: string | undefined): string | undefined {
   const raw = model?.trim();
   if (!raw) return undefined;
@@ -36,6 +62,12 @@ export function resolveAgentIdFromModel(model: string | undefined): string | und
   return normalizeAgentId(agentId);
 }
 
+/**
+ * 解析请求的 Agent ID
+ * 优先从请求头获取，否则从模型名称获取，默认返回 "main"
+ * @param params - 参数
+ * @returns Agent ID
+ */
 export function resolveAgentIdForRequest(params: {
   req: IncomingMessage;
   model: string | undefined;
@@ -47,6 +79,12 @@ export function resolveAgentIdForRequest(params: {
   return fromModel ?? "main";
 }
 
+/**
+ * 解析会话键
+ * 优先使用显式指定的会话键，否则根据用户和前缀生成
+ * @param params - 参数
+ * @returns 会话键
+ */
 export function resolveSessionKey(params: {
   req: IncomingMessage;
   agentId: string;

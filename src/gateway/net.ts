@@ -1,7 +1,16 @@
+/**
+ * 网络工具模块
+ * 提供 IP 地址解析、绑定地址解析、代理检测等网络相关功能
+ */
 import net from "node:net";
 
 import { pickPrimaryTailnetIPv4, pickPrimaryTailnetIPv6 } from "../infra/tailnet.js";
 
+/**
+ * 检查是否为回环地址
+ * @param ip - IP 地址
+ * @returns 是否为回环地址
+ */
 export function isLoopbackAddress(ip: string | undefined): boolean {
   if (!ip) return false;
   if (ip === "127.0.0.1") return true;
@@ -11,17 +20,32 @@ export function isLoopbackAddress(ip: string | undefined): boolean {
   return false;
 }
 
+/**
+ * 规范化 IPv4 映射地址
+ * @param ip - IP 地址
+ * @returns 规范化后的地址
+ */
 function normalizeIPv4MappedAddress(ip: string): string {
   if (ip.startsWith("::ffff:")) return ip.slice("::ffff:".length);
   return ip;
 }
 
+/**
+ * 规范化 IP 地址
+ * @param ip - IP 地址
+ * @returns 规范化后的地址
+ */
 function normalizeIp(ip: string | undefined): string | undefined {
   const trimmed = ip?.trim();
   if (!trimmed) return undefined;
   return normalizeIPv4MappedAddress(trimmed.toLowerCase());
 }
 
+/**
+ * 去除可选的端口号
+ * @param ip - IP 地址（可能包含端口）
+ * @returns 纯 IP 地址
+ */
 function stripOptionalPort(ip: string): string {
   if (ip.startsWith("[")) {
     const end = ip.indexOf("]");
@@ -36,24 +60,46 @@ function stripOptionalPort(ip: string): string {
   return ip;
 }
 
+/**
+ * 解析 X-Forwarded-For 头中的客户端 IP
+ * @param forwardedFor - X-Forwarded-For 头值
+ * @returns 客户端 IP
+ */
 export function parseForwardedForClientIp(forwardedFor?: string): string | undefined {
   const raw = forwardedFor?.split(",")[0]?.trim();
   if (!raw) return undefined;
   return normalizeIp(stripOptionalPort(raw));
 }
 
+/**
+ * 解析 X-Real-IP 头
+ * @param realIp - X-Real-IP 头值
+ * @returns 客户端 IP
+ */
 function parseRealIp(realIp?: string): string | undefined {
   const raw = realIp?.trim();
   if (!raw) return undefined;
   return normalizeIp(stripOptionalPort(raw));
 }
 
+/**
+ * 检查是否为受信任的代理地址
+ * @param ip - IP 地址
+ * @param trustedProxies - 受信任的代理列表
+ * @returns 是否为受信任的代理
+ */
 export function isTrustedProxyAddress(ip: string | undefined, trustedProxies?: string[]): boolean {
   const normalized = normalizeIp(ip);
   if (!normalized || !trustedProxies || trustedProxies.length === 0) return false;
   return trustedProxies.some((proxy) => normalizeIp(proxy) === normalized);
 }
 
+/**
+ * 解析网关客户端 IP
+ * 考虑代理头和受信任代理列表
+ * @param params - 参数
+ * @returns 客户端 IP
+ */
 export function resolveGatewayClientIp(params: {
   remoteAddr?: string;
   forwardedFor?: string;
@@ -66,6 +112,11 @@ export function resolveGatewayClientIp(params: {
   return parseForwardedForClientIp(params.forwardedFor) ?? parseRealIp(params.realIp) ?? remote;
 }
 
+/**
+ * 检查是否为本地网关地址
+ * @param ip - IP 地址
+ * @returns 是否为本地网关地址
+ */
 export function isLocalGatewayAddress(ip: string | undefined): boolean {
   if (isLoopbackAddress(ip)) return true;
   if (!ip) return false;

@@ -1,37 +1,69 @@
+/**
+ * 网关探测模块
+ * 提供网关连接探测和健康检查功能
+ */
 import { randomUUID } from "node:crypto";
 
 import type { SystemPresence } from "../infra/system-presence.js";
 import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../utils/message-channel.js";
 import { GatewayClient } from "./client.js";
 
+/** 网关探测认证信息 */
 export type GatewayProbeAuth = {
+  /** 令牌 */
   token?: string;
+  /** 密码 */
   password?: string;
 };
 
+/** 网关探测关闭信息 */
 export type GatewayProbeClose = {
+  /** 关闭代码 */
   code: number;
+  /** 关闭原因 */
   reason: string;
+  /** 提示信息 */
   hint?: string;
 };
 
+/** 网关探测结果 */
 export type GatewayProbeResult = {
+  /** 是否成功 */
   ok: boolean;
+  /** 探测 URL */
   url: string;
+  /** 连接延迟（毫秒） */
   connectLatencyMs: number | null;
+  /** 错误信息 */
   error: string | null;
+  /** 关闭信息 */
   close: GatewayProbeClose | null;
+  /** 健康状态 */
   health: unknown;
+  /** 状态信息 */
   status: unknown;
+  /** 系统存在信息 */
   presence: SystemPresence[] | null;
+  /** 配置快照 */
   configSnapshot: unknown;
 };
 
+/**
+ * 格式化错误信息
+ * @param err - 错误对象
+ * @returns 错误消息字符串
+ */
 function formatError(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
 }
 
+/**
+ * 探测网关
+ * 连接到网关并获取健康状态、状态信息等
+ * @param opts - 探测选项
+ * @returns 探测结果
+ */
 export async function probeGateway(opts: {
   url: string;
   auth?: GatewayProbeAuth;

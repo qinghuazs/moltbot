@@ -1,10 +1,22 @@
+/**
+ * 日期时间工具模块
+ * 提供时区解析、时间格式检测、时间戳规范化等功能
+ */
 import { execSync } from "node:child_process";
 
+/** 时间格式偏好类型 */
 export type TimeFormatPreference = "auto" | "12" | "24";
+/** 解析后的时间格式类型 */
 export type ResolvedTimeFormat = "12" | "24";
 
+/** 缓存的时间格式 */
 let cachedTimeFormat: ResolvedTimeFormat | undefined;
 
+/**
+ * 解析用户时区
+ * @param configured - 配置的时区
+ * @returns 有效的时区字符串
+ */
 export function resolveUserTimezone(configured?: string): string {
   const trimmed = configured?.trim();
   if (trimmed) {
@@ -19,6 +31,11 @@ export function resolveUserTimezone(configured?: string): string {
   return host?.trim() || "UTC";
 }
 
+/**
+ * 解析用户时间格式偏好
+ * @param preference - 时间格式偏好
+ * @returns 解析后的时间格式（12 或 24 小时制）
+ */
 export function resolveUserTimeFormat(preference?: TimeFormatPreference): ResolvedTimeFormat {
   if (preference === "12" || preference === "24") return preference;
   if (cachedTimeFormat) return cachedTimeFormat;
@@ -26,6 +43,12 @@ export function resolveUserTimeFormat(preference?: TimeFormatPreference): Resolv
   return cachedTimeFormat;
 }
 
+/**
+ * 规范化时间戳
+ * 支持 Date 对象、数字（秒或毫秒）、字符串格式
+ * @param raw - 原始时间戳值
+ * @returns 规范化后的时间戳对象，无效返回 undefined
+ */
 export function normalizeTimestamp(
   raw: unknown,
 ): { timestampMs: number; timestampUtc: string } | undefined {
@@ -60,6 +83,12 @@ export function normalizeTimestamp(
   return { timestampMs, timestampUtc: new Date(timestampMs).toISOString() };
 }
 
+/**
+ * 为对象添加规范化的时间戳字段
+ * @param value - 原始对象
+ * @param rawTimestamp - 原始时间戳值
+ * @returns 带有时间戳字段的对象
+ */
 export function withNormalizedTimestamp<T extends Record<string, unknown>>(
   value: T,
   rawTimestamp: unknown,
@@ -79,7 +108,13 @@ export function withNormalizedTimestamp<T extends Record<string, unknown>>(
   };
 }
 
+/**
+ * 检测系统时间格式
+ * 支持 macOS、Windows 和其他平台
+ * @returns true 表示 24 小时制，false 表示 12 小时制
+ */
 function detectSystemTimeFormat(): boolean {
+  // macOS：读取系统偏好设置
   if (process.platform === "darwin") {
     try {
       const result = execSync("defaults read -g AppleICUForce24HourTime 2>/dev/null", {
@@ -93,6 +128,7 @@ function detectSystemTimeFormat(): boolean {
     }
   }
 
+  // Windows：通过 PowerShell 读取区域设置
   if (process.platform === "win32") {
     try {
       const result = execSync(
@@ -115,6 +151,11 @@ function detectSystemTimeFormat(): boolean {
   }
 }
 
+/**
+ * 获取日期的序数后缀（英文）
+ * @param day - 日期数字
+ * @returns 序数后缀（st, nd, rd, th）
+ */
 function ordinalSuffix(day: number): string {
   if (day >= 11 && day <= 13) return "th";
   switch (day % 10) {
@@ -129,6 +170,13 @@ function ordinalSuffix(day: number): string {
   }
 }
 
+/**
+ * 格式化用户友好的时间字符串
+ * @param date - 日期对象
+ * @param timeZone - 时区
+ * @param format - 时间格式（12 或 24 小时制）
+ * @returns 格式化的时间字符串，如 "Monday, January 1st, 2024 — 14:30"
+ */
 export function formatUserTime(
   date: Date,
   timeZone: string,
