@@ -1,17 +1,29 @@
+/**
+ * 归档文件处理模块
+ * 提供 tar 和 zip 格式归档文件的解压功能
+ */
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as tar from "tar";
 import JSZip from "jszip";
 
+/** 归档类型 */
 export type ArchiveKind = "tar" | "zip";
 
+/** 归档日志器接口 */
 export type ArchiveLogger = {
   info?: (message: string) => void;
   warn?: (message: string) => void;
 };
 
+/** tar 文件后缀列表 */
 const TAR_SUFFIXES = [".tgz", ".tar.gz", ".tar"];
 
+/**
+ * 根据文件路径解析归档类型
+ * @param filePath - 文件路径
+ * @returns 归档类型，无法识别返回 null
+ */
 export function resolveArchiveKind(filePath: string): ArchiveKind | null {
   const lower = filePath.toLowerCase();
   if (lower.endsWith(".zip")) return "zip";
@@ -19,15 +31,23 @@ export function resolveArchiveKind(filePath: string): ArchiveKind | null {
   return null;
 }
 
+/**
+ * 解析打包的根目录
+ * 处理 npm 包的 package/ 目录结构
+ * @param extractDir - 解压目录
+ * @returns 根目录路径
+ */
 export async function resolvePackedRootDir(extractDir: string): Promise<string> {
+  // 首先检查标准的 package 目录
   const direct = path.join(extractDir, "package");
   try {
     const stat = await fs.stat(direct);
     if (stat.isDirectory()) return direct;
   } catch {
-    // ignore
+    // 忽略
   }
 
+  // 如果只有一个目录，使用它作为根目录
   const entries = await fs.readdir(extractDir, { withFileTypes: true });
   const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
   if (dirs.length !== 1) {
@@ -40,6 +60,13 @@ export async function resolvePackedRootDir(extractDir: string): Promise<string> 
   return path.join(extractDir, onlyDir);
 }
 
+/**
+ * 带超时的 Promise 包装器
+ * @param promise - 原始 Promise
+ * @param timeoutMs - 超时毫秒数
+ * @param label - 操作标签（用于错误消息）
+ * @returns Promise 结果
+ */
 export async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
@@ -61,6 +88,12 @@ export async function withTimeout<T>(
   }
 }
 
+/**
+ * 解压 zip 文件
+ * @param params - 参数对象
+ * @param params.archivePath - 归档文件路径
+ * @param params.destDir - 目标目录
+ */
 async function extractZip(params: { archivePath: string; destDir: string }): Promise<void> {
   const buffer = await fs.readFile(params.archivePath);
   const zip = await JSZip.loadAsync(buffer);
@@ -70,6 +103,7 @@ async function extractZip(params: { archivePath: string; destDir: string }): Pro
     const entryPath = entry.name.replaceAll("\\", "/");
     if (!entryPath || entryPath.endsWith("/")) {
       const dirPath = path.resolve(params.destDir, entryPath);
+      // 安全检查：防止路径遍历攻击
       if (!dirPath.startsWith(params.destDir)) {
         throw new Error(`zip entry escapes destination: ${entry.name}`);
       }

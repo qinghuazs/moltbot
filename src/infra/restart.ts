@@ -1,23 +1,41 @@
+/**
+ * 网关重启模块
+ * 提供网关服务的重启功能，支持 launchctl、systemd 和 supervisor
+ */
 import { spawnSync } from "node:child_process";
 import {
   resolveGatewayLaunchAgentLabel,
   resolveGatewaySystemdServiceName,
 } from "../daemon/constants.js";
 
+/** 重启尝试结果类型 */
 export type RestartAttempt = {
+  /** 是否成功 */
   ok: boolean;
+  /** 重启方法 */
   method: "launchctl" | "systemd" | "supervisor";
+  /** 详细信息 */
   detail?: string;
+  /** 尝试过的命令 */
   tried?: string[];
 };
 
+/** spawn 超时毫秒数 */
 const SPAWN_TIMEOUT_MS = 2000;
+/** SIGUSR1 授权宽限期毫秒数 */
 const SIGUSR1_AUTH_GRACE_MS = 5000;
 
+/** SIGUSR1 授权计数 */
 let sigusr1AuthorizedCount = 0;
+/** SIGUSR1 授权过期时间 */
 let sigusr1AuthorizedUntil = 0;
+/** 是否允许外部 SIGUSR1 */
 let sigusr1ExternalAllowed = false;
 
+/**
+ * 如果过期则重置 SIGUSR1 授权
+ * @param now - 当前时间戳
+ */
 function resetSigusr1AuthorizationIfExpired(now = Date.now()) {
   if (sigusr1AuthorizedCount <= 0) return;
   if (now <= sigusr1AuthorizedUntil) return;
@@ -25,14 +43,27 @@ function resetSigusr1AuthorizationIfExpired(now = Date.now()) {
   sigusr1AuthorizedUntil = 0;
 }
 
+/**
+ * 设置网关 SIGUSR1 重启策略
+ * @param opts - 选项
+ * @param opts.allowExternal - 是否允许外部触发
+ */
 export function setGatewaySigusr1RestartPolicy(opts?: { allowExternal?: boolean }) {
   sigusr1ExternalAllowed = opts?.allowExternal === true;
 }
 
+/**
+ * 检查是否允许外部 SIGUSR1 重启
+ * @returns 是否允许
+ */
 export function isGatewaySigusr1RestartExternallyAllowed() {
   return sigusr1ExternalAllowed;
 }
 
+/**
+ * 授权网关 SIGUSR1 重启
+ * @param delayMs - 延迟毫秒数
+ */
 export function authorizeGatewaySigusr1Restart(delayMs = 0) {
   const delay = Math.max(0, Math.floor(delayMs));
   const expiresAt = Date.now() + delay + SIGUSR1_AUTH_GRACE_MS;
@@ -42,6 +73,10 @@ export function authorizeGatewaySigusr1Restart(delayMs = 0) {
   }
 }
 
+/**
+ * 消费网关 SIGUSR1 重启授权
+ * @returns 是否有可用授权
+ */
 export function consumeGatewaySigusr1RestartAuthorization(): boolean {
   resetSigusr1AuthorizationIfExpired();
   if (sigusr1AuthorizedCount <= 0) return false;
@@ -52,6 +87,11 @@ export function consumeGatewaySigusr1RestartAuthorization(): boolean {
   return true;
 }
 
+/**
+ * 格式化 spawn 结果详情
+ * @param result - spawn 结果
+ * @returns 格式化后的详情字符串
+ */
 function formatSpawnDetail(result: {
   error?: unknown;
   status?: number | null;
