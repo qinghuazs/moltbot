@@ -1,41 +1,41 @@
 ---
 name: food-order
-description: Reorder Foodora orders + track ETA/status with ordercli. Never confirm without explicit user approval. Triggers: order food, reorder, track ETA.
+description: 使用 ordercli 重新订购 Foodora 订单 + 跟踪 ETA/状态。未经用户明确批准绝不确认。触发词：订餐、重新订购、跟踪 ETA。
 homepage: https://ordercli.sh
 metadata: {"moltbot":{"emoji":"🥡","requires":{"bins":["ordercli"]},"install":[{"id":"go","kind":"go","module":"github.com/steipete/ordercli/cmd/ordercli@latest","bins":["ordercli"],"label":"Install ordercli (go)"}]}}
 ---
 
-# Food order (Foodora via ordercli)
+# 订餐（通过 ordercli 使用 Foodora）
 
-Goal: reorder a previous Foodora order safely (preview first; confirm only on explicit user “yes/confirm/place the order”).
+目标：安全地重新订购之前的 Foodora 订单（先预览；仅在用户明确说"是/确认/下单"时才确认）。
 
-Hard safety rules
-- Never run `ordercli foodora reorder ... --confirm` unless user explicitly confirms placing the order.
-- Prefer preview-only steps first; show what will happen; ask for confirmation.
-- If user is unsure: stop at preview and ask questions.
+硬性安全规则
+- 除非用户明确确认下单，否则绝不运行 `ordercli foodora reorder ... --confirm`。
+- 优先使用仅预览步骤；展示将要发生的事情；请求确认。
+- 如果用户不确定：停在预览阶段并提问。
 
-Setup (once)
-- Country: `ordercli foodora countries` → `ordercli foodora config set --country AT`
-- Login (password): `ordercli foodora login --email you@example.com --password-stdin`
-- Login (no password, preferred): `ordercli foodora session chrome --url https://www.foodora.at/ --profile "Default"`
+设置（一次性）
+- 国家：`ordercli foodora countries` → `ordercli foodora config set --country AT`
+- 登录（密码）：`ordercli foodora login --email you@example.com --password-stdin`
+- 登录（无密码，推荐）：`ordercli foodora session chrome --url https://www.foodora.at/ --profile "Default"`
 
-Find what to reorder
-- Recent list: `ordercli foodora history --limit 10`
-- Details: `ordercli foodora history show <orderCode>`
-- If needed (machine-readable): `ordercli foodora history show <orderCode> --json`
+查找要重新订购的内容
+- 最近列表：`ordercli foodora history --limit 10`
+- 详情：`ordercli foodora history show <orderCode>`
+- 如需（机器可读）：`ordercli foodora history show <orderCode> --json`
 
-Preview reorder (no cart changes)
+预览重新订购（不更改购物车）
 - `ordercli foodora reorder <orderCode>`
 
-Place reorder (cart change; explicit confirmation required)
-- Confirm first, then run: `ordercli foodora reorder <orderCode> --confirm`
-- Multiple addresses? Ask user for the right `--address-id` (take from their Foodora account / prior order data) and run:
+下单重新订购（更改购物车；需要明确确认）
+- 先确认，然后运行：`ordercli foodora reorder <orderCode> --confirm`
+- 多个地址？询问用户正确的 `--address-id`（从他们的 Foodora 账户/之前的订单数据获取）并运行：
   - `ordercli foodora reorder <orderCode> --confirm --address-id <id>`
 
-Track the order
-- ETA/status (active list): `ordercli foodora orders`
-- Live updates: `ordercli foodora orders --watch`
-- Single order detail: `ordercli foodora order <orderCode>`
+跟踪订单
+- ETA/状态（活动列表）：`ordercli foodora orders`
+- 实时更新：`ordercli foodora orders --watch`
+- 单个订单详情：`ordercli foodora order <orderCode>`
 
-Debug / safe testing
-- Use a throwaway config: `ordercli --config /tmp/ordercli.json ...`
+调试/安全测试
+- 使用临时配置：`ordercli --config /tmp/ordercli.json ...`

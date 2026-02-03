@@ -1,29 +1,29 @@
 ---
 name: video-frames
-description: Extract frames or short clips from videos using ffmpeg.
+description: 使用 ffmpeg 从视频中提取帧或短片段。
 homepage: https://ffmpeg.org
 metadata: {"moltbot":{"emoji":"🎞️","requires":{"bins":["ffmpeg"]},"install":[{"id":"brew","kind":"brew","formula":"ffmpeg","bins":["ffmpeg"],"label":"Install ffmpeg (brew)"}]}}
 ---
 
-# Video Frames (ffmpeg)
+# 视频帧（ffmpeg）
 
-Extract a single frame from a video, or create quick thumbnails for inspection.
+从视频中提取单帧，或创建快速缩略图以供检查。
 
-## Quick start
+## 快速开始
 
-First frame:
+第一帧：
 
 ```bash
 {baseDir}/scripts/frame.sh /path/to/video.mp4 --out /tmp/frame.jpg
 ```
 
-At a timestamp:
+在指定时间戳：
 
 ```bash
 {baseDir}/scripts/frame.sh /path/to/video.mp4 --time 00:00:10 --out /tmp/frame-10s.jpg
 ```
 
-## Notes
+## 注意
 
-- Prefer `--time` for “what is happening around here?”.
-- Use a `.jpg` for quick share; use `.png` for crisp UI frames.
+- 对于"这里发生了什么？"优先使用 `--time`。
+- 使用 `.jpg` 快速分享；使用 `.png` 获得清晰的 UI 帧。

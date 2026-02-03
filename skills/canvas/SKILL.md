@@ -1,17 +1,17 @@
-# Canvas Skill
+# Canvas 技能
 
-Display HTML content on connected Moltbot nodes (Mac app, iOS, Android).
+在已连接的 Moltbot 节点（Mac 应用、iOS、Android）上显示 HTML 内容。
 
-## Overview
+## 概述
 
-The canvas tool lets you present web content on any connected node's canvas view. Great for:
-- Displaying games, visualizations, dashboards
-- Showing generated HTML content
-- Interactive demos
+canvas 工具可让你在任何已连接节点的 canvas 视图中展示 Web 内容。适用于：
+- 显示游戏、可视化、仪表盘
+- 展示生成的 HTML 内容
+- 交互式演示
 
-## How It Works
+## 工作原理
 
-### Architecture
+### 架构
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
@@ -21,41 +21,41 @@ The canvas tool lets you present web content on any connected node's canvas view
 └─────────────────┘     └──────────────────┘     └─────────────┘
 ```
 
-1. **Canvas Host Server**: Serves static HTML/CSS/JS files from `canvasHost.root` directory
-2. **Node Bridge**: Communicates canvas URLs to connected nodes
-3. **Node Apps**: Render the content in a WebView
+1. **Canvas Host 服务器**：从 `canvasHost.root` 目录提供静态 HTML/CSS/JS 文件
+2. **Node Bridge**：将 canvas URL 传递给已连接的节点
+3. **Node 应用**：在 WebView 中渲染内容
 
-### Tailscale Integration
+### Tailscale 集成
 
-The canvas host server binds based on `gateway.bind` setting:
+Canvas host 服务器根据 `gateway.bind` 设置进行绑定：
 
-| Bind Mode | Server Binds To | Canvas URL Uses |
+| 绑定模式 | 服务器绑定到 | Canvas URL 使用 |
 |-----------|-----------------|-----------------|
-| `loopback` | 127.0.0.1 | localhost (local only) |
-| `lan` | LAN interface | LAN IP address |
-| `tailnet` | Tailscale interface | Tailscale hostname |
-| `auto` | Best available | Tailscale > LAN > loopback |
+| `loopback` | 127.0.0.1 | localhost（仅本地） |
+| `lan` | LAN 接口 | LAN IP 地址 |
+| `tailnet` | Tailscale 接口 | Tailscale 主机名 |
+| `auto` | 最佳可用 | Tailscale > LAN > loopback |
 
-**Key insight:** The `canvasHostHostForBridge` is derived from `bridgeHost`. When bound to Tailscale, nodes receive URLs like:
+**关键点：**`canvasHostHostForBridge` 派生自 `bridgeHost`。当绑定到 Tailscale 时，节点会收到如下 URL：
 ```
 http://<tailscale-hostname>:18793/__moltbot__/canvas/<file>.html
 ```
 
-This is why localhost URLs don't work - the node receives the Tailscale hostname from the bridge!
+这就是为什么 localhost URL 不起作用——节点从 bridge 接收的是 Tailscale 主机名！
 
-## Actions
+## 操作
 
-| Action | Description |
+| 操作 | 描述 |
 |--------|-------------|
-| `present` | Show canvas with optional target URL |
-| `hide` | Hide the canvas |
-| `navigate` | Navigate to a new URL |
-| `eval` | Execute JavaScript in the canvas |
-| `snapshot` | Capture screenshot of canvas |
+| `present` | 显示 canvas，可选目标 URL |
+| `hide` | 隐藏 canvas |
+| `navigate` | 导航到新 URL |
+| `eval` | 在 canvas 中执行 JavaScript |
+| `snapshot` | 捕获 canvas 截图 |
 
-## Configuration
+## 配置
 
-In `~/.clawdbot/moltbot.json`:
+在 `~/.clawdbot/moltbot.json` 中：
 
 ```json
 {
@@ -71,20 +71,20 @@ In `~/.clawdbot/moltbot.json`:
 }
 ```
 
-### Live Reload
+### 实时重载
 
-When `liveReload: true` (default), the canvas host:
-- Watches the root directory for changes (via chokidar)
-- Injects a WebSocket client into HTML files
-- Automatically reloads connected canvases when files change
+当 `liveReload: true`（默认）时，canvas host 会：
+- 监视根目录的变更（通过 chokidar）
+- 向 HTML 文件注入 WebSocket 客户端
+- 当文件变更时自动重载已连接的 canvas
 
-Great for development!
+非常适合开发！
 
-## Workflow
+## 工作流程
 
-### 1. Create HTML content
+### 1. 创建 HTML 内容
 
-Place files in the canvas root directory (default `~/clawd/canvas/`):
+将文件放在 canvas 根目录（默认 `~/clawd/canvas/`）：
 
 ```bash
 cat > ~/clawd/canvas/my-game.html << 'HTML'
@@ -98,42 +98,42 @@ cat > ~/clawd/canvas/my-game.html << 'HTML'
 HTML
 ```
 
-### 2. Find your canvas host URL
+### 2. 找到你的 canvas host URL
 
-Check how your gateway is bound:
+检查 gateway 的绑定方式：
 ```bash
 cat ~/.clawdbot/moltbot.json | jq '.gateway.bind'
 ```
 
-Then construct the URL:
-- **loopback**: `http://127.0.0.1:18793/__moltbot__/canvas/<file>.html`
-- **lan/tailnet/auto**: `http://<hostname>:18793/__moltbot__/canvas/<file>.html`
+然后构建 URL：
+- **loopback**：`http://127.0.0.1:18793/__moltbot__/canvas/<file>.html`
+- **lan/tailnet/auto**：`http://<hostname>:18793/__moltbot__/canvas/<file>.html`
 
-Find your Tailscale hostname:
+查找你的 Tailscale 主机名：
 ```bash
 tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//'
 ```
 
-### 3. Find connected nodes
+### 3. 查找已连接的节点
 
 ```bash
 moltbot nodes list
 ```
 
-Look for Mac/iOS/Android nodes with canvas capability.
+查找具有 canvas 功能的 Mac/iOS/Android 节点。
 
-### 4. Present content
+### 4. 展示内容
 
 ```
 canvas action:present node:<node-id> target:<full-url>
 ```
 
-**Example:**
+**示例：**
 ```
 canvas action:present node:mac-63599bc4-b54d-4392-9048-b97abd58343a target:http://peters-mac-studio-1.sheep-coho.ts.net:18793/__moltbot__/canvas/snake.html
 ```
 
-### 5. Navigate, snapshot, or hide
+### 5. 导航、截图或隐藏
 
 ```
 canvas action:navigate node:<node-id> url:<new-url>
@@ -141,49 +141,49 @@ canvas action:snapshot node:<node-id>
 canvas action:hide node:<node-id>
 ```
 
-## Debugging
+## 调试
 
-### White screen / content not loading
+### 白屏 / 内容未加载
 
-**Cause:** URL mismatch between server bind and node expectation.
+**原因：**服务器绑定与节点期望的 URL 不匹配。
 
-**Debug steps:**
-1. Check server bind: `cat ~/.clawdbot/moltbot.json | jq '.gateway.bind'`
-2. Check what port canvas is on: `lsof -i :18793`
-3. Test URL directly: `curl http://<hostname>:18793/__moltbot__/canvas/<file>.html`
+**调试步骤：**
+1. 检查服务器绑定：`cat ~/.clawdbot/moltbot.json | jq '.gateway.bind'`
+2. 检查 canvas 使用的端口：`lsof -i :18793`
+3. 直接测试 URL：`curl http://<hostname>:18793/__moltbot__/canvas/<file>.html`
 
-**Solution:** Use the full hostname matching your bind mode, not localhost.
+**解决方案：**使用与绑定模式匹配的完整主机名，而不是 localhost。
 
-### "node required" error
+### "node required" 错误
 
-Always specify `node:<node-id>` parameter.
+始终指定 `node:<node-id>` 参数。
 
-### "node not connected" error
+### "node not connected" 错误
 
-Node is offline. Use `moltbot nodes list` to find online nodes.
+节点离线。使用 `moltbot nodes list` 查找在线节点。
 
-### Content not updating
+### 内容未更新
 
-If live reload isn't working:
-1. Check `liveReload: true` in config
-2. Ensure file is in the canvas root directory
-3. Check for watcher errors in logs
+如果实时重载不工作：
+1. 检查配置中的 `liveReload: true`
+2. 确保文件在 canvas 根目录中
+3. 检查日志中的 watcher 错误
 
-## URL Path Structure
+## URL 路径结构
 
-The canvas host serves from `/__moltbot__/canvas/` prefix:
+Canvas host 从 `/__moltbot__/canvas/` 前缀提供服务：
 
 ```
 http://<host>:18793/__moltbot__/canvas/index.html  → ~/clawd/canvas/index.html
 http://<host>:18793/__moltbot__/canvas/games/snake.html → ~/clawd/canvas/games/snake.html
 ```
 
-The `/__moltbot__/canvas/` prefix is defined by `CANVAS_HOST_PATH` constant.
+`/__moltbot__/canvas/` 前缀由 `CANVAS_HOST_PATH` 常量定义。
 
-## Tips
+## 提示
 
-- Keep HTML self-contained (inline CSS/JS) for best results
-- Use the default index.html as a test page (has bridge diagnostics)
-- The canvas persists until you `hide` it or navigate away
-- Live reload makes development fast - just save and it updates!
-- A2UI JSON push is WIP - use HTML files for now
+- 保持 HTML 自包含（内联 CSS/JS）以获得最佳效果
+- 使用默认的 index.html 作为测试页面（包含 bridge 诊断）
+- Canvas 会持续显示直到你 `hide` 它或导航离开
+- 实时重载使开发变得快速——只需保存即可更新！
+- A2UI JSON 推送正在开发中——目前请使用 HTML 文件

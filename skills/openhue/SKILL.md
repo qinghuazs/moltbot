@@ -1,30 +1,30 @@
 ---
 name: openhue
-description: Control Philips Hue lights/scenes via the OpenHue CLI.
+description: 通过 OpenHue CLI 控制飞利浦 Hue 灯光/场景。
 homepage: https://www.openhue.io/cli
 metadata: {"moltbot":{"emoji":"💡","requires":{"bins":["openhue"]},"install":[{"id":"brew","kind":"brew","formula":"openhue/cli/openhue-cli","bins":["openhue"],"label":"Install OpenHue CLI (brew)"}]}}
 ---
 
 # OpenHue CLI
 
-Use `openhue` to control Hue lights and scenes via a Hue Bridge.
+使用 `openhue` 通过 Hue Bridge 控制 Hue 灯光和场景。
 
-Setup
-- Discover bridges: `openhue discover`
-- Guided setup: `openhue setup`
+设置
+- 发现网桥：`openhue discover`
+- 引导设置：`openhue setup`
 
-Read
+读取
 - `openhue get light --json`
 - `openhue get room --json`
 - `openhue get scene --json`
 
-Write
-- Turn on: `openhue set light <id-or-name> --on`
-- Turn off: `openhue set light <id-or-name> --off`
-- Brightness: `openhue set light <id> --on --brightness 50`
-- Color: `openhue set light <id> --on --rgb #3399FF`
-- Scene: `openhue set scene <scene-id>`
+写入
+- 打开：`openhue set light <id-or-name> --on`
+- 关闭：`openhue set light <id-or-name> --off`
+- 亮度：`openhue set light <id> --on --brightness 50`
+- 颜色：`openhue set light <id> --on --rgb #3399FF`
+- 场景：`openhue set scene <scene-id>`
 
-Notes
-- You may need to press the Hue Bridge button during setup.
-- Use `--room "Room Name"` when light names are ambiguous.
+注意
+- 设置过程中可能需要按下 Hue Bridge 按钮。
+- 当灯光名称有歧义时使用 `--room "Room Name"`。

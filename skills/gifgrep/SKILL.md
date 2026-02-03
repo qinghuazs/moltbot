@@ -1,47 +1,47 @@
 ---
 name: gifgrep
-description: Search GIF providers with CLI/TUI, download results, and extract stills/sheets.
+description: 使用 CLI/TUI 搜索 GIF 提供商，下载结果，并提取静态图/图集。
 homepage: https://gifgrep.com
 metadata: {"moltbot":{"emoji":"🧲","requires":{"bins":["gifgrep"]},"install":[{"id":"brew","kind":"brew","formula":"steipete/tap/gifgrep","bins":["gifgrep"],"label":"Install gifgrep (brew)"},{"id":"go","kind":"go","module":"github.com/steipete/gifgrep/cmd/gifgrep@latest","bins":["gifgrep"],"label":"Install gifgrep (go)"}]}}
 ---
 
 # gifgrep
 
-Use `gifgrep` to search GIF providers (Tenor/Giphy), browse in a TUI, download results, and extract stills or sheets.
+使用 `gifgrep` 搜索 GIF 提供商（Tenor/Giphy），在 TUI 中浏览，下载结果，并提取静态图或图集。
 
-GIF-Grab (gifgrep workflow)
-- Search → preview → download → extract (still/sheet) for fast review and sharing.
+GIF-Grab（gifgrep 工作流）
+- 搜索 → 预览 → 下载 → 提取（静态图/图集）以便快速审查和分享。
 
-Quick start
+快速开始
 - `gifgrep cats --max 5`
 - `gifgrep cats --format url | head -n 5`
 - `gifgrep search --json cats | jq '.[0].url'`
 - `gifgrep tui "office handshake"`
 - `gifgrep cats --download --max 1 --format url`
 
-TUI + previews
-- TUI: `gifgrep tui "query"`
-- CLI still previews: `--thumbs` (Kitty/Ghostty only; still frame)
+TUI + 预览
+- TUI：`gifgrep tui "query"`
+- CLI 静态预览：`--thumbs`（仅限 Kitty/Ghostty；静态帧）
 
-Download + reveal
-- `--download` saves to `~/Downloads`
-- `--reveal` shows the last download in Finder
+下载 + 显示
+- `--download` 保存到 `~/Downloads`
+- `--reveal` 在 Finder 中显示最后下载的文件
 
-Stills + sheets
+静态图 + 图集
 - `gifgrep still ./clip.gif --at 1.5s -o still.png`
 - `gifgrep sheet ./clip.gif --frames 9 --cols 3 -o sheet.png`
-- Sheets = single PNG grid of sampled frames (great for quick review, docs, PRs, chat).
-- Tune: `--frames` (count), `--cols` (grid width), `--padding` (spacing).
+- 图集 = 采样帧的单个 PNG 网格（非常适合快速审查、文档、PR、聊天）。
+- 调整：`--frames`（数量）、`--cols`（网格宽度）、`--padding`（间距）。
 
-Providers
+提供商
 - `--source auto|tenor|giphy`
-- `GIPHY_API_KEY` required for `--source giphy`
-- `TENOR_API_KEY` optional (Tenor demo key used if unset)
+- `--source giphy` 需要 `GIPHY_API_KEY`
+- `TENOR_API_KEY` 可选（未设置时使用 Tenor 演示密钥）
 
-Output
-- `--json` prints an array of results (`id`, `title`, `url`, `preview_url`, `tags`, `width`, `height`)
-- `--format` for pipe-friendly fields (e.g., `url`)
+输出
+- `--json` 打印结果数组（`id`、`title`、`url`、`preview_url`、`tags`、`width`、`height`）
+- `--format` 用于管道友好的字段（例如 `url`）
 
-Environment tweaks
-- `GIFGREP_SOFTWARE_ANIM=1` to force software animation
-- `GIFGREP_CELL_ASPECT=0.5` to tweak preview geometry
+环境调整
+- `GIFGREP_SOFTWARE_ANIM=1` 强制软件动画
+- `GIFGREP_CELL_ASPECT=0.5` 调整预览几何
