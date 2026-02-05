@@ -1,3 +1,16 @@
+/**
+ * 认证配置存储模块
+ *
+ * 该模块负责管理认证配置的持久化存储，包括：
+ * - 加载和保存认证配置存储文件
+ * - 处理旧版认证格式的迁移
+ * - 合并 OAuth 凭证文件
+ * - 同步外部 CLI 工具的凭证
+ * - 支持文件锁定以确保并发安全
+ *
+ * @module agents/auth-profiles/store
+ */
+
 import fs from "node:fs";
 import type { OAuthCredentials } from "@mariozechner/pi-ai";
 import lockfile from "proper-lockfile";
@@ -8,8 +21,14 @@ import { syncExternalCliCredentials } from "./external-cli-sync.js";
 import { ensureAuthStoreFile, resolveAuthStorePath, resolveLegacyAuthStorePath } from "./paths.js";
 import type { AuthProfileCredential, AuthProfileStore, ProfileUsageStats } from "./types.js";
 
+/** 旧版认证存储格式类型 */
 type LegacyAuthStore = Record<string, AuthProfileCredential>;
 
+/**
+ * 同步认证配置存储的内部字段
+ * @param target - 目标存储对象
+ * @param source - 源存储对象
+ */
 function _syncAuthProfileStore(target: AuthProfileStore, source: AuthProfileStore): void {
   target.version = source.version;
   target.profiles = source.profiles;
@@ -18,6 +37,14 @@ function _syncAuthProfileStore(target: AuthProfileStore, source: AuthProfileStor
   target.usageStats = source.usageStats;
 }
 
+/**
+ * 使用文件锁更新认证配置存储
+ * 确保并发安全的存储更新操作
+ *
+ * @param params.agentDir - 代理目录路径（可选）
+ * @param params.updater - 更新函数，返回 true 表示需要保存
+ * @returns 更新后的存储对象，失败时返回 null
+ */
 export async function updateAuthProfileStoreWithLock(params: {
   agentDir?: string;
   updater: (store: AuthProfileStore) => boolean;
@@ -47,6 +74,11 @@ export async function updateAuthProfileStoreWithLock(params: {
   }
 }
 
+/**
+ * 尝试将原始数据转换为旧版认证存储格式
+ * @param raw - 原始 JSON 数据
+ * @returns 旧版存储对象，无效时返回 null
+ */
 function coerceLegacyStore(raw: unknown): LegacyAuthStore | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
@@ -66,6 +98,11 @@ function coerceLegacyStore(raw: unknown): LegacyAuthStore | null {
   return Object.keys(entries).length > 0 ? entries : null;
 }
 
+/**
+ * 尝试将原始数据转换为认证配置存储格式
+ * @param raw - 原始 JSON 数据
+ * @returns 存储对象，无效时返回 null
+ */
 function coerceAuthStore(raw: unknown): AuthProfileStore | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
@@ -111,6 +148,12 @@ function coerceAuthStore(raw: unknown): AuthProfileStore | null {
   };
 }
 
+/**
+ * 合并两个记录对象
+ * @param base - 基础记录
+ * @param override - 覆盖记录
+ * @returns 合并后的记录，两者都为空时返回 undefined
+ */
 function mergeRecord<T>(
   base?: Record<string, T>,
   override?: Record<string, T>,
@@ -121,6 +164,12 @@ function mergeRecord<T>(
   return { ...base, ...override };
 }
 
+/**
+ * 合并两个认证配置存储
+ * @param base - 基础存储
+ * @param override - 覆盖存储
+ * @returns 合并后的存储对象
+ */
 function mergeAuthProfileStores(
   base: AuthProfileStore,
   override: AuthProfileStore,
@@ -142,6 +191,11 @@ function mergeAuthProfileStores(
   };
 }
 
+/**
+ * 将 OAuth 文件中的凭证合并到存储中
+ * @param store - 目标存储对象
+ * @returns 是否有新凭证被添加
+ */
 function mergeOAuthFileIntoStore(store: AuthProfileStore): boolean {
   const oauthPath = resolveOAuthPath();
   const oauthRaw = loadJsonFile(oauthPath);
@@ -162,6 +216,12 @@ function mergeOAuthFileIntoStore(store: AuthProfileStore): boolean {
   return mutated;
 }
 
+/**
+ * 加载认证配置存储
+ * 处理旧版格式迁移和外部 CLI 凭证同步
+ *
+ * @returns 认证配置存储对象
+ */
 export function loadAuthProfileStore(): AuthProfileStore {
   const authPath = resolveAuthStorePath();
   const raw = loadJsonFile(authPath);
@@ -222,6 +282,14 @@ export function loadAuthProfileStore(): AuthProfileStore {
   return store;
 }
 
+/**
+ * 为特定代理加载认证配置存储
+ * 支持从主代理继承认证配置
+ *
+ * @param agentDir - 代理目录路径（可选）
+ * @param _options - 选项（如是否允许钥匙串提示）
+ * @returns 认证配置存储对象
+ */
 function loadAuthProfileStoreForAgent(
   agentDir?: string,
   _options?: { allowKeychainPrompt?: boolean },
@@ -318,6 +386,14 @@ function loadAuthProfileStoreForAgent(
   return store;
 }
 
+/**
+ * 确保认证配置存储存在并已加载
+ * 对于子代理，会合并主代理的认证配置
+ *
+ * @param agentDir - 代理目录路径（可选）
+ * @param options - 选项（如是否允许钥匙串提示）
+ * @returns 认证配置存储对象
+ */
 export function ensureAuthProfileStore(
   agentDir?: string,
   options?: { allowKeychainPrompt?: boolean },
@@ -335,6 +411,12 @@ export function ensureAuthProfileStore(
   return merged;
 }
 
+/**
+ * 保存认证配置存储到文件
+ *
+ * @param store - 要保存的存储对象
+ * @param agentDir - 代理目录路径（可选）
+ */
 export function saveAuthProfileStore(store: AuthProfileStore, agentDir?: string): void {
   const authPath = resolveAuthStorePath(agentDir);
   const payload = {

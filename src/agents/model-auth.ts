@@ -1,3 +1,15 @@
+/**
+ * 模型认证模块
+ *
+ * 该模块负责解析和管理模型提供商的认证信息，包括：
+ * - API 密钥解析（从配置、环境变量、认证存储）
+ * - OAuth 令牌管理
+ * - AWS SDK 认证链
+ * - 认证模式检测
+ *
+ * @module agents/model-auth
+ */
+
 import path from "node:path";
 
 import { type Api, getEnvApiKey, type Model } from "@mariozechner/pi-ai";
@@ -17,11 +29,19 @@ import { normalizeProviderId } from "./model-selection.js";
 
 export { ensureAuthProfileStore, resolveAuthProfileOrder } from "./auth-profiles.js";
 
+/** AWS Bedrock Bearer Token 环境变量名 */
 const AWS_BEARER_ENV = "AWS_BEARER_TOKEN_BEDROCK";
+/** AWS Access Key ID 环境变量名 */
 const AWS_ACCESS_KEY_ENV = "AWS_ACCESS_KEY_ID";
+/** AWS Secret Access Key 环境变量名 */
 const AWS_SECRET_KEY_ENV = "AWS_SECRET_ACCESS_KEY";
+/** AWS Profile 环境变量名 */
 const AWS_PROFILE_ENV = "AWS_PROFILE";
 
+/**
+ * 解析提供商配置
+ * 支持标准化的提供商 ID 匹配
+ */
 function resolveProviderConfig(
   cfg: MoltbotConfig | undefined,
   provider: string,
@@ -44,6 +64,12 @@ function resolveProviderConfig(
   );
 }
 
+/**
+ * 获取自定义提供商的 API 密钥
+ * @param cfg - 配置对象
+ * @param provider - 提供商标识
+ * @returns API 密钥，未配置时返回 undefined
+ */
 export function getCustomProviderApiKey(
   cfg: MoltbotConfig | undefined,
   provider: string,
@@ -53,6 +79,10 @@ export function getCustomProviderApiKey(
   return key || undefined;
 }
 
+/**
+ * 解析提供商的认证模式覆盖配置
+ * @returns 认证模式，未配置时返回 undefined
+ */
 function resolveProviderAuthOverride(
   cfg: MoltbotConfig | undefined,
   provider: string,
@@ -65,6 +95,10 @@ function resolveProviderAuthOverride(
   return undefined;
 }
 
+/**
+ * 解析环境变量来源标签
+ * 区分 shell 环境和进程环境
+ */
 function resolveEnvSourceLabel(params: {
   applied: Set<string>;
   envVars: string[];
@@ -75,6 +109,11 @@ function resolveEnvSourceLabel(params: {
   return `${prefix}${params.label}`;
 }
 
+/**
+ * 解析 AWS SDK 认证使用的环境变量名
+ * @param env - 环境变量对象
+ * @returns 使用的环境变量名，未配置时返回 undefined
+ */
 export function resolveAwsSdkEnvVarName(env: NodeJS.ProcessEnv = process.env): string | undefined {
   if (env[AWS_BEARER_ENV]?.trim()) return AWS_BEARER_ENV;
   if (env[AWS_ACCESS_KEY_ENV]?.trim() && env[AWS_SECRET_KEY_ENV]?.trim()) {
@@ -84,6 +123,10 @@ export function resolveAwsSdkEnvVarName(env: NodeJS.ProcessEnv = process.env): s
   return undefined;
 }
 
+/**
+ * 解析 AWS SDK 认证信息
+ * 支持 Bearer Token、Access Key 和 Profile 三种方式
+ */
 function resolveAwsSdkAuthInfo(): { mode: "aws-sdk"; source: string } {
   const applied = new Set(getShellEnvAppliedKeys());
   if (process.env[AWS_BEARER_ENV]?.trim()) {
@@ -119,13 +162,36 @@ function resolveAwsSdkAuthInfo(): { mode: "aws-sdk"; source: string } {
   return { mode: "aws-sdk", source: "aws-sdk default chain" };
 }
 
+/** 已解析的提供商认证信息 */
 export type ResolvedProviderAuth = {
+  /** API 密钥 */
   apiKey?: string;
+  /** 认证配置 ID */
   profileId?: string;
+  /** 认证来源描述 */
   source: string;
+  /** 认证模式 */
   mode: "api-key" | "oauth" | "token" | "aws-sdk";
 };
 
+/**
+ * 解析提供商的 API 密钥
+ *
+ * 按以下优先级查找：
+ * 1. 指定的 profileId
+ * 2. 认证配置存储中的配置（按顺序）
+ * 3. 环境变量
+ * 4. 配置文件中的自定义密钥
+ * 5. AWS SDK 默认链（仅 Bedrock）
+ *
+ * @param params.provider - 提供商标识
+ * @param params.cfg - 配置对象
+ * @param params.profileId - 指定的配置 ID
+ * @param params.preferredProfile - 首选配置
+ * @param params.store - 认证存储
+ * @param params.agentDir - 代理目录
+ * @returns 解析后的认证信息
+ */
 export async function resolveApiKeyForProvider(params: {
   provider: string;
   cfg?: MoltbotConfig;
@@ -226,9 +292,19 @@ export async function resolveApiKeyForProvider(params: {
   );
 }
 
+/** 环境变量 API 密钥解析结果 */
 export type EnvApiKeyResult = { apiKey: string; source: string };
+
+/** 模型认证模式类型 */
 export type ModelAuthMode = "api-key" | "oauth" | "token" | "mixed" | "aws-sdk" | "unknown";
 
+/**
+ * 从环境变量解析 API 密钥
+ * 支持各提供商特定的环境变量名
+ *
+ * @param provider - 提供商标识
+ * @returns API 密钥和来源，未找到时返回 null
+ */
 export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
   const normalized = normalizeProviderId(provider);
   const applied = new Set(getShellEnvAppliedKeys());
@@ -291,6 +367,15 @@ export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
   return pick(envVar);
 }
 
+/**
+ * 解析提供商的认证模式
+ * 检测使用的是 API 密钥、OAuth、Token 还是 AWS SDK
+ *
+ * @param provider - 提供商标识
+ * @param cfg - 配置对象
+ * @param store - 认证存储
+ * @returns 认证模式，未知时返回 undefined
+ */
 export function resolveModelAuthMode(
   provider?: string,
   cfg?: MoltbotConfig,
@@ -333,6 +418,18 @@ export function resolveModelAuthMode(
   return "unknown";
 }
 
+/**
+ * 获取模型的 API 密钥
+ * 便捷方法，从模型对象中提取提供商并解析认证
+ *
+ * @param params.model - 模型对象
+ * @param params.cfg - 配置对象
+ * @param params.profileId - 指定的配置 ID
+ * @param params.preferredProfile - 首选配置
+ * @param params.store - 认证存储
+ * @param params.agentDir - 代理目录
+ * @returns 解析后的认证信息
+ */
 export async function getApiKeyForModel(params: {
   model: Model<Api>;
   cfg?: MoltbotConfig;
@@ -351,6 +448,15 @@ export async function getApiKeyForModel(params: {
   });
 }
 
+/**
+ * 要求 API 密钥存在
+ * 如果认证信息中没有 API 密钥则抛出错误
+ *
+ * @param auth - 认证信息
+ * @param provider - 提供商标识（用于错误消息）
+ * @returns API 密钥
+ * @throws 如果没有 API 密钥
+ */
 export function requireApiKey(auth: ResolvedProviderAuth, provider: string): string {
   const key = auth.apiKey?.trim();
   if (key) return key;

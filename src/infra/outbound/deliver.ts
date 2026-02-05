@@ -1,3 +1,17 @@
+/**
+ * 出站消息投递模块
+ *
+ * 该模块负责将消息投递到各种渠道（WhatsApp、Telegram、Discord 等），
+ * 支持：
+ * - 文本消息分块投递
+ * - 媒体消息投递
+ * - Signal 富文本格式
+ * - 渠道适配器插件系统
+ * - 会话转录镜像
+ *
+ * @module infra/outbound/deliver
+ */
+
 import {
   chunkByParagraph,
   chunkMarkdownTextWithMode,
@@ -28,20 +42,30 @@ import type { OutboundChannel } from "./targets.js";
 export type { NormalizedOutboundPayload } from "./payloads.js";
 export { normalizeOutboundPayloads } from "./payloads.js";
 
+/** Matrix 消息发送函数类型 */
 type SendMatrixMessage = (
   to: string,
   text: string,
   opts?: { mediaUrl?: string; replyToId?: string; threadId?: string; timeoutMs?: number },
 ) => Promise<{ messageId: string; roomId: string }>;
 
+/** 出站消息发送依赖注入接口 */
 export type OutboundSendDeps = {
+  /** WhatsApp 发送函数 */
   sendWhatsApp?: typeof sendMessageWhatsApp;
+  /** Telegram 发送函数 */
   sendTelegram?: typeof sendMessageTelegram;
+  /** Discord 发送函数 */
   sendDiscord?: typeof sendMessageDiscord;
+  /** Slack 发送函数 */
   sendSlack?: typeof sendMessageSlack;
+  /** Signal 发送函数 */
   sendSignal?: typeof sendMessageSignal;
+  /** iMessage 发送函数 */
   sendIMessage?: typeof sendMessageIMessage;
+  /** Matrix 发送函数 */
   sendMatrix?: SendMatrixMessage;
+  /** MS Teams 发送函数 */
   sendMSTeams?: (
     to: string,
     text: string,
@@ -49,38 +73,63 @@ export type OutboundSendDeps = {
   ) => Promise<{ messageId: string; conversationId: string }>;
 };
 
+/** 出站消息投递结果 */
 export type OutboundDeliveryResult = {
+  /** 投递渠道 */
   channel: Exclude<OutboundChannel, "none">;
+  /** 消息 ID */
   messageId: string;
+  /** 聊天 ID（可选） */
   chatId?: string;
+  /** 频道 ID（可选） */
   channelId?: string;
+  /** 房间 ID（可选，Matrix） */
   roomId?: string;
+  /** 会话 ID（可选，MS Teams） */
   conversationId?: string;
+  /** 时间戳（可选） */
   timestamp?: number;
+  /** JID（可选，WhatsApp） */
   toJid?: string;
+  /** 投票 ID（可选） */
   pollId?: string;
-  // Channel docking: stash channel-specific fields here to avoid core type churn.
+  /** 渠道特定元数据，避免核心类型频繁变更 */
   meta?: Record<string, unknown>;
 };
 
+/** 文本分块函数类型 */
 type Chunker = (text: string, limit: number) => string[];
 
+/** 渠道处理器接口 */
 type ChannelHandler = {
+  /** 分块函数 */
   chunker: Chunker | null;
+  /** 分块模式：纯文本或 Markdown */
   chunkerMode?: "text" | "markdown";
+  /** 文本分块限制 */
   textChunkLimit?: number;
+  /** 发送完整负载（可选） */
   sendPayload?: (payload: ReplyPayload) => Promise<OutboundDeliveryResult>;
+  /** 发送文本消息 */
   sendText: (text: string) => Promise<OutboundDeliveryResult>;
+  /** 发送媒体消息 */
   sendMedia: (caption: string, mediaUrl: string) => Promise<OutboundDeliveryResult>;
 };
 
+/**
+ * 检查中止信号，如果已中止则抛出错误
+ * @param abortSignal - 中止信号
+ */
 function throwIfAborted(abortSignal?: AbortSignal): void {
   if (abortSignal?.aborted) {
     throw new Error("Outbound delivery aborted");
   }
 }
 
-// Channel docking: outbound delivery delegates to plugin.outbound adapters.
+/**
+ * 创建渠道处理器
+ * 渠道对接：出站投递委托给插件的 outbound 适配器
+ */
 async function createChannelHandler(params: {
   cfg: MoltbotConfig;
   channel: Exclude<OutboundChannel, "none">;
@@ -112,6 +161,10 @@ async function createChannelHandler(params: {
   return handler;
 }
 
+/**
+ * 创建插件处理器
+ * 封装插件的出站适配器为统一的处理器接口
+ */
 function createPluginHandler(params: {
   outbound?: ChannelOutboundAdapter;
   cfg: MoltbotConfig;
@@ -174,6 +227,32 @@ function createPluginHandler(params: {
   };
 }
 
+/**
+ * 投递出站消息负载
+ *
+ * 将消息负载投递到指定渠道，支持：
+ * - 文本消息自动分块
+ * - 媒体消息投递
+ * - Signal 富文本格式
+ * - 会话转录镜像
+ * - 中止信号处理
+ *
+ * @param params.cfg - 配置对象
+ * @param params.channel - 目标渠道
+ * @param params.to - 接收者标识
+ * @param params.accountId - 账户 ID（可选）
+ * @param params.payloads - 消息负载列表
+ * @param params.replyToId - 回复消息 ID（可选）
+ * @param params.threadId - 线程 ID（可选）
+ * @param params.deps - 依赖注入（可选）
+ * @param params.gifPlayback - GIF 播放模式（可选）
+ * @param params.abortSignal - 中止信号（可选）
+ * @param params.bestEffort - 尽力投递模式（可选）
+ * @param params.onError - 错误回调（可选）
+ * @param params.onPayload - 负载回调（可选）
+ * @param params.mirror - 会话镜像配置（可选）
+ * @returns 投递结果列表
+ */
 export async function deliverOutboundPayloads(params: {
   cfg: MoltbotConfig;
   channel: Exclude<OutboundChannel, "none">;

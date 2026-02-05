@@ -1,3 +1,16 @@
+/**
+ * 模型故障转移模块
+ *
+ * 该模块提供模型调用的故障转移机制，当主模型调用失败时，
+ * 自动尝试备用模型。支持：
+ * - 文本模型故障转移
+ * - 图像模型故障转移
+ * - 认证配置冷却检测
+ * - 错误分类和重试策略
+ *
+ * @module agents/model-fallback
+ */
+
 import type { MoltbotConfig } from "../config/config.js";
 import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "./defaults.js";
 import {
@@ -20,20 +33,33 @@ import {
   resolveAuthProfileOrder,
 } from "./auth-profiles.js";
 
+/** 模型候选项，包含提供商和模型名称 */
 type ModelCandidate = {
   provider: string;
   model: string;
 };
 
+/** 故障转移尝试记录 */
 type FallbackAttempt = {
+  /** 提供商标识 */
   provider: string;
+  /** 模型名称 */
   model: string;
+  /** 错误信息 */
   error: string;
+  /** 故障原因分类 */
   reason?: FailoverReason;
+  /** HTTP 状态码 */
   status?: number;
+  /** 错误代码 */
   code?: string;
 };
 
+/**
+ * 检查错误是否为用户主动中止
+ * @param err - 错误对象
+ * @returns 是否为中止错误
+ */
 function isAbortError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   if (isFailoverError(err)) return false;
@@ -43,10 +69,18 @@ function isAbortError(err: unknown): boolean {
   return name === "AbortError";
 }
 
+/**
+ * 判断是否应该重新抛出中止错误
+ * 用户主动中止时不应进行故障转移
+ */
 function shouldRethrowAbort(err: unknown): boolean {
   return isAbortError(err) && !isTimeoutError(err);
 }
 
+/**
+ * 构建允许的模型键集合
+ * 基于配置中的模型白名单
+ */
 function buildAllowedModelKeys(
   cfg: MoltbotConfig | undefined,
   defaultProvider: string,
@@ -65,6 +99,10 @@ function buildAllowedModelKeys(
   return keys.size > 0 ? keys : null;
 }
 
+/**
+ * 解析图像模型故障转移候选列表
+ * 包括主模型和配置的备用模型
+ */
 function resolveImageFallbackCandidates(params: {
   cfg: MoltbotConfig | undefined;
   defaultProvider: string;
@@ -126,6 +164,10 @@ function resolveImageFallbackCandidates(params: {
   return candidates;
 }
 
+/**
+ * 解析文本模型故障转移候选列表
+ * 包括主模型、配置的备用模型和默认模型
+ */
 function resolveFallbackCandidates(params: {
   cfg: MoltbotConfig | undefined;
   provider: string;
@@ -190,6 +232,21 @@ function resolveFallbackCandidates(params: {
   return candidates;
 }
 
+/**
+ * 使用模型故障转移机制执行操作
+ *
+ * 当主模型调用失败时，自动尝试备用模型。
+ * 支持认证配置冷却检测，跳过处于冷却期的提供商。
+ *
+ * @param params.cfg - 配置对象
+ * @param params.provider - 主提供商
+ * @param params.model - 主模型
+ * @param params.agentDir - 代理目录（可选）
+ * @param params.fallbacksOverride - 显式备用列表（可选）
+ * @param params.run - 执行函数
+ * @param params.onError - 错误回调（可选）
+ * @returns 执行结果、使用的模型信息和尝试记录
+ */
 export async function runWithModelFallback<T>(params: {
   cfg: MoltbotConfig | undefined;
   provider: string;
@@ -298,6 +355,18 @@ export async function runWithModelFallback<T>(params: {
   });
 }
 
+/**
+ * 使用图像模型故障转移机制执行操作
+ *
+ * 专门用于图像生成任务的故障转移，
+ * 当主图像模型失败时自动尝试备用模型。
+ *
+ * @param params.cfg - 配置对象
+ * @param params.modelOverride - 模型覆盖（可选）
+ * @param params.run - 执行函数
+ * @param params.onError - 错误回调（可选）
+ * @returns 执行结果、使用的模型信息和尝试记录
+ */
 export async function runWithImageModelFallback<T>(params: {
   cfg: MoltbotConfig | undefined;
   modelOverride?: string;

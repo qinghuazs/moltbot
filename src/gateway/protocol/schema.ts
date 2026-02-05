@@ -1,3 +1,12 @@
+/**
+ * 网关协议 Schema 聚合导出模块
+ *
+ * 该模块统一导出所有网关协议相关的 TypeBox Schema 定义，
+ * 用于验证客户端与网关之间的通信消息格式。
+ *
+ * @module gateway/protocol/schema
+ */
+
 export * from "./schema/agent.js";
 export * from "./schema/agents-models-skills.js";
 export * from "./schema/channels.js";
