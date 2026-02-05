@@ -1,27 +1,53 @@
+/**
+ * 上下文压缩模块
+ *
+ * 提供会话历史的压缩和摘要功能，用于：
+ * - 在上下文窗口接近限制时压缩历史消息
+ * - 将长对话历史摘要为简短总结
+ * - 支持分阶段摘要以处理超大上下文
+ */
+
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { estimateTokens, generateSummary } from "@mariozechner/pi-coding-agent";
 
 import { DEFAULT_CONTEXT_TOKENS } from "./defaults.js";
 
+/** 基础分块比例（占上下文窗口的比例） */
 export const BASE_CHUNK_RATIO = 0.4;
+/** 最小分块比例 */
 export const MIN_CHUNK_RATIO = 0.15;
-export const SAFETY_MARGIN = 1.2; // 20% buffer for estimateTokens() inaccuracy
+/** 安全边际（用于补偿 token 估算误差） */
+export const SAFETY_MARGIN = 1.2;
+/** 默认摘要回退文本 */
 const DEFAULT_SUMMARY_FALLBACK = "No prior history.";
+/** 默认分块数量 */
 const DEFAULT_PARTS = 2;
+/** 合并摘要的指令 */
 const MERGE_SUMMARIES_INSTRUCTIONS =
   "Merge these partial summaries into a single cohesive summary. Preserve decisions," +
   " TODOs, open questions, and any constraints.";
 
+/**
+ * 估算消息列表的总 token 数
+ */
 export function estimateMessagesTokens(messages: AgentMessage[]): number {
   return messages.reduce((sum, message) => sum + estimateTokens(message), 0);
 }
 
+/**
+ * 规范化分块数量
+ */
 function normalizeParts(parts: number, messageCount: number): number {
   if (!Number.isFinite(parts) || parts <= 1) return 1;
   return Math.min(Math.max(1, Math.floor(parts)), Math.max(1, messageCount));
 }
 
+/**
+ * 按 token 份额分割消息
+ *
+ * 将消息列表分割为指定数量的块，每块的 token 数大致相等。
+ */
 export function splitMessagesByTokenShare(
   messages: AgentMessage[],
   parts = DEFAULT_PARTS,
@@ -59,6 +85,11 @@ export function splitMessagesByTokenShare(
   return chunks;
 }
 
+/**
+ * 按最大 token 数分块消息
+ *
+ * 将消息列表分割为多个块，每块不超过指定的最大 token 数。
+ */
 export function chunkMessagesByMaxTokens(
   messages: AgentMessage[],
   maxTokens: number,
@@ -127,6 +158,10 @@ export function isOversizedForSummary(msg: AgentMessage, contextWindow: number):
   return tokens > contextWindow * 0.5;
 }
 
+/**
+ * 分块摘要
+ * 将消息分块后逐块生成摘要
+ */
 async function summarizeChunks(params: {
   messages: AgentMessage[];
   model: NonNullable<ExtensionContext["model"]>;
@@ -231,6 +266,12 @@ export async function summarizeWithFallback(params: {
   );
 }
 
+/**
+ * 分阶段摘要
+ *
+ * 将消息分成多个部分分别摘要，然后合并为最终摘要。
+ * 适用于超大上下文的处理。
+ */
 export async function summarizeInStages(params: {
   messages: AgentMessage[];
   model: NonNullable<ExtensionContext["model"]>;
@@ -294,6 +335,12 @@ export async function summarizeInStages(params: {
   });
 }
 
+/**
+ * 按上下文份额裁剪历史
+ *
+ * 确保历史消息不超过上下文窗口的指定比例。
+ * 返回保留的消息和被丢弃的消息统计。
+ */
 export function pruneHistoryForContextShare(params: {
   messages: AgentMessage[];
   maxContextTokens: number;
@@ -340,6 +387,9 @@ export function pruneHistoryForContextShare(params: {
   };
 }
 
+/**
+ * 解析上下文窗口 token 数
+ */
 export function resolveContextWindowTokens(model?: ExtensionContext["model"]): number {
   return Math.max(1, Math.floor(model?.contextWindow ?? DEFAULT_CONTEXT_TOKENS));
 }

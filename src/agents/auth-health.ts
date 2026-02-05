@@ -1,3 +1,12 @@
+/**
+ * 认证配置健康检查模块
+ *
+ * 提供认证配置的健康状态检查功能，包括：
+ * - OAuth 令牌过期检测
+ * - API 密钥状态检查
+ * - 按提供商汇总健康状态
+ */
+
 import type { MoltbotConfig } from "../config/config.js";
 import {
   type AuthProfileCredential,
@@ -5,44 +14,84 @@ import {
   resolveAuthProfileDisplayLabel,
 } from "./auth-profiles.js";
 
+/** 认证配置来源 */
 export type AuthProfileSource = "store";
 
+/** 认证配置健康状态 */
 export type AuthProfileHealthStatus = "ok" | "expiring" | "expired" | "missing" | "static";
 
+/**
+ * 单个认证配置的健康信息
+ */
 export type AuthProfileHealth = {
+  /** 配置 ID */
   profileId: string;
+  /** 提供商名称 */
   provider: string;
+  /** 认证类型 */
   type: "oauth" | "token" | "api_key";
+  /** 健康状态 */
   status: AuthProfileHealthStatus;
+  /** 过期时间戳 */
   expiresAt?: number;
+  /** 剩余有效时间（毫秒） */
   remainingMs?: number;
+  /** 配置来源 */
   source: AuthProfileSource;
+  /** 显示标签 */
   label: string;
 };
 
+/** 提供商健康状态 */
 export type AuthProviderHealthStatus = "ok" | "expiring" | "expired" | "missing" | "static";
 
+/**
+ * 提供商级别的健康信息
+ */
 export type AuthProviderHealth = {
+  /** 提供商名称 */
   provider: string;
+  /** 健康状态 */
   status: AuthProviderHealthStatus;
+  /** 最早过期时间 */
   expiresAt?: number;
+  /** 剩余有效时间（毫秒） */
   remainingMs?: number;
+  /** 该提供商下的所有配置 */
   profiles: AuthProfileHealth[];
 };
 
+/**
+ * 认证健康摘要
+ */
 export type AuthHealthSummary = {
+  /** 检查时间戳 */
   now: number;
+  /** 警告阈值（毫秒） */
   warnAfterMs: number;
+  /** 所有配置的健康信息 */
   profiles: AuthProfileHealth[];
+  /** 按提供商汇总的健康信息 */
   providers: AuthProviderHealth[];
 };
 
+/** 默认 OAuth 警告阈值：24 小时 */
 export const DEFAULT_OAUTH_WARN_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * 解析认证配置来源
+ * 目前所有配置都来自 store
+ */
 export function resolveAuthProfileSource(_profileId: string): AuthProfileSource {
   return "store";
 }
 
+/**
+ * 格式化剩余时间为简短字符串
+ *
+ * @param remainingMs - 剩余毫秒数
+ * @returns 格式化的时间字符串（如 "5m", "2h", "3d"）
+ */
 export function formatRemainingShort(remainingMs?: number): string {
   if (remainingMs === undefined || Number.isNaN(remainingMs)) return "unknown";
   if (remainingMs <= 0) return "0m";
@@ -54,6 +103,9 @@ export function formatRemainingShort(remainingMs?: number): string {
   return `${days}d`;
 }
 
+/**
+ * 解析 OAuth 令牌状态
+ */
 function resolveOAuthStatus(
   expiresAt: number | undefined,
   now: number,
@@ -72,6 +124,9 @@ function resolveOAuthStatus(
   return { status: "ok", remainingMs };
 }
 
+/**
+ * 构建单个配置的健康信息
+ */
 function buildProfileHealth(params: {
   profileId: string;
   credential: AuthProfileCredential;
@@ -136,6 +191,17 @@ function buildProfileHealth(params: {
   };
 }
 
+/**
+ * 构建认证健康摘要
+ *
+ * 检查所有认证配置的健康状态，并按提供商汇总。
+ *
+ * @param params.store - 认证配置存储
+ * @param params.cfg - 可选的配置对象
+ * @param params.warnAfterMs - 警告阈值（默认 24 小时）
+ * @param params.providers - 可选的提供商过滤列表
+ * @returns 认证健康摘要
+ */
 export function buildAuthHealthSummary(params: {
   store: AuthProfileStore;
   cfg?: MoltbotConfig;

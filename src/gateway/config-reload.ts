@@ -1,35 +1,75 @@
+/**
+ * 网关配置热重载模块
+ *
+ * 提供配置文件变更检测和热重载功能，包括：
+ * - 监听配置文件变更
+ * - 计算配置差异
+ * - 根据变更类型决定热重载或重启
+ * - 支持渠道、钩子、定时任务等组件的独立重载
+ */
+
 import chokidar from "chokidar";
 import { type ChannelId, listChannelPlugins } from "../channels/plugins/index.js";
 import { getActivePluginRegistry } from "../plugins/runtime.js";
 import type { MoltbotConfig, ConfigFileSnapshot, GatewayReloadMode } from "../config/config.js";
 
+/**
+ * 网关重载设置
+ */
 export type GatewayReloadSettings = {
+  /** 重载模式 */
   mode: GatewayReloadMode;
+  /** 防抖延迟（毫秒） */
   debounceMs: number;
 };
 
+/** 渠道类型 */
 export type ChannelKind = ChannelId;
 
+/**
+ * 网关重载计划
+ * 描述配置变更后需要执行的操作
+ */
 export type GatewayReloadPlan = {
+  /** 变更的配置路径 */
   changedPaths: string[];
+  /** 是否需要重启网关 */
   restartGateway: boolean;
+  /** 需要重启的原因 */
   restartReasons: string[];
+  /** 热重载的原因 */
   hotReasons: string[];
+  /** 是否重载钩子 */
   reloadHooks: boolean;
+  /** 是否重启 Gmail 监听器 */
   restartGmailWatcher: boolean;
+  /** 是否重启浏览器控制 */
   restartBrowserControl: boolean;
+  /** 是否重启定时任务 */
   restartCron: boolean;
+  /** 是否重启心跳 */
   restartHeartbeat: boolean;
+  /** 需要重启的渠道 */
   restartChannels: Set<ChannelKind>;
+  /** 无需操作的路径 */
   noopPaths: string[];
 };
 
+/**
+ * 重载规则
+ */
 type ReloadRule = {
+  /** 配置路径前缀 */
   prefix: string;
+  /** 重载类型：restart=重启, hot=热重载, none=无需操作 */
   kind: "restart" | "hot" | "none";
+  /** 需要执行的操作 */
   actions?: ReloadAction[];
 };
 
+/**
+ * 重载操作类型
+ */
 type ReloadAction =
   | "reload-hooks"
   | "restart-gmail-watcher"
@@ -38,6 +78,7 @@ type ReloadAction =
   | "restart-heartbeat"
   | `restart-channel:${ChannelId}`;
 
+/** 默认重载设置 */
 const DEFAULT_RELOAD_SETTINGS: GatewayReloadSettings = {
   mode: "hybrid",
   debounceMs: 300,
@@ -131,6 +172,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
+/**
+ * 比较两个配置对象，返回变更的路径列表
+ */
 export function diffConfigPaths(prev: unknown, next: unknown, prefix = ""): string[] {
   if (prev === next) return [];
   if (isPlainObject(prev) && isPlainObject(next)) {
@@ -156,6 +200,9 @@ export function diffConfigPaths(prev: unknown, next: unknown, prefix = ""): stri
   return [prefix || "<root>"];
 }
 
+/**
+ * 解析网关重载设置
+ */
 export function resolveGatewayReloadSettings(cfg: MoltbotConfig): GatewayReloadSettings {
   const rawMode = cfg.gateway?.reload?.mode;
   const mode =
@@ -170,6 +217,9 @@ export function resolveGatewayReloadSettings(cfg: MoltbotConfig): GatewayReloadS
   return { mode, debounceMs };
 }
 
+/**
+ * 根据变更路径构建重载计划
+ */
 export function buildGatewayReloadPlan(changedPaths: string[]): GatewayReloadPlan {
   const plan: GatewayReloadPlan = {
     changedPaths,
@@ -241,10 +291,19 @@ export function buildGatewayReloadPlan(changedPaths: string[]): GatewayReloadPla
   return plan;
 }
 
+/**
+ * 配置重载器接口
+ */
 export type GatewayConfigReloader = {
+  /** 停止监听 */
   stop: () => Promise<void>;
 };
 
+/**
+ * 启动网关配置重载器
+ *
+ * 监听配置文件变更，根据变更类型执行热重载或触发重启。
+ */
 export function startGatewayConfigReloader(opts: {
   initialConfig: MoltbotConfig;
   readSnapshot: () => Promise<ConfigFileSnapshot>;

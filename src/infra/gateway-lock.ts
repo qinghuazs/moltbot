@@ -1,3 +1,14 @@
+/**
+ * 网关进程锁模块
+ *
+ * 提供网关进程的互斥锁机制，确保同一配置只有一个网关实例运行。
+ * 支持：
+ * - 基于文件的进程锁
+ * - 进程存活检测
+ * - 过期锁自动清理
+ * - Linux 平台的进程启动时间验证
+ */
+
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
@@ -5,32 +16,60 @@ import path from "node:path";
 
 import { resolveConfigPath, resolveGatewayLockDir, resolveStateDir } from "../config/paths.js";
 
+/** 默认锁获取超时时间（毫秒） */
 const DEFAULT_TIMEOUT_MS = 5000;
+/** 默认轮询间隔（毫秒） */
 const DEFAULT_POLL_INTERVAL_MS = 100;
+/** 默认过期时间（毫秒） */
 const DEFAULT_STALE_MS = 30_000;
 
+/**
+ * 锁文件内容
+ */
 type LockPayload = {
+  /** 持有锁的进程 ID */
   pid: number;
+  /** 锁创建时间 */
   createdAt: string;
+  /** 配置文件路径 */
   configPath: string;
+  /** 进程启动时间（Linux 平台） */
   startTime?: number;
 };
 
+/**
+ * 网关锁句柄
+ */
 export type GatewayLockHandle = {
+  /** 锁文件路径 */
   lockPath: string;
+  /** 配置文件路径 */
   configPath: string;
+  /** 释放锁 */
   release: () => Promise<void>;
 };
 
+/**
+ * 网关锁选项
+ */
 export type GatewayLockOptions = {
+  /** 环境变量 */
   env?: NodeJS.ProcessEnv;
+  /** 超时时间（毫秒） */
   timeoutMs?: number;
+  /** 轮询间隔（毫秒） */
   pollIntervalMs?: number;
+  /** 过期时间（毫秒） */
   staleMs?: number;
+  /** 是否在测试中允许锁 */
   allowInTests?: boolean;
+  /** 平台 */
   platform?: NodeJS.Platform;
 };
 
+/**
+ * 网关锁错误
+ */
 export class GatewayLockError extends Error {
   constructor(
     message: string,
@@ -41,8 +80,12 @@ export class GatewayLockError extends Error {
   }
 }
 
+/** 锁持有者状态 */
 type LockOwnerStatus = "alive" | "dead" | "unknown";
 
+/**
+ * 检查进程是否存活
+ */
 function isAlive(pid: number): boolean {
   if (!Number.isFinite(pid) || pid <= 0) return false;
   try {
@@ -156,6 +199,16 @@ function resolveGatewayLockPath(env: NodeJS.ProcessEnv) {
   return { lockPath, configPath };
 }
 
+/**
+ * 获取网关进程锁
+ *
+ * 尝试获取网关进程锁，确保同一配置只有一个网关实例运行。
+ * 如果锁已被占用，会等待直到超时或锁被释放。
+ *
+ * @param opts - 锁选项
+ * @returns 锁句柄，或 null（在测试环境或禁用锁时）
+ * @throws GatewayLockError 如果获取锁超时
+ */
 export async function acquireGatewayLock(
   opts: GatewayLockOptions = {},
 ): Promise<GatewayLockHandle | null> {

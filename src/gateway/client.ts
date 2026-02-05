@@ -1,3 +1,13 @@
+/**
+ * 网关客户端模块
+ *
+ * 提供与 Moltbot 网关服务器通信的 WebSocket 客户端实现，包括：
+ * - 自动重连和指数退避
+ * - 设备身份认证和令牌管理
+ * - TLS 指纹验证
+ * - 心跳检测和连接健康监控
+ */
+
 import { randomUUID } from "node:crypto";
 import { WebSocket, type ClientOptions, type CertMeta } from "ws";
 import { normalizeFingerprint } from "../infra/tls/fingerprint.js";
@@ -32,39 +42,75 @@ import {
   validateResponseFrame,
 } from "./protocol/index.js";
 
+/**
+ * 待处理请求的回调
+ */
 type Pending = {
+  /** 成功回调 */
   resolve: (value: unknown) => void;
+  /** 失败回调 */
   reject: (err: unknown) => void;
+  /** 是否期望最终响应（而非仅确认） */
   expectFinal: boolean;
 };
 
+/**
+ * 网关客户端配置选项
+ */
 export type GatewayClientOptions = {
-  url?: string; // ws://127.0.0.1:18789
+  /** WebSocket 连接 URL（默认 ws://127.0.0.1:18789） */
+  url?: string;
+  /** 认证令牌 */
   token?: string;
+  /** 认证密码 */
   password?: string;
+  /** 客户端实例 ID */
   instanceId?: string;
+  /** 客户端名称标识 */
   clientName?: GatewayClientName;
+  /** 客户端显示名称 */
   clientDisplayName?: string;
+  /** 客户端版本 */
   clientVersion?: string;
+  /** 运行平台 */
   platform?: string;
+  /** 客户端模式 */
   mode?: GatewayClientMode;
+  /** 角色（如 operator） */
   role?: string;
+  /** 权限范围 */
   scopes?: string[];
+  /** 客户端能力 */
   caps?: string[];
+  /** 支持的命令 */
   commands?: string[];
+  /** 权限映射 */
   permissions?: Record<string, boolean>;
+  /** PATH 环境变量 */
   pathEnv?: string;
+  /** 设备身份信息 */
   deviceIdentity?: DeviceIdentity;
+  /** 最小协议版本 */
   minProtocol?: number;
+  /** 最大协议版本 */
   maxProtocol?: number;
+  /** TLS 证书指纹（用于验证服务器） */
   tlsFingerprint?: string;
+  /** 事件回调 */
   onEvent?: (evt: EventFrame) => void;
+  /** 连接成功回调 */
   onHelloOk?: (hello: HelloOk) => void;
+  /** 连接错误回调 */
   onConnectError?: (err: Error) => void;
+  /** 连接关闭回调 */
   onClose?: (code: number, reason: string) => void;
+  /** 序列号间隙回调 */
   onGap?: (info: { expected: number; received: number }) => void;
 };
 
+/**
+ * 网关关闭代码说明映射
+ */
 export const GATEWAY_CLOSE_CODE_HINTS: Readonly<Record<number, string>> = {
   1000: "normal closure",
   1006: "abnormal closure (no close frame)",
@@ -72,23 +118,46 @@ export const GATEWAY_CLOSE_CODE_HINTS: Readonly<Record<number, string>> = {
   1012: "service restart",
 };
 
+/**
+ * 获取网关关闭代码的描述
+ */
 export function describeGatewayCloseCode(code: number): string | undefined {
   return GATEWAY_CLOSE_CODE_HINTS[code];
 }
 
+/**
+ * 网关 WebSocket 客户端
+ *
+ * 提供与网关服务器的持久连接，支持：
+ * - 自动重连（指数退避）
+ * - 设备身份认证
+ * - 请求/响应模式
+ * - 心跳检测
+ */
 export class GatewayClient {
+  /** WebSocket 连接实例 */
   private ws: WebSocket | null = null;
+  /** 客户端配置 */
   private opts: GatewayClientOptions;
+  /** 待处理请求映射 */
   private pending = new Map<string, Pending>();
+  /** 重连退避时间（毫秒） */
   private backoffMs = 1000;
+  /** 是否已关闭 */
   private closed = false;
+  /** 最后接收的序列号 */
   private lastSeq: number | null = null;
+  /** 连接挑战 nonce */
   private connectNonce: string | null = null;
+  /** 是否已发送连接请求 */
   private connectSent = false;
+  /** 连接定时器 */
   private connectTimer: NodeJS.Timeout | null = null;
-  // Track last tick to detect silent stalls.
+  /** 最后心跳时间戳（用于检测静默停滞） */
   private lastTick: number | null = null;
+  /** 心跳间隔（毫秒） */
   private tickIntervalMs = 30_000;
+  /** 心跳检测定时器 */
   private tickTimer: NodeJS.Timeout | null = null;
 
   constructor(opts: GatewayClientOptions) {
