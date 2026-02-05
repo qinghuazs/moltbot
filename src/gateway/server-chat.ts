@@ -1,3 +1,15 @@
+/**
+ * 网关聊天模块
+ *
+ * 该模块处理网关的聊天功能，包括：
+ * - 聊天运行注册表管理
+ * - 代理事件处理
+ * - WebChat 广播
+ * - 心跳可见性控制
+ *
+ * @module gateway/server-chat
+ */
+
 import { normalizeVerboseLevel } from "../auto-reply/thinking.js";
 import { loadConfig } from "../config/config.js";
 import { type AgentEventPayload, getAgentRunContext } from "../infra/agent-events.js";
@@ -6,8 +18,8 @@ import { loadSessionEntry } from "./session-utils.js";
 import { formatForLog } from "./ws-log.js";
 
 /**
- * Check if webchat broadcasts should be suppressed for heartbeat runs.
- * Returns true if the run is a heartbeat and showOk is false.
+ * 检查是否应该抑制心跳运行的 WebChat 广播
+ * 当运行是心跳且 showOk 为 false 时返回 true
  */
 function shouldSuppressHeartbeatBroadcast(runId: string): boolean {
   const runContext = getAgentRunContext(runId);
@@ -23,19 +35,32 @@ function shouldSuppressHeartbeatBroadcast(runId: string): boolean {
   }
 }
 
+/** 聊天运行条目 */
 export type ChatRunEntry = {
+  /** 会话键 */
   sessionKey: string;
+  /** 客户端运行 ID */
   clientRunId: string;
 };
 
+/** 聊天运行注册表接口 */
 export type ChatRunRegistry = {
+  /** 添加运行条目 */
   add: (sessionId: string, entry: ChatRunEntry) => void;
+  /** 查看队首条目 */
   peek: (sessionId: string) => ChatRunEntry | undefined;
+  /** 移除并返回队首条目 */
   shift: (sessionId: string) => ChatRunEntry | undefined;
+  /** 移除指定条目 */
   remove: (sessionId: string, clientRunId: string, sessionKey?: string) => ChatRunEntry | undefined;
+  /** 清空所有条目 */
   clear: () => void;
 };
 
+/**
+ * 创建聊天运行注册表
+ * 管理每个会话的运行队列
+ */
 export function createChatRunRegistry(): ChatRunRegistry {
   const chatRunSessions = new Map<string, ChatRunEntry[]>();
 
@@ -78,14 +103,24 @@ export function createChatRunRegistry(): ChatRunRegistry {
   return { add, peek, shift, remove, clear };
 }
 
+/** 聊天运行状态 */
 export type ChatRunState = {
+  /** 运行注册表 */
   registry: ChatRunRegistry;
+  /** 文本缓冲区 */
   buffers: Map<string, string>;
+  /** 增量发送时间戳 */
   deltaSentAt: Map<string, number>;
+  /** 已中止的运行 */
   abortedRuns: Map<string, number>;
+  /** 清空所有状态 */
   clear: () => void;
 };
 
+/**
+ * 创建聊天运行状态
+ * 管理聊天运行的所有状态数据
+ */
 export function createChatRunState(): ChatRunState {
   const registry = createChatRunRegistry();
   const buffers = new Map<string, string>();
@@ -108,23 +143,36 @@ export function createChatRunState(): ChatRunState {
   };
 }
 
+/** 聊天事件广播函数类型 */
 export type ChatEventBroadcast = (
   event: string,
   payload: unknown,
   opts?: { dropIfSlow?: boolean },
 ) => void;
 
+/** 节点发送到会话函数类型 */
 export type NodeSendToSession = (sessionKey: string, event: string, payload: unknown) => void;
 
+/** 代理事件处理器选项 */
 export type AgentEventHandlerOptions = {
+  /** 广播函数 */
   broadcast: ChatEventBroadcast;
+  /** 节点发送到会话函数 */
   nodeSendToSession: NodeSendToSession;
+  /** 代理运行序列号映射 */
   agentRunSeq: Map<string, number>;
+  /** 聊天运行状态 */
   chatRunState: ChatRunState;
+  /** 解析运行 ID 对应的会话键 */
   resolveSessionKeyForRun: (runId: string) => string | undefined;
+  /** 清除代理运行上下文 */
   clearAgentRunContext: (runId: string) => void;
 };
 
+/**
+ * 创建代理事件处理器
+ * 处理代理运行过程中的各种事件
+ */
 export function createAgentEventHandler({
   broadcast,
   nodeSendToSession,

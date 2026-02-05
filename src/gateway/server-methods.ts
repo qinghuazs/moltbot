@@ -1,3 +1,14 @@
+/**
+ * 网关服务器方法模块
+ *
+ * 该模块聚合所有网关 RPC 方法处理器，并提供：
+ * - 方法权限验证
+ * - 角色和作用域检查
+ * - 方法路由分发
+ *
+ * @module gateway/server-methods
+ */
+
 import { ErrorCodes, errorShape } from "./protocol/index.js";
 import { agentHandlers } from "./server-methods/agent.js";
 import { agentsHandlers } from "./server-methods/agents.js";
@@ -26,14 +37,22 @@ import { voicewakeHandlers } from "./server-methods/voicewake.js";
 import { webHandlers } from "./server-methods/web.js";
 import { wizardHandlers } from "./server-methods/wizard.js";
 
+/** 管理员作用域 */
 const ADMIN_SCOPE = "operator.admin";
+/** 只读作用域 */
 const READ_SCOPE = "operator.read";
+/** 写入作用域 */
 const WRITE_SCOPE = "operator.write";
+/** 审批作用域 */
 const APPROVALS_SCOPE = "operator.approvals";
+/** 配对作用域 */
 const PAIRING_SCOPE = "operator.pairing";
 
+/** 审批相关方法集合 */
 const APPROVAL_METHODS = new Set(["exec.approval.request", "exec.approval.resolve"]);
+/** 节点角色方法集合 */
 const NODE_ROLE_METHODS = new Set(["node.invoke.result", "node.event", "skills.bins"]);
+/** 配对相关方法集合 */
 const PAIRING_METHODS = new Set([
   "node.pair.request",
   "node.pair.list",
