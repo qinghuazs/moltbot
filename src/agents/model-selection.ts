@@ -1,29 +1,63 @@
+/**
+ * 模型选择模块
+ *
+ * 该模块负责解析和选择 AI 模型，包括：
+ * - 模型引用解析（provider/model 格式）
+ * - 模型别名索引构建
+ * - 模型白名单管理
+ * - 默认模型配置解析
+ * - 思考级别配置
+ *
+ * @module agents/model-selection
+ */
+
 import type { MoltbotConfig } from "../config/config.js";
 import type { ModelCatalogEntry } from "./model-catalog.js";
 import { normalizeGoogleModelId } from "./models-config.providers.js";
 import { resolveAgentModelPrimary } from "./agent-scope.js";
 import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "./defaults.js";
 
+/** 模型引用类型，包含提供商和模型名称 */
 export type ModelRef = {
+  /** 提供商标识 */
   provider: string;
+  /** 模型名称 */
   model: string;
 };
 
+/** 思考级别类型，控制模型的推理深度 */
 export type ThinkLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
+/** 模型别名索引，用于快速查找模型别名 */
 export type ModelAliasIndex = {
+  /** 按别名查找 */
   byAlias: Map<string, { alias: string; ref: ModelRef }>;
+  /** 按模型键查找别名列表 */
   byKey: Map<string, string[]>;
 };
 
+/**
+ * 标准化别名键
+ * 转换为小写并去除空白
+ */
 function normalizeAliasKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/**
+ * 生成模型键
+ * @param provider - 提供商标识
+ * @param model - 模型名称
+ * @returns 格式为 "provider/model" 的键
+ */
 export function modelKey(provider: string, model: string) {
   return `${provider}/${model}`;
 }
 
+/**
+ * 标准化提供商 ID
+ * 处理别名和变体（如 z.ai -> zai）
+ */
 export function normalizeProviderId(provider: string): string {
   const normalized = provider.trim().toLowerCase();
   if (normalized === "z.ai" || normalized === "z-ai") return "zai";
@@ -32,6 +66,10 @@ export function normalizeProviderId(provider: string): string {
   return normalized;
 }
 
+/**
+ * 检查是否为 CLI 提供商
+ * CLI 提供商通过外部 CLI 工具调用模型
+ */
 export function isCliProvider(provider: string, cfg?: MoltbotConfig): boolean {
   const normalized = normalizeProviderId(provider);
   if (normalized === "claude-cli") return true;
@@ -40,6 +78,10 @@ export function isCliProvider(provider: string, cfg?: MoltbotConfig): boolean {
   return Object.keys(backends).some((key) => normalizeProviderId(key) === normalized);
 }
 
+/**
+ * 标准化 Anthropic 模型 ID
+ * 处理简写形式（如 opus-4.5 -> claude-opus-4-5）
+ */
 function normalizeAnthropicModelId(model: string): string {
   const trimmed = model.trim();
   if (!trimmed) return trimmed;
@@ -49,12 +91,23 @@ function normalizeAnthropicModelId(model: string): string {
   return trimmed;
 }
 
+/**
+ * 根据提供商标准化模型 ID
+ */
 function normalizeProviderModelId(provider: string, model: string): string {
   if (provider === "anthropic") return normalizeAnthropicModelId(model);
   if (provider === "google") return normalizeGoogleModelId(model);
   return model;
 }
 
+/**
+ * 解析模型引用字符串
+ * 支持 "provider/model" 和 "model"（使用默认提供商）格式
+ *
+ * @param raw - 原始字符串
+ * @param defaultProvider - 默认提供商
+ * @returns 模型引用，无效时返回 null
+ */
 export function parseModelRef(raw: string, defaultProvider: string): ModelRef | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -72,6 +125,14 @@ export function parseModelRef(raw: string, defaultProvider: string): ModelRef | 
   return { provider, model: normalizedModel };
 }
 
+/**
+ * 构建模型别名索引
+ * 从配置中提取所有模型别名，用于快速查找
+ *
+ * @param params.cfg - 配置对象
+ * @param params.defaultProvider - 默认提供商
+ * @returns 模型别名索引
+ */
 export function buildModelAliasIndex(params: {
   cfg: MoltbotConfig;
   defaultProvider: string;
@@ -96,6 +157,15 @@ export function buildModelAliasIndex(params: {
   return { byAlias, byKey };
 }
 
+/**
+ * 从字符串解析模型引用
+ * 支持别名查找和直接解析
+ *
+ * @param params.raw - 原始字符串
+ * @param params.defaultProvider - 默认提供商
+ * @param params.aliasIndex - 别名索引（可选）
+ * @returns 模型引用和别名，无效时返回 null
+ */
 export function resolveModelRefFromString(params: {
   raw: string;
   defaultProvider: string;
@@ -115,6 +185,15 @@ export function resolveModelRefFromString(params: {
   return { ref: parsed };
 }
 
+/**
+ * 解析配置中的模型引用
+ * 从 agents.defaults.model 配置中获取主模型
+ *
+ * @param params.cfg - 配置对象
+ * @param params.defaultProvider - 默认提供商
+ * @param params.defaultModel - 默认模型
+ * @returns 模型引用
+ */
 export function resolveConfiguredModelRef(params: {
   cfg: MoltbotConfig;
   defaultProvider: string;
@@ -153,6 +232,14 @@ export function resolveConfiguredModelRef(params: {
   return { provider: params.defaultProvider, model: params.defaultModel };
 }
 
+/**
+ * 解析代理的默认模型
+ * 支持代理级别的模型覆盖
+ *
+ * @param params.cfg - 配置对象
+ * @param params.agentId - 代理 ID（可选）
+ * @returns 模型引用
+ */
 export function resolveDefaultModelForAgent(params: {
   cfg: MoltbotConfig;
   agentId?: string;
@@ -185,6 +272,16 @@ export function resolveDefaultModelForAgent(params: {
   });
 }
 
+/**
+ * 构建允许的模型集合
+ * 基于配置中的模型白名单和目录
+ *
+ * @param params.cfg - 配置对象
+ * @param params.catalog - 模型目录
+ * @param params.defaultProvider - 默认提供商
+ * @param params.defaultModel - 默认模型（可选）
+ * @returns 允许的模型集合信息
+ */
 export function buildAllowedModelSet(params: {
   cfg: MoltbotConfig;
   catalog: ModelCatalogEntry[];
@@ -254,13 +351,22 @@ export function buildAllowedModelSet(params: {
   return { allowAny: false, allowedCatalog, allowedKeys };
 }
 
+/** 模型引用状态信息 */
 export type ModelRefStatus = {
+  /** 模型键 */
   key: string;
+  /** 是否在目录中 */
   inCatalog: boolean;
+  /** 是否允许任意模型 */
   allowAny: boolean;
+  /** 是否被允许 */
   allowed: boolean;
 };
 
+/**
+ * 获取模型引用的状态
+ * 检查模型是否在目录中以及是否被允许
+ */
 export function getModelRefStatus(params: {
   cfg: MoltbotConfig;
   catalog: ModelCatalogEntry[];
@@ -283,6 +389,17 @@ export function getModelRefStatus(params: {
   };
 }
 
+/**
+ * 解析并验证允许的模型引用
+ * 检查模型是否在白名单中
+ *
+ * @param params.cfg - 配置对象
+ * @param params.catalog - 模型目录
+ * @param params.raw - 原始模型字符串
+ * @param params.defaultProvider - 默认提供商
+ * @param params.defaultModel - 默认模型（可选）
+ * @returns 模型引用或错误信息
+ */
 export function resolveAllowedModelRef(params: {
   cfg: MoltbotConfig;
   catalog: ModelCatalogEntry[];
@@ -322,6 +439,16 @@ export function resolveAllowedModelRef(params: {
   return { ref: resolved.ref, key: status.key };
 }
 
+/**
+ * 解析思考级别默认值
+ * 根据模型能力确定默认的思考深度
+ *
+ * @param params.cfg - 配置对象
+ * @param params.provider - 提供商
+ * @param params.model - 模型名称
+ * @param params.catalog - 模型目录（可选）
+ * @returns 思考级别
+ */
 export function resolveThinkingDefault(params: {
   cfg: MoltbotConfig;
   provider: string;
