@@ -1,3 +1,15 @@
+/**
+ * 配对存储模块
+ *
+ * 该模块负责管理渠道配对请求的存储，包括：
+ * - 配对码生成和验证
+ * - 配对请求的创建和管理
+ * - 允许列表的存储
+ * - 文件锁定以确保并发安全
+ *
+ * @module pairing/pairing-store
+ */
+
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -8,10 +20,15 @@ import { getPairingAdapter } from "../channels/plugins/pairing.js";
 import type { ChannelId, ChannelPairingAdapter } from "../channels/plugins/types.js";
 import { resolveOAuthDir, resolveStateDir } from "../config/paths.js";
 
+/** 配对码长度 */
 const PAIRING_CODE_LENGTH = 8;
+/** 配对码字母表（排除易混淆字符） */
 const PAIRING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+/** 配对请求 TTL（1 小时） */
 const PAIRING_PENDING_TTL_MS = 60 * 60 * 1000;
+/** 最大待处理配对请求数 */
 const PAIRING_PENDING_MAX = 3;
+/** 配对存储锁选项 */
 const PAIRING_STORE_LOCK_OPTIONS = {
   retries: {
     retries: 10,
@@ -23,21 +40,30 @@ const PAIRING_STORE_LOCK_OPTIONS = {
   stale: 30_000,
 } as const;
 
+/** 配对渠道类型 */
 export type PairingChannel = ChannelId;
 
+/** 配对请求类型 */
 export type PairingRequest = {
+  /** 请求 ID */
   id: string;
+  /** 配对码 */
   code: string;
+  /** 创建时间 */
   createdAt: string;
+  /** 最后查看时间 */
   lastSeenAt: string;
+  /** 元数据 */
   meta?: Record<string, string>;
 };
 
+/** 配对存储类型 */
 type PairingStore = {
   version: 1;
   requests: PairingRequest[];
 };
 
+/** 允许列表存储类型 */
 type AllowFromStore = {
   version: 1;
   allowFrom: string[];

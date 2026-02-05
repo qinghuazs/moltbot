@@ -1,3 +1,16 @@
+/**
+ * 安全审计模块
+ *
+ * 该模块提供安全审计功能，包括：
+ * - 配置安全检查
+ * - 文件系统权限检查
+ * - 渠道安全检查
+ * - 网关连接检查
+ * - 安全发现报告生成
+ *
+ * @module security/audit
+ */
+
 import { listChannelPlugins } from "../channels/plugins/index.js";
 import { resolveChannelDefaultAccountId } from "../channels/plugins/helpers.js";
 import type { ChannelId } from "../channels/plugins/types.js";
@@ -30,26 +43,42 @@ import {
 } from "./audit-fs.js";
 import type { ExecFn } from "./windows-acl.js";
 
+/** 安全审计严重性级别 */
 export type SecurityAuditSeverity = "info" | "warn" | "critical";
 
+/** 安全审计发现 */
 export type SecurityAuditFinding = {
+  /** 检查 ID */
   checkId: string;
+  /** 严重性级别 */
   severity: SecurityAuditSeverity;
+  /** 标题 */
   title: string;
+  /** 详情 */
   detail: string;
+  /** 修复建议 */
   remediation?: string;
 };
 
+/** 安全审计摘要 */
 export type SecurityAuditSummary = {
+  /** 严重问题数 */
   critical: number;
+  /** 警告数 */
   warn: number;
+  /** 信息数 */
   info: number;
 };
 
+/** 安全审计报告 */
 export type SecurityAuditReport = {
+  /** 时间戳 */
   ts: number;
+  /** 摘要 */
   summary: SecurityAuditSummary;
+  /** 发现列表 */
   findings: SecurityAuditFinding[];
+  /** 深度检查结果 */
   deep?: {
     gateway?: {
       attempted: boolean;
@@ -61,24 +90,31 @@ export type SecurityAuditReport = {
   };
 };
 
+/** 安全审计选项 */
 export type SecurityAuditOptions = {
+  /** 配置对象 */
   config: MoltbotConfig;
+  /** 环境变量 */
   env?: NodeJS.ProcessEnv;
+  /** 平台 */
   platform?: NodeJS.Platform;
+  /** 是否深度检查 */
   deep?: boolean;
+  /** 是否包含文件系统检查 */
   includeFilesystem?: boolean;
+  /** 是否包含渠道安全检查 */
   includeChannelSecurity?: boolean;
-  /** Override where to check state (default: resolveStateDir()). */
+  /** 覆盖状态目录（默认：resolveStateDir()） */
   stateDir?: string;
-  /** Override config path check (default: resolveConfigPath()). */
+  /** 覆盖配置路径检查（默认：resolveConfigPath()） */
   configPath?: string;
-  /** Time limit for deep gateway probe. */
+  /** 深度网关探测超时时间 */
   deepTimeoutMs?: number;
-  /** Dependency injection for tests. */
+  /** 测试用依赖注入 */
   plugins?: ReturnType<typeof listChannelPlugins>;
-  /** Dependency injection for tests. */
+  /** 测试用依赖注入 */
   probeGatewayFn?: typeof probeGateway;
-  /** Dependency injection for tests (Windows ACL checks). */
+  /** 测试用依赖注入（Windows ACL 检查） */
   execIcacls?: ExecFn;
 };
 
