@@ -1,11 +1,32 @@
+/**
+ * Markdown 代码围栏模块
+ *
+ * 该模块提供 Markdown 代码围栏（fenced code blocks）的解析功能，
+ * 用于识别和处理代码块边界。
+ *
+ * @module markdown/fences
+ */
+
+/** 代码围栏范围类型 */
 export type FenceSpan = {
+  /** 起始位置 */
   start: number;
+  /** 结束位置 */
   end: number;
+  /** 开始行内容 */
   openLine: string;
+  /** 围栏标记（如 ``` 或 ~~~） */
   marker: string;
+  /** 缩进 */
   indent: string;
 };
 
+/**
+ * 解析代码围栏范围
+ *
+ * @param buffer - 要解析的文本
+ * @returns 代码围栏范围数组
+ */
 export function parseFenceSpans(buffer: string): FenceSpan[] {
   const spans: FenceSpan[] = [];
   let open:
@@ -70,10 +91,25 @@ export function parseFenceSpans(buffer: string): FenceSpan[] {
   return spans;
 }
 
+/**
+ * 查找指定位置所在的代码围栏
+ *
+ * @param spans - 代码围栏范围数组
+ * @param index - 位置索引
+ * @returns 包含该位置的围栏，未找到返回 undefined
+ */
 export function findFenceSpanAt(spans: FenceSpan[], index: number): FenceSpan | undefined {
   return spans.find((span) => index > span.start && index < span.end);
 }
 
+/**
+ * 检查指定位置是否可以安全断开
+ * 即该位置不在代码围栏内部
+ *
+ * @param spans - 代码围栏范围数组
+ * @param index - 位置索引
+ * @returns 是否可以安全断开
+ */
 export function isSafeFenceBreak(spans: FenceSpan[], index: number): boolean {
   return !findFenceSpanAt(spans, index);
 }
