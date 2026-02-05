@@ -1,72 +1,138 @@
+/**
+ * 设备配对模块
+ *
+ * 该模块负责管理设备配对流程，包括：
+ * - 配对请求的创建和管理
+ * - 设备的批准和拒绝
+ * - 已配对设备的存储
+ * - 设备认证令牌管理
+ *
+ * @module infra/device-pairing
+ */
+
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveStateDir } from "../config/paths.js";
 
+/** 待处理的设备配对请求 */
 export type DevicePairingPendingRequest = {
+  /** 请求 ID */
   requestId: string;
+  /** 设备 ID */
   deviceId: string;
+  /** 公钥 */
   publicKey: string;
+  /** 显示名称 */
   displayName?: string;
+  /** 平台 */
   platform?: string;
+  /** 客户端 ID */
   clientId?: string;
+  /** 客户端模式 */
   clientMode?: string;
+  /** 角色 */
   role?: string;
+  /** 角色列表 */
   roles?: string[];
+  /** 作用域列表 */
   scopes?: string[];
+  /** 远程 IP */
   remoteIp?: string;
+  /** 是否静默 */
   silent?: boolean;
+  /** 是否为修复请求 */
   isRepair?: boolean;
+  /** 时间戳 */
   ts: number;
 };
 
+/** 设备认证令牌 */
 export type DeviceAuthToken = {
+  /** 令牌值 */
   token: string;
+  /** 角色 */
   role: string;
+  /** 作用域列表 */
   scopes: string[];
+  /** 创建时间（毫秒） */
   createdAtMs: number;
+  /** 轮换时间（毫秒） */
   rotatedAtMs?: number;
+  /** 撤销时间（毫秒） */
   revokedAtMs?: number;
+  /** 最后使用时间（毫秒） */
   lastUsedAtMs?: number;
 };
 
+/** 设备认证令牌摘要 */
 export type DeviceAuthTokenSummary = {
+  /** 角色 */
   role: string;
+  /** 作用域列表 */
   scopes: string[];
+  /** 创建时间（毫秒） */
   createdAtMs: number;
+  /** 轮换时间（毫秒） */
   rotatedAtMs?: number;
+  /** 撤销时间（毫秒） */
   revokedAtMs?: number;
+  /** 最后使用时间（毫秒） */
   lastUsedAtMs?: number;
 };
 
+/** 已配对设备 */
 export type PairedDevice = {
+  /** 设备 ID */
   deviceId: string;
+  /** 公钥 */
   publicKey: string;
+  /** 显示名称 */
   displayName?: string;
+  /** 平台 */
   platform?: string;
+  /** 客户端 ID */
   clientId?: string;
+  /** 客户端模式 */
   clientMode?: string;
+  /** 角色 */
   role?: string;
+  /** 角色列表 */
   roles?: string[];
+  /** 作用域列表 */
   scopes?: string[];
+  /** 远程 IP */
   remoteIp?: string;
+  /** 认证令牌映射 */
   tokens?: Record<string, DeviceAuthToken>;
+  /** 创建时间（毫秒） */
   createdAtMs: number;
+  /** 批准时间（毫秒） */
   approvedAtMs: number;
 };
 
+/** 设备配对列表 */
 export type DevicePairingList = {
+  /** 待处理请求列表 */
   pending: DevicePairingPendingRequest[];
+  /** 已配对设备列表 */
   paired: PairedDevice[];
 };
 
+/** 设备配对状态文件结构 */
 type DevicePairingStateFile = {
+  /** 按 ID 索引的待处理请求 */
   pendingById: Record<string, DevicePairingPendingRequest>;
+  /** 按设备 ID 索引的已配对设备 */
   pairedByDeviceId: Record<string, PairedDevice>;
 };
 
+/** 待处理请求的 TTL（5 分钟） */
 const PENDING_TTL_MS = 5 * 60 * 1000;
 
+/**
+ * 解析配对相关文件路径
+ */
 function resolvePaths(baseDir?: string) {
   const root = baseDir ?? resolveStateDir();
   const dir = path.join(root, "devices");
@@ -77,6 +143,9 @@ function resolvePaths(baseDir?: string) {
   };
 }
 
+/**
+ * 读取 JSON 文件
+ */
 async function readJSON<T>(filePath: string): Promise<T | null> {
   try {
     const raw = await fs.readFile(filePath, "utf8");
@@ -86,6 +155,9 @@ async function readJSON<T>(filePath: string): Promise<T | null> {
   }
 }
 
+/**
+ * 原子写入 JSON 文件
+ */
 async function writeJSONAtomic(filePath: string, value: unknown) {
   const dir = path.dirname(filePath);
   await fs.mkdir(dir, { recursive: true });
