@@ -11,7 +11,9 @@
       "Bash(do echo:*)",
       "Bash(done)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(scripts/committer:*)",
+      "Bash(pnpm lint)"
     ]
   }
 }
