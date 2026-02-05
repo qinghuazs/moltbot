@@ -1,3 +1,12 @@
+/**
+ * 渠道工具模块
+ *
+ * 提供渠道相关的工具和操作查询功能，包括：
+ * - 列出渠道支持的消息操作
+ * - 聚合渠道提供的 agent 工具
+ * - 解析渠道消息工具提示
+ */
+
 import { getChannelDock } from "../channels/dock.js";
 import { getChannelPlugin, listChannelPlugins } from "../channels/plugins/index.js";
 import { normalizeAnyChannelId } from "../channels/registry.js";
@@ -42,6 +51,11 @@ export function listAllChannelSupportedActions(params: {
   return Array.from(actions);
 }
 
+/**
+ * 列出渠道提供的 agent 工具
+ *
+ * 聚合所有渠道插件提供的工具（如登录工具等）。
+ */
 export function listChannelAgentTools(params: { cfg?: MoltbotConfig }): ChannelAgentTool[] {
   // Channel docking: aggregate channel-owned tools (login, etc.).
   const tools: ChannelAgentTool[] = [];
@@ -54,6 +68,11 @@ export function listChannelAgentTools(params: { cfg?: MoltbotConfig }): ChannelA
   return tools;
 }
 
+/**
+ * 解析渠道消息工具提示
+ *
+ * 获取特定渠道的消息工具使用提示。
+ */
 export function resolveChannelMessageToolHints(params: {
   cfg?: MoltbotConfig;
   channel?: string | null;

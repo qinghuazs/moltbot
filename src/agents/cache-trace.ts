@@ -1,3 +1,13 @@
+/**
+ * 缓存追踪模块
+ *
+ * 提供 LLM 调用的详细追踪功能，用于调试缓存行为，包括：
+ * - 记录会话加载、清理、限制等各阶段
+ * - 记录提示词和消息内容
+ * - 生成消息指纹和摘要
+ * - 支持 JSONL 格式日志输出
+ */
+
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -10,6 +20,9 @@ import { resolveStateDir } from "../config/paths.js";
 import { parseBooleanValue } from "../utils/boolean.js";
 import { resolveUserPath } from "../utils.js";
 
+/**
+ * 缓存追踪阶段
+ */
 export type CacheTraceStage =
   | "session:loaded"
   | "session:sanitized"
@@ -19,35 +32,65 @@ export type CacheTraceStage =
   | "stream:context"
   | "session:after";
 
+/**
+ * 缓存追踪事件
+ */
 export type CacheTraceEvent = {
+  /** 时间戳 */
   ts: string;
+  /** 序列号 */
   seq: number;
+  /** 阶段 */
   stage: CacheTraceStage;
+  /** 运行 ID */
   runId?: string;
+  /** 会话 ID */
   sessionId?: string;
+  /** 会话键 */
   sessionKey?: string;
+  /** 提供商 */
   provider?: string;
+  /** 模型 ID */
   modelId?: string;
+  /** 模型 API */
   modelApi?: string | null;
+  /** 工作目录 */
   workspaceDir?: string;
+  /** 提示词 */
   prompt?: string;
+  /** 系统提示 */
   system?: unknown;
+  /** 选项 */
   options?: Record<string, unknown>;
+  /** 模型信息 */
   model?: Record<string, unknown>;
+  /** 消息列表 */
   messages?: AgentMessage[];
+  /** 消息数量 */
   messageCount?: number;
+  /** 消息角色列表 */
   messageRoles?: Array<string | undefined>;
+  /** 消息指纹列表 */
   messageFingerprints?: string[];
+  /** 消息摘要 */
   messagesDigest?: string;
+  /** 系统提示摘要 */
   systemDigest?: string;
+  /** 备注 */
   note?: string;
+  /** 错误信息 */
   error?: string;
 };
 
+/**
+ * 缓存追踪器接口
+ */
 export type CacheTrace = {
   enabled: true;
   filePath: string;
+  /** 记录阶段 */
   recordStage: (stage: CacheTraceStage, payload?: Partial<CacheTraceEvent>) => void;
+  /** 包装流函数 */
   wrapStreamFn: (streamFn: StreamFn) => StreamFn;
 };
 
@@ -190,6 +233,12 @@ function safeJsonStringify(value: unknown): string | null {
   }
 }
 
+/**
+ * 创建缓存追踪器
+ *
+ * @param params - 初始化参数
+ * @returns 缓存追踪器实例，如果未启用则返回 null
+ */
 export function createCacheTrace(params: CacheTraceInit): CacheTrace | null {
   const cfg = resolveCacheTraceConfig(params);
   if (!cfg.enabled) return null;

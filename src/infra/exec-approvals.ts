@@ -1,3 +1,14 @@
+/**
+ * 命令执行审批模块
+ *
+ * 提供命令执行的安全审批机制，包括：
+ * - 执行权限控制（deny/allowlist/full）
+ * - 命令白名单管理
+ * - Shell 命令解析和分析
+ * - 安全二进制文件检测
+ * - 通过 Unix socket 请求审批
+ */
+
 import crypto from "node:crypto";
 import fs from "node:fs";
 import net from "node:net";
@@ -6,22 +17,40 @@ import path from "node:path";
 
 import { DEFAULT_AGENT_ID } from "../routing/session-key.js";
 
+/** 执行主机类型 */
 export type ExecHost = "sandbox" | "gateway" | "node";
+/** 执行安全级别 */
 export type ExecSecurity = "deny" | "allowlist" | "full";
+/** 审批询问模式 */
 export type ExecAsk = "off" | "on-miss" | "always";
 
+/**
+ * 执行审批默认配置
+ */
 export type ExecApprovalsDefaults = {
+  /** 安全级别 */
   security?: ExecSecurity;
+  /** 询问模式 */
   ask?: ExecAsk;
+  /** 询问失败时的回退安全级别 */
   askFallback?: ExecSecurity;
+  /** 是否自动允许技能命令 */
   autoAllowSkills?: boolean;
 };
 
+/**
+ * 白名单条目
+ */
 export type ExecAllowlistEntry = {
+  /** 条目 ID */
   id?: string;
+  /** 匹配模式（支持 glob） */
   pattern: string;
+  /** 最后使用时间 */
   lastUsedAt?: number;
+  /** 最后使用的命令 */
   lastUsedCommand?: string;
+  /** 最后解析的路径 */
   lastResolvedPath?: string;
 };
 
@@ -264,6 +293,9 @@ export type ExecApprovalsDefaultOverrides = {
   autoAllowSkills?: boolean;
 };
 
+/**
+ * 解析执行审批配置
+ */
 export function resolveExecApprovals(
   agentId?: string,
   overrides?: ExecApprovalsDefaultOverrides,
@@ -743,6 +775,11 @@ function parseSegmentsFromParts(
   return segments;
 }
 
+/**
+ * 分析 Shell 命令
+ *
+ * 解析命令字符串，提取可执行文件和参数，支持管道和链式命令。
+ */
 export function analyzeShellCommand(params: {
   command: string;
   cwd?: string;
@@ -833,6 +870,11 @@ export function resolveSafeBins(entries?: string[] | null): Set<string> {
   return normalizeSafeBins(entries ?? []);
 }
 
+/**
+ * 检查是否为安全二进制文件使用
+ *
+ * 安全二进制文件（如 jq、grep 等）在不访问文件系统时可以自动允许。
+ */
 export function isSafeBinUsage(params: {
   argv: string[];
   resolution: CommandResolution | null;
@@ -914,6 +956,9 @@ function evaluateSegments(
   return { satisfied, matches };
 }
 
+/**
+ * 评估执行白名单
+ */
 export function evaluateExecAllowlist(params: {
   analysis: ExecCommandAnalysis;
   allowlist: ExecAllowlistEntry[];
@@ -1207,6 +1252,9 @@ export function maxAsk(a: ExecAsk, b: ExecAsk): ExecAsk {
 
 export type ExecApprovalDecision = "allow-once" | "allow-always" | "deny";
 
+/**
+ * 通过 Unix socket 请求执行审批
+ */
 export async function requestExecApprovalViaSocket(params: {
   socketPath: string;
   token: string;

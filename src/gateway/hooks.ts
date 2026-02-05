@@ -1,3 +1,13 @@
+/**
+ * Webhook 钩子模块
+ *
+ * 提供 HTTP Webhook 端点功能，允许外部系统触发 agent 操作，包括：
+ * - 钩子配置解析和验证
+ * - 请求认证（Bearer token、header、query）
+ * - JSON 请求体解析
+ * - agent 调用负载规范化
+ */
+
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import { listChannelPlugins } from "../channels/plugins/index.js";
@@ -6,16 +16,28 @@ import type { MoltbotConfig } from "../config/config.js";
 import { normalizeMessageChannel } from "../utils/message-channel.js";
 import { type HookMappingResolved, resolveHookMappings } from "./hooks-mapping.js";
 
+/** 默认钩子路径 */
 const DEFAULT_HOOKS_PATH = "/hooks";
+/** 默认最大请求体大小 */
 const DEFAULT_HOOKS_MAX_BODY_BYTES = 256 * 1024;
 
+/**
+ * 解析后的钩子配置
+ */
 export type HooksConfigResolved = {
+  /** 基础路径 */
   basePath: string;
+  /** 认证令牌 */
   token: string;
+  /** 最大请求体大小 */
   maxBodyBytes: number;
+  /** 路由映射 */
   mappings: HookMappingResolved[];
 };
 
+/**
+ * 解析钩子配置
+ */
 export function resolveHooksConfig(cfg: MoltbotConfig): HooksConfigResolved | null {
   if (cfg.hooks?.enabled !== true) return null;
   const token = cfg.hooks?.token?.trim();
@@ -41,11 +63,19 @@ export function resolveHooksConfig(cfg: MoltbotConfig): HooksConfigResolved | nu
   };
 }
 
+/**
+ * 钩子令牌提取结果
+ */
 export type HookTokenResult = {
   token: string | undefined;
   fromQuery: boolean;
 };
 
+/**
+ * 从请求中提取钩子令牌
+ *
+ * 按优先级检查：Authorization header > X-Moltbot-Token header > query 参数
+ */
 export function extractHookToken(req: IncomingMessage, url: URL): HookTokenResult {
   const auth =
     typeof req.headers.authorization === "string" ? req.headers.authorization.trim() : "";
@@ -61,6 +91,9 @@ export function extractHookToken(req: IncomingMessage, url: URL): HookTokenResul
   return { token: undefined, fromQuery: false };
 }
 
+/**
+ * 读取 JSON 请求体
+ */
 export async function readJsonBody(
   req: IncomingMessage,
   maxBytes: number,
@@ -103,6 +136,9 @@ export async function readJsonBody(
   });
 }
 
+/**
+ * 规范化请求头
+ */
 export function normalizeHookHeaders(req: IncomingMessage) {
   const headers: Record<string, string> = {};
   for (const [key, value] of Object.entries(req.headers)) {
@@ -115,6 +151,9 @@ export function normalizeHookHeaders(req: IncomingMessage) {
   return headers;
 }
 
+/**
+ * 规范化唤醒负载
+ */
 export function normalizeWakePayload(
   payload: Record<string, unknown>,
 ):
@@ -126,6 +165,9 @@ export function normalizeWakePayload(
   return { ok: true, value: { text, mode } };
 }
 
+/**
+ * 钩子 agent 调用负载
+ */
 export type HookAgentPayload = {
   message: string;
   name: string;
@@ -158,6 +200,9 @@ export function resolveHookDeliver(raw: unknown): boolean {
   return raw !== false;
 }
 
+/**
+ * 规范化 agent 调用负载
+ */
 export function normalizeAgentPayload(
   payload: Record<string, unknown>,
   opts?: { idFactory?: () => string },
