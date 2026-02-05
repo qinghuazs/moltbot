@@ -1,3 +1,12 @@
+/**
+ * Bonjour/mDNS 服务发现模块
+ *
+ * 该模块负责通过 mDNS 协议广播网关服务，
+ * 使局域网内的设备能够自动发现 Moltbot 网关。
+ *
+ * @module infra/bonjour
+ */
+
 import os from "node:os";
 
 import { logDebug, logWarn } from "../logger.js";
@@ -7,26 +16,40 @@ import { formatBonjourError } from "./bonjour-errors.js";
 import { isTruthyEnvValue } from "./env.js";
 import { registerUnhandledRejectionHandler } from "./unhandled-rejections.js";
 
+/** 网关 Bonjour 广播器接口 */
 export type GatewayBonjourAdvertiser = {
+  /** 停止广播 */
   stop: () => Promise<void>;
 };
 
+/** 网关 Bonjour 广播选项 */
 export type GatewayBonjourAdvertiseOpts = {
+  /** 实例名称 */
   instanceName?: string;
+  /** 网关端口 */
   gatewayPort: number;
+  /** SSH 端口 */
   sshPort?: number;
+  /** 是否启用 TLS */
   gatewayTlsEnabled?: boolean;
+  /** TLS 证书 SHA256 指纹 */
   gatewayTlsFingerprintSha256?: string;
+  /** Canvas 端口 */
   canvasPort?: number;
+  /** Tailnet DNS 名称 */
   tailnetDns?: string;
+  /** CLI 路径 */
   cliPath?: string;
   /**
-   * Minimal mode - omit sensitive fields (cliPath, sshPort) from TXT records.
-   * Reduces information disclosure for better operational security.
+   * 最小模式 - 从 TXT 记录中省略敏感字段（cliPath、sshPort）
+   * 减少信息泄露以提高操作安全性
    */
   minimal?: boolean;
 };
 
+/**
+ * 检查是否通过环境变量禁用
+ */
 function isDisabledByEnv() {
   if (isTruthyEnvValue(process.env.CLAWDBOT_DISABLE_BONJOUR)) return true;
   if (process.env.NODE_ENV === "test") return true;
@@ -34,16 +57,23 @@ function isDisabledByEnv() {
   return false;
 }
 
+/**
+ * 安全的服务名称
+ */
 function safeServiceName(name: string) {
   const trimmed = name.trim();
   return trimmed.length > 0 ? trimmed : "Moltbot";
 }
 
+/**
+ * 美化实例名称
+ */
 function prettifyInstanceName(name: string) {
   const normalized = name.trim().replace(/\s+/g, " ");
   return normalized.replace(/\s+\(Moltbot\)\s*$/i, "").trim() || normalized;
 }
 
+/** Bonjour 服务接口 */
 type BonjourService = {
   advertise: () => Promise<void>;
   destroy: () => Promise<void>;
@@ -54,6 +84,9 @@ type BonjourService = {
   serviceState: string;
 };
 
+/**
+ * 生成服务摘要信息
+ */
 function serviceSummary(label: string, svc: BonjourService): string {
   let fqdn = "unknown";
   let hostname = "unknown";
@@ -77,6 +110,13 @@ function serviceSummary(label: string, svc: BonjourService): string {
   return `${label} fqdn=${fqdn} host=${hostname} port=${port} state=${state}`;
 }
 
+/**
+ * 启动网关 Bonjour 广播器
+ * 通过 mDNS 协议广播网关服务
+ *
+ * @param opts - 广播选项
+ * @returns 广播器实例
+ */
 export async function startGatewayBonjourAdvertiser(
   opts: GatewayBonjourAdvertiseOpts,
 ): Promise<GatewayBonjourAdvertiser> {

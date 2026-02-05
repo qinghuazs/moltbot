@@ -1,3 +1,16 @@
+/**
+ * 记忆搜索配置模块
+ *
+ * 该模块负责解析和管理记忆搜索功能的配置，包括：
+ * - 嵌入向量提供商配置（OpenAI、Gemini、本地）
+ * - 存储配置（SQLite + 向量扩展）
+ * - 分块配置
+ * - 同步配置
+ * - 查询配置（混合搜索）
+ *
+ * @module agents/memory-search
+ */
+
 import os from "node:os";
 import path from "node:path";
 
@@ -6,11 +19,17 @@ import { resolveStateDir } from "../config/paths.js";
 import { clampInt, clampNumber, resolveUserPath } from "../utils.js";
 import { resolveAgentConfig } from "./agent-scope.js";
 
+/** 已解析的记忆搜索配置类型 */
 export type ResolvedMemorySearchConfig = {
+  /** 是否启用 */
   enabled: boolean;
+  /** 数据源列表 */
   sources: Array<"memory" | "sessions">;
+  /** 额外路径列表 */
   extraPaths: string[];
+  /** 嵌入向量提供商 */
   provider: "openai" | "local" | "gemini" | "auto";
+  /** 远程配置 */
   remote?: {
     baseUrl?: string;
     apiKey?: string;
@@ -23,15 +42,20 @@ export type ResolvedMemorySearchConfig = {
       timeoutMinutes: number;
     };
   };
+  /** 实验性功能 */
   experimental: {
     sessionMemory: boolean;
   };
+  /** 备用提供商 */
   fallback: "openai" | "gemini" | "local" | "none";
+  /** 嵌入模型名称 */
   model: string;
+  /** 本地模型配置 */
   local: {
     modelPath?: string;
     modelCacheDir?: string;
   };
+  /** 存储配置 */
   store: {
     driver: "sqlite";
     path: string;
@@ -40,10 +64,12 @@ export type ResolvedMemorySearchConfig = {
       extensionPath?: string;
     };
   };
+  /** 分块配置 */
   chunking: {
     tokens: number;
     overlap: number;
   };
+  /** 同步配置 */
   sync: {
     onSessionStart: boolean;
     onSearch: boolean;
@@ -55,6 +81,7 @@ export type ResolvedMemorySearchConfig = {
       deltaMessages: number;
     };
   };
+  /** 查询配置 */
   query: {
     maxResults: number;
     minScore: number;
@@ -65,28 +92,47 @@ export type ResolvedMemorySearchConfig = {
       candidateMultiplier: number;
     };
   };
+  /** 缓存配置 */
   cache: {
     enabled: boolean;
     maxEntries?: number;
   };
 };
 
+/** 默认 OpenAI 嵌入模型 */
 const DEFAULT_OPENAI_MODEL = "text-embedding-3-small";
+/** 默认 Gemini 嵌入模型 */
 const DEFAULT_GEMINI_MODEL = "gemini-embedding-001";
+/** 默认分块 token 数 */
 const DEFAULT_CHUNK_TOKENS = 400;
+/** 默认分块重叠 token 数 */
 const DEFAULT_CHUNK_OVERLAP = 80;
+/** 默认文件监视防抖时间（毫秒） */
 const DEFAULT_WATCH_DEBOUNCE_MS = 1500;
+/** 默认会话增量字节数 */
 const DEFAULT_SESSION_DELTA_BYTES = 100_000;
+/** 默认会话增量消息数 */
 const DEFAULT_SESSION_DELTA_MESSAGES = 50;
+/** 默认最大结果数 */
 const DEFAULT_MAX_RESULTS = 6;
+/** 默认最小分数阈值 */
 const DEFAULT_MIN_SCORE = 0.35;
+/** 默认启用混合搜索 */
 const DEFAULT_HYBRID_ENABLED = true;
+/** 默认向量权重 */
 const DEFAULT_HYBRID_VECTOR_WEIGHT = 0.7;
+/** 默认文本权重 */
 const DEFAULT_HYBRID_TEXT_WEIGHT = 0.3;
+/** 默认候选倍数 */
 const DEFAULT_HYBRID_CANDIDATE_MULTIPLIER = 4;
+/** 默认启用缓存 */
 const DEFAULT_CACHE_ENABLED = true;
+/** 默认数据源 */
 const DEFAULT_SOURCES: Array<"memory" | "sessions"> = ["memory"];
 
+/**
+ * 标准化数据源列表
+ */
 function normalizeSources(
   sources: Array<"memory" | "sessions"> | undefined,
   sessionMemoryEnabled: boolean,
@@ -101,6 +147,10 @@ function normalizeSources(
   return Array.from(normalized);
 }
 
+/**
+ * 解析存储路径
+ * 支持 {agentId} 占位符
+ */
 function resolveStorePath(agentId: string, raw?: string): string {
   const stateDir = resolveStateDir(process.env, os.homedir);
   const fallback = path.join(stateDir, "memory", `${agentId}.sqlite`);
@@ -109,6 +159,9 @@ function resolveStorePath(agentId: string, raw?: string): string {
   return resolveUserPath(withToken);
 }
 
+/**
+ * 合并默认配置和覆盖配置
+ */
 function mergeConfig(
   defaults: MemorySearchConfig | undefined,
   overrides: MemorySearchConfig | undefined,
@@ -279,6 +332,13 @@ function mergeConfig(
   };
 }
 
+/**
+ * 解析记忆搜索配置
+ *
+ * @param cfg - 配置对象
+ * @param agentId - 代理 ID
+ * @returns 已解析的配置，禁用时返回 null
+ */
 export function resolveMemorySearchConfig(
   cfg: MoltbotConfig,
   agentId: string,

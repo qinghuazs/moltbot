@@ -1,3 +1,12 @@
+/**
+ * CLI 代理运行器模块
+ *
+ * 该模块负责通过外部 CLI 工具运行代理，
+ * 支持 Claude CLI 等后端。
+ *
+ * @module agents/cli-runner
+ */
+
 import type { ImageContent } from "@mariozechner/pi-ai";
 import { resolveHeartbeatPrompt } from "../auto-reply/heartbeat.js";
 import type { ThinkLevel } from "../auto-reply/thinking.js";
@@ -32,6 +41,27 @@ import type { EmbeddedPiRunResult } from "./pi-embedded-runner.js";
 
 const log = createSubsystemLogger("agent/claude-cli");
 
+/**
+ * 运行 CLI 代理
+ *
+ * @param params.sessionId - 会话 ID
+ * @param params.sessionKey - 会话键
+ * @param params.sessionFile - 会话文件路径
+ * @param params.workspaceDir - 工作区目录
+ * @param params.config - 配置对象
+ * @param params.prompt - 提示词
+ * @param params.provider - 提供商
+ * @param params.model - 模型名称
+ * @param params.thinkLevel - 思考级别
+ * @param params.timeoutMs - 超时时间（毫秒）
+ * @param params.runId - 运行 ID
+ * @param params.extraSystemPrompt - 额外系统提示词
+ * @param params.streamParams - 流式参数
+ * @param params.ownerNumbers - 所有者号码列表
+ * @param params.cliSessionId - CLI 会话 ID
+ * @param params.images - 图片内容列表
+ * @returns 运行结果
+ */
 export async function runCliAgent(params: {
   sessionId: string;
   sessionKey?: string;
