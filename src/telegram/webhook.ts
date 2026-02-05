@@ -1,3 +1,19 @@
+/**
+ * Telegram Webhook 服务模块
+ *
+ * 本模块提供 Telegram Bot Webhook 模式的服务器实现，包括：
+ * - HTTP 服务器创建和监听
+ * - Webhook 回调处理
+ * - 健康检查端点
+ * - 诊断日志和心跳
+ * - 优雅关闭支持
+ *
+ * Webhook 模式相比轮询模式具有更低的延迟和更好的资源利用率，
+ * 适用于生产环境部署。
+ *
+ * @module telegram/webhook
+ */
+
 import { createServer } from "node:http";
 
 import { webhookCallback } from "grammy";
@@ -17,6 +33,27 @@ import { resolveTelegramAllowedUpdates } from "./allowed-updates.js";
 import { createTelegramBot } from "./bot.js";
 import { withTelegramApiErrorLogging } from "./api-logging.js";
 
+/**
+ * 启动 Telegram Webhook 服务器
+ *
+ * 创建 HTTP 服务器监听 Telegram 的 Webhook 推送，并自动向 Telegram API 注册 Webhook URL。
+ * 支持健康检查端点、诊断日志和优雅关闭。
+ *
+ * @param opts - Webhook 服务器配置选项
+ * @param opts.token - Telegram Bot 令牌（必需）
+ * @param opts.accountId - 账户 ID（用于多账户场景）
+ * @param opts.config - Moltbot 配置对象
+ * @param opts.path - Webhook 路径，默认 "/telegram-webhook"
+ * @param opts.port - 监听端口，默认 8787
+ * @param opts.host - 监听主机，默认 "0.0.0.0"
+ * @param opts.secret - Webhook 密钥（用于验证请求来源）
+ * @param opts.runtime - 运行时环境
+ * @param opts.fetch - 自定义 fetch 实现（用于代理等场景）
+ * @param opts.abortSignal - 中止信号（用于优雅关闭）
+ * @param opts.healthPath - 健康检查路径，默认 "/healthz"
+ * @param opts.publicUrl - 公开 URL（用于 Webhook 注册）
+ * @returns 包含 server、bot 和 stop 函数的对象
+ */
 export async function startTelegramWebhook(opts: {
   token: string;
   accountId?: string;

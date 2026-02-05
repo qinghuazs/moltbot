@@ -1,3 +1,20 @@
+/**
+ * Telegram Bot 核心模块
+ *
+ * 本模块提供 Telegram Bot 的核心功能实现，包括：
+ * - Bot 实例创建和配置
+ * - 消息处理中间件
+ * - 更新去重和序列化
+ * - 原生命令注册
+ * - 表情回应处理
+ * - 群组和论坛话题支持
+ * - 会话管理和路由
+ *
+ * 基于 grammY 框架构建，支持轮询和 Webhook 两种模式。
+ *
+ * @module telegram/bot
+ */
+
 // @ts-nocheck
 import { sequentialize } from "@grammyjs/runner";
 import { apiThrottler } from "@grammyjs/transformer-throttler";
@@ -47,23 +64,48 @@ import {
 import { resolveTelegramFetch } from "./fetch.js";
 import { wasSentByBot } from "./sent-message-cache.js";
 
+/**
+ * Telegram Bot 创建选项
+ */
 export type TelegramBotOptions = {
+  /** Bot 令牌（必需） */
   token: string;
+  /** 账户 ID（用于多账户场景） */
   accountId?: string;
+  /** 运行时环境 */
   runtime?: RuntimeEnv;
+  /** 是否要求 @提及才响应（群组中） */
   requireMention?: boolean;
+  /** 私聊允许列表（用户 ID 或用户名） */
   allowFrom?: Array<string | number>;
+  /** 群组允许列表（群组 ID 或用户名） */
   groupAllowFrom?: Array<string | number>;
+  /** 媒体文件最大大小（MB） */
   mediaMaxMb?: number;
+  /** 回复模式 */
   replyToMode?: ReplyToMode;
+  /** 自定义 fetch 实现（用于代理） */
   proxyFetch?: typeof fetch;
+  /** Moltbot 配置对象 */
   config?: MoltbotConfig;
+  /** 更新偏移量配置（用于轮询模式） */
   updateOffset?: {
+    /** 上次处理的更新 ID */
     lastUpdateId?: number | null;
+    /** 更新 ID 回调函数 */
     onUpdateId?: (updateId: number) => void | Promise<void>;
   };
 };
 
+/**
+ * 获取 Telegram 更新的序列化键
+ *
+ * 用于确保同一聊天/话题的消息按顺序处理，避免并发问题。
+ * 控制命令使用单独的序列化键以获得更高优先级。
+ *
+ * @param ctx - Telegram 上下文对象
+ * @returns 序列化键字符串
+ */
 export function getTelegramSequentialKey(ctx: {
   chat?: { id?: number };
   message?: TelegramMessage;
@@ -106,6 +148,20 @@ export function getTelegramSequentialKey(ctx: {
   return "telegram:unknown";
 }
 
+/**
+ * 创建 Telegram Bot 实例
+ *
+ * 初始化并配置 Telegram Bot，包括：
+ * - API 客户端配置（代理、超时等）
+ * - 中间件链（节流、序列化、错误处理）
+ * - 更新去重机制
+ * - 原生命令注册
+ * - 消息处理器
+ * - 表情回应处理
+ *
+ * @param opts - Bot 创建选项
+ * @returns 配置完成的 grammY Bot 实例
+ */
 export function createTelegramBot(opts: TelegramBotOptions) {
   const runtime: RuntimeEnv = opts.runtime ?? {
     log: console.log,
@@ -470,6 +526,16 @@ export function createTelegramBot(opts: TelegramBotOptions) {
   return bot;
 }
 
+/**
+ * 创建 Telegram Webhook 回调处理器
+ *
+ * 用于将 grammY Bot 实例包装为 HTTP 请求处理器，
+ * 适用于 Express、Fastify 等 Web 框架集成。
+ *
+ * @param bot - grammY Bot 实例
+ * @param path - Webhook 路径，默认 "/telegram-webhook"
+ * @returns 包含 path 和 handler 的对象
+ */
 export function createTelegramWebhookCallback(bot: Bot, path = "/telegram-webhook") {
   return { path, handler: webhookCallback(bot, "http") };
 }

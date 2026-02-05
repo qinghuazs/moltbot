@@ -1,3 +1,18 @@
+/**
+ * Telegram 消息发送模块
+ *
+ * 本模块提供 Telegram 消息发送的核心功能，包括：
+ * - 发送文本消息（支持 Markdown 和 HTML 格式）
+ * - 发送媒体消息（图片、视频、音频、文档、GIF 动画）
+ * - 发送贴纸消息
+ * - 消息表情回应
+ * - 消息删除和编辑
+ * - 内联键盘按钮支持
+ * - 论坛话题和消息回复线程支持
+ *
+ * @module telegram/send
+ */
+
 import type {
   InlineKeyboardButton,
   InlineKeyboardMarkup,
@@ -30,47 +45,80 @@ import { parseTelegramTarget, stripTelegramInternalPrefixes } from "./targets.js
 import { resolveTelegramVoiceSend } from "./voice.js";
 import { buildTelegramThreadParams } from "./bot/helpers.js";
 
+/**
+ * Telegram 消息发送选项
+ */
 type TelegramSendOpts = {
+  /** Bot 令牌（可选，默认从配置读取） */
   token?: string;
+  /** 账户 ID（用于多账户场景） */
   accountId?: string;
+  /** 是否启用详细日志 */
   verbose?: boolean;
+  /** 媒体文件 URL */
   mediaUrl?: string;
+  /** 媒体文件最大字节数 */
   maxBytes?: number;
+  /** Bot API 实例（可选，用于复用连接） */
   api?: Bot["api"];
+  /** 重试配置 */
   retry?: RetryConfig;
+  /** 文本格式模式：markdown 或 html */
   textMode?: "markdown" | "html";
+  /** 纯文本内容（用于 HTML 解析失败时的回退） */
   plainText?: string;
-  /** Send audio as voice message (voice bubble) instead of audio file. Defaults to false. */
+  /** 将音频作为语音消息发送（语音气泡），默认为 false */
   asVoice?: boolean;
-  /** Send message silently (no notification). Defaults to false. */
+  /** 静默发送消息（无通知），默认为 false */
   silent?: boolean;
-  /** Message ID to reply to (for threading) */
+  /** 要回复的消息 ID（用于消息线程） */
   replyToMessageId?: number;
-  /** Quote text for Telegram reply_parameters. */
+  /** Telegram reply_parameters 的引用文本 */
   quoteText?: string;
-  /** Forum topic thread ID (for forum supergroups) */
+  /** 论坛话题线程 ID（用于论坛超级群组） */
   messageThreadId?: number;
-  /** Inline keyboard buttons (reply markup). */
+  /** 内联键盘按钮（回复标记） */
   buttons?: Array<Array<{ text: string; callback_data: string }>>;
 };
 
+/**
+ * Telegram 消息发送结果
+ */
 type TelegramSendResult = {
+  /** 发送的消息 ID */
   messageId: string;
+  /** 聊天 ID */
   chatId: string;
 };
 
+/**
+ * Telegram 表情回应选项
+ */
 type TelegramReactionOpts = {
+  /** Bot 令牌 */
   token?: string;
+  /** 账户 ID */
   accountId?: string;
+  /** Bot API 实例 */
   api?: Bot["api"];
+  /** 是否移除回应 */
   remove?: boolean;
+  /** 是否启用详细日志 */
   verbose?: boolean;
+  /** 重试配置 */
   retry?: RetryConfig;
 };
 
+/** 匹配 Telegram HTML 解析错误的正则表达式 */
 const PARSE_ERR_RE = /can't parse entities|parse entities|find end of the entity/i;
+/** 诊断日志记录器 */
 const diagLogger = createSubsystemLogger("telegram/diagnostic");
 
+/**
+ * 创建 Telegram HTTP 错误日志记录器
+ * @param cfg - 配置对象
+ * @returns 日志记录函数，当诊断标志未启用时返回空函数
+ */
 function createTelegramHttpLogger(cfg: ReturnType<typeof loadConfig>) {
   const enabled = isDiagnosticFlagEnabled("telegram.http", cfg);
   if (!enabled) {
@@ -83,6 +131,13 @@ function createTelegramHttpLogger(cfg: ReturnType<typeof loadConfig>) {
   };
 }
 
+/**
+ * 解析 Telegram 客户端配置选项
+ * 根据账户配置设置代理、网络和超时参数
+ *
+ * @param account - 已解析的 Telegram 账户配置
+ * @returns API 客户端选项，如果无需特殊配置则返回 undefined
+ */
 function resolveTelegramClientOptions(
   account: ResolvedTelegramAccount,
 ): ApiClientOptions | undefined {
@@ -104,6 +159,15 @@ function resolveTelegramClientOptions(
     : undefined;
 }
 
+/**
+ * 解析 Bot 令牌
+ * 优先使用显式传入的令牌，否则从账户配置中获取
+ *
+ * @param explicit - 显式传入的令牌
+ * @param params - 包含账户 ID 和令牌的参数对象
+ * @returns 解析后的令牌字符串
+ * @throws 当令牌缺失时抛出错误
+ */
 function resolveToken(explicit: string | undefined, params: { accountId: string; token: string }) {
   if (explicit?.trim()) return explicit.trim();
   if (!params.token) {
@@ -114,6 +178,18 @@ function resolveToken(explicit: string | undefined, params: { accountId: string;
   return params.token.trim();
 }
 
+/**
+ * 标准化聊天 ID
+ * 处理各种格式的聊天标识符，包括：
+ * - 内部前缀（如 telegram:、telegram:group:）
+ * - t.me 链接
+ * - @用户名
+ * - 数字 ID
+ *
+ * @param to - 原始聊天标识符
+ * @returns 标准化后的聊天 ID
+ * @throws 当接收者为空时抛出错误
+ */
 function normalizeChatId(to: string): string {
   const trimmed = to.trim();
   if (!trimmed) throw new Error("Recipient is required for Telegram sends");
@@ -140,6 +216,14 @@ function normalizeChatId(to: string): string {
   return normalized;
 }
 
+/**
+ * 标准化消息 ID
+ * 将字符串或数字格式的消息 ID 转换为整数
+ *
+ * @param raw - 原始消息 ID（字符串或数字）
+ * @returns 整数格式的消息 ID
+ * @throws 当消息 ID 无效或缺失时抛出错误
+ */
 function normalizeMessageId(raw: string | number): number {
   if (typeof raw === "number" && Number.isFinite(raw)) {
     return Math.trunc(raw);
@@ -155,6 +239,13 @@ function normalizeMessageId(raw: string | number): number {
   throw new Error("Message id is required for Telegram actions");
 }
 
+/**
+ * 构建内联键盘标记
+ * 将按钮数组转换为 Telegram InlineKeyboardMarkup 格式
+ *
+ * @param buttons - 按钮二维数组，每个按钮包含 text 和 callback_data
+ * @returns InlineKeyboardMarkup 对象，如果无有效按钮则返回 undefined
+ */
 export function buildInlineKeyboard(
   buttons?: TelegramSendOpts["buttons"],
 ): InlineKeyboardMarkup | undefined {
@@ -175,6 +266,24 @@ export function buildInlineKeyboard(
   return { inline_keyboard: rows };
 }
 
+/**
+ * 发送 Telegram 消息
+ *
+ * 支持发送文本消息和媒体消息（图片、视频、音频、文档、GIF）。
+ * 自动处理：
+ * - Markdown/HTML 格式转换
+ * - 媒体文件下载和发送
+ * - 长文本分割（媒体标题超限时）
+ * - HTML 解析失败时的纯文本回退
+ * - 论坛话题和消息回复线程
+ * - 内联键盘按钮
+ *
+ * @param to - 目标聊天 ID 或用户名
+ * @param text - 消息文本内容
+ * @param opts - 发送选项
+ * @returns 包含 messageId 和 chatId 的发送结果
+ * @throws 当消息为空或发送失败时抛出错误
+ */
 export async function sendMessageTelegram(
   to: string,
   text: string,
@@ -432,6 +541,16 @@ export async function sendMessageTelegram(
   return { messageId, chatId: String(res?.chat?.id ?? chatId) };
 }
 
+/**
+ * 为 Telegram 消息添加表情回应
+ *
+ * @param chatIdInput - 聊天 ID
+ * @param messageIdInput - 消息 ID
+ * @param emoji - 表情符号
+ * @param opts - 回应选项（可设置 remove: true 移除回应）
+ * @returns 操作成功标志
+ * @throws 当 Bot API 不支持回应功能时抛出错误
+ */
 export async function reactMessageTelegram(
   chatIdInput: string | number,
   messageIdInput: string | number,
@@ -478,14 +597,30 @@ export async function reactMessageTelegram(
   return { ok: true };
 }
 
+/**
+ * Telegram 消息删除选项
+ */
 type TelegramDeleteOpts = {
+  /** Bot 令牌 */
   token?: string;
+  /** 账户 ID */
   accountId?: string;
+  /** 是否启用详细日志 */
   verbose?: boolean;
+  /** Bot API 实例 */
   api?: Bot["api"];
+  /** 重试配置 */
   retry?: RetryConfig;
 };
 
+/**
+ * 删除 Telegram 消息
+ *
+ * @param chatIdInput - 聊天 ID
+ * @param messageIdInput - 要删除的消息 ID
+ * @param opts - 删除选项
+ * @returns 操作成功标志
+ */
 export async function deleteMessageTelegram(
   chatIdInput: string | number,
   messageIdInput: string | number,
@@ -521,19 +656,40 @@ export async function deleteMessageTelegram(
   return { ok: true };
 }
 
+/**
+ * Telegram 消息编辑选项
+ */
 type TelegramEditOpts = {
+  /** Bot 令牌 */
   token?: string;
+  /** 账户 ID */
   accountId?: string;
+  /** 是否启用详细日志 */
   verbose?: boolean;
+  /** Bot API 实例 */
   api?: Bot["api"];
+  /** 重试配置 */
   retry?: RetryConfig;
+  /** 文本格式模式 */
   textMode?: "markdown" | "html";
-  /** Inline keyboard buttons (reply markup). Pass empty array to remove buttons. */
+  /** 内联键盘按钮（传空数组可移除按钮） */
   buttons?: Array<Array<{ text: string; callback_data: string }>>;
-  /** Optional config injection to avoid global loadConfig() (improves testability). */
+  /** 可选的配置注入，避免调用全局 loadConfig()（提高可测试性） */
   cfg?: ReturnType<typeof loadConfig>;
 };
 
+/**
+ * 编辑 Telegram 消息
+ *
+ * 支持编辑消息文本和内联键盘按钮。
+ * 当 HTML 解析失败时自动回退到纯文本。
+ *
+ * @param chatIdInput - 聊天 ID
+ * @param messageIdInput - 要编辑的消息 ID
+ * @param text - 新的消息文本
+ * @param opts - 编辑选项
+ * @returns 包含操作结果、messageId 和 chatId 的对象
+ */
 export async function editMessageTelegram(
   chatIdInput: string | number,
   messageIdInput: string | number,
@@ -617,6 +773,12 @@ export async function editMessageTelegram(
   return { ok: true, messageId: String(messageId), chatId };
 }
 
+/**
+ * 根据媒体类型推断默认文件名
+ *
+ * @param kind - 媒体类型（image、video、audio 或其他）
+ * @returns 默认文件名
+ */
 function inferFilename(kind: ReturnType<typeof mediaKindFromMime>) {
   switch (kind) {
     case "image":
@@ -630,23 +792,37 @@ function inferFilename(kind: ReturnType<typeof mediaKindFromMime>) {
   }
 }
 
+/**
+ * Telegram 贴纸发送选项
+ */
 type TelegramStickerOpts = {
+  /** Bot 令牌 */
   token?: string;
+  /** 账户 ID */
   accountId?: string;
+  /** 是否启用详细日志 */
   verbose?: boolean;
+  /** Bot API 实例 */
   api?: Bot["api"];
+  /** 重试配置 */
   retry?: RetryConfig;
-  /** Message ID to reply to (for threading) */
+  /** 要回复的消息 ID（用于消息线程） */
   replyToMessageId?: number;
-  /** Forum topic thread ID (for forum supergroups) */
+  /** 论坛话题线程 ID（用于论坛超级群组） */
   messageThreadId?: number;
 };
 
 /**
- * Send a sticker to a Telegram chat by file_id.
- * @param to - Chat ID or username (e.g., "123456789" or "@username")
- * @param fileId - Telegram file_id of the sticker to send
- * @param opts - Optional configuration
+ * 发送 Telegram 贴纸
+ *
+ * 通过 file_id 发送贴纸到指定聊天。
+ * 支持论坛话题和消息回复线程。
+ *
+ * @param to - 目标聊天 ID 或用户名（如 "123456789" 或 "@username"）
+ * @param fileId - 贴纸的 Telegram file_id
+ * @param opts - 发送选项
+ * @returns 包含 messageId 和 chatId 的发送结果
+ * @throws 当 file_id 为空时抛出错误
  */
 export async function sendStickerTelegram(
   to: string,
