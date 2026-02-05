@@ -1,3 +1,15 @@
+/**
+ * 子系统日志模块
+ *
+ * 该模块提供子系统级别的日志功能，包括：
+ * - 按子系统分类的日志记录
+ * - 控制台和文件双输出
+ * - 颜色编码的控制台输出
+ * - 日志级别过滤
+ *
+ * @module logging/subsystem
+ */
+
 import { Chalk } from "chalk";
 import type { Logger as TsLogger } from "tslog";
 
@@ -10,17 +22,28 @@ import { getChildLogger } from "./logger.js";
 import { loggingState } from "./state.js";
 import { clearActiveProgressLine } from "../terminal/progress-line.js";
 
+/** 日志对象类型 */
 type LogObj = { date?: Date } & Record<string, unknown>;
 
+/** 子系统日志器接口 */
 export type SubsystemLogger = {
+  /** 子系统名称 */
   subsystem: string;
+  /** 跟踪级别日志 */
   trace: (message: string, meta?: Record<string, unknown>) => void;
+  /** 调试级别日志 */
   debug: (message: string, meta?: Record<string, unknown>) => void;
+  /** 信息级别日志 */
   info: (message: string, meta?: Record<string, unknown>) => void;
+  /** 警告级别日志 */
   warn: (message: string, meta?: Record<string, unknown>) => void;
+  /** 错误级别日志 */
   error: (message: string, meta?: Record<string, unknown>) => void;
+  /** 致命级别日志 */
   fatal: (message: string, meta?: Record<string, unknown>) => void;
+  /** 原始输出 */
   raw: (message: string) => void;
+  /** 创建子日志器 */
   child: (name: string) => SubsystemLogger;
 };
 
@@ -199,6 +222,12 @@ function logToFile(
   }
 }
 
+/**
+ * 创建子系统日志器
+ *
+ * @param subsystem - 子系统名称
+ * @returns 子系统日志器实例
+ */
 export function createSubsystemLogger(subsystem: string): SubsystemLogger {
   let fileLogger: TsLogger<LogObj> | null = null;
   const getFileLogger = () => {
@@ -265,6 +294,13 @@ export function createSubsystemLogger(subsystem: string): SubsystemLogger {
   return logger;
 }
 
+/**
+ * 为日志器创建运行时环境
+ *
+ * @param logger - 子系统日志器
+ * @param exit - 退出函数
+ * @returns 运行时环境
+ */
 export function runtimeForLogger(
   logger: SubsystemLogger,
   exit: RuntimeEnv["exit"] = defaultRuntime.exit,
@@ -276,6 +312,13 @@ export function runtimeForLogger(
   };
 }
 
+/**
+ * 创建子系统运行时环境
+ *
+ * @param subsystem - 子系统名称
+ * @param exit - 退出函数
+ * @returns 运行时环境
+ */
 export function createSubsystemRuntime(
   subsystem: string,
   exit: RuntimeEnv["exit"] = defaultRuntime.exit,
