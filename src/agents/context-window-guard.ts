@@ -1,21 +1,50 @@
+/**
+ * 上下文窗口守卫模块
+ *
+ * 提供上下文窗口大小的解析和验证功能，用于：
+ * - 从多个来源解析上下文窗口大小
+ * - 检测过小的上下文窗口并发出警告
+ * - 阻止使用过小的上下文窗口
+ */
+
 import type { MoltbotConfig } from "../config/config.js";
 
+/** 上下文窗口硬性最小值（token 数） */
 export const CONTEXT_WINDOW_HARD_MIN_TOKENS = 16_000;
+/** 上下文窗口警告阈值（token 数） */
 export const CONTEXT_WINDOW_WARN_BELOW_TOKENS = 32_000;
 
+/** 上下文窗口来源 */
 export type ContextWindowSource = "model" | "modelsConfig" | "agentContextTokens" | "default";
 
+/**
+ * 上下文窗口信息
+ */
 export type ContextWindowInfo = {
+  /** token 数量 */
   tokens: number;
+  /** 来源 */
   source: ContextWindowSource;
 };
 
+/**
+ * 规范化正整数
+ */
 function normalizePositiveInt(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   const int = Math.floor(value);
   return int > 0 ? int : null;
 }
 
+/**
+ * 解析上下文窗口信息
+ *
+ * 按优先级从以下来源解析：
+ * 1. 模型自带的上下文窗口
+ * 2. models.providers 配置
+ * 3. agents.defaults.contextTokens 配置
+ * 4. 默认值
+ */
 export function resolveContextWindowInfo(params: {
   cfg: MoltbotConfig | undefined;
   provider: string;
@@ -43,11 +72,21 @@ export function resolveContextWindowInfo(params: {
   return { tokens: Math.floor(params.defaultTokens), source: "default" };
 }
 
+/**
+ * 上下文窗口守卫结果
+ */
 export type ContextWindowGuardResult = ContextWindowInfo & {
+  /** 是否应该警告 */
   shouldWarn: boolean;
+  /** 是否应该阻止 */
   shouldBlock: boolean;
 };
 
+/**
+ * 评估上下文窗口守卫
+ *
+ * 检查上下文窗口大小是否满足最小要求。
+ */
 export function evaluateContextWindowGuard(params: {
   info: ContextWindowInfo;
   warnBelowTokens?: number;

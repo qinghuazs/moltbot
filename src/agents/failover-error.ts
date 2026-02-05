@@ -1,14 +1,36 @@
+/**
+ * 故障转移错误模块
+ *
+ * 提供 LLM 调用失败时的错误分类和故障转移支持，包括：
+ * - 识别可重试的错误类型（超时、限流、认证等）
+ * - 将普通错误转换为故障转移错误
+ * - 提供错误描述和状态码映射
+ */
+
 import { classifyFailoverReason, type FailoverReason } from "./pi-embedded-helpers.js";
 
+/** 超时提示正则 */
 const TIMEOUT_HINT_RE = /timeout|timed out|deadline exceeded|context deadline exceeded/i;
+/** 中止超时正则 */
 const ABORT_TIMEOUT_RE = /request was aborted|request aborted/i;
 
+/**
+ * 故障转移错误
+ *
+ * 表示可以触发故障转移的错误，包含错误原因和上下文信息。
+ */
 export class FailoverError extends Error {
+  /** 故障转移原因 */
   readonly reason: FailoverReason;
+  /** 提供商 */
   readonly provider?: string;
+  /** 模型 */
   readonly model?: string;
+  /** 配置 ID */
   readonly profileId?: string;
+  /** HTTP 状态码 */
   readonly status?: number;
+  /** 错误代码 */
   readonly code?: string;
 
   constructor(
@@ -34,10 +56,16 @@ export class FailoverError extends Error {
   }
 }
 
+/**
+ * 检查是否为故障转移错误
+ */
 export function isFailoverError(err: unknown): err is FailoverError {
   return err instanceof FailoverError;
 }
 
+/**
+ * 根据故障转移原因解析 HTTP 状态码
+ */
 export function resolveFailoverStatus(reason: FailoverReason): number | undefined {
   switch (reason) {
     case "billing":
@@ -101,6 +129,9 @@ function hasTimeoutHint(err: unknown): boolean {
   return Boolean(message && TIMEOUT_HINT_RE.test(message));
 }
 
+/**
+ * 检查是否为超时错误
+ */
 export function isTimeoutError(err: unknown): boolean {
   if (hasTimeoutHint(err)) return true;
   if (!err || typeof err !== "object") return false;
@@ -112,6 +143,9 @@ export function isTimeoutError(err: unknown): boolean {
   return hasTimeoutHint(cause) || hasTimeoutHint(reason);
 }
 
+/**
+ * 从错误中解析故障转移原因
+ */
 export function resolveFailoverReasonFromError(err: unknown): FailoverReason | null {
   if (isFailoverError(err)) return err.reason;
 
@@ -132,6 +166,9 @@ export function resolveFailoverReasonFromError(err: unknown): FailoverReason | n
   return classifyFailoverReason(message);
 }
 
+/**
+ * 描述故障转移错误
+ */
 export function describeFailoverError(err: unknown): {
   message: string;
   reason?: FailoverReason;
@@ -155,6 +192,11 @@ export function describeFailoverError(err: unknown): {
   };
 }
 
+/**
+ * 将普通错误转换为故障转移错误
+ *
+ * 如果错误可以被识别为可重试的类型，则转换为 FailoverError。
+ */
 export function coerceToFailoverError(
   err: unknown,
   context?: {
