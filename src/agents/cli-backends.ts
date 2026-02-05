@@ -1,12 +1,27 @@
+/**
+ * CLI 后端配置模块
+ *
+ * 该模块负责管理 CLI 后端的配置，包括：
+ * - Claude CLI 后端
+ * - Codex CLI 后端
+ * - 自定义 CLI 后端
+ *
+ * @module agents/cli-backends
+ */
+
 import type { MoltbotConfig } from "../config/config.js";
 import type { CliBackendConfig } from "../config/types.js";
 import { normalizeProviderId } from "./model-selection.js";
 
+/** 已解析的 CLI 后端 */
 export type ResolvedCliBackend = {
+  /** 后端 ID */
   id: string;
+  /** 后端配置 */
   config: CliBackendConfig;
 };
 
+/** Claude 模型别名映射 */
 const CLAUDE_MODEL_ALIASES: Record<string, string> = {
   opus: "opus",
   "opus-4.5": "opus",
@@ -25,6 +40,7 @@ const CLAUDE_MODEL_ALIASES: Record<string, string> = {
   "claude-haiku-3-5": "haiku",
 };
 
+/** 默认 Claude CLI 后端配置 */
 const DEFAULT_CLAUDE_BACKEND: CliBackendConfig = {
   command: "claude",
   args: ["-p", "--output-format", "json", "--dangerously-skip-permissions"],
@@ -50,6 +66,7 @@ const DEFAULT_CLAUDE_BACKEND: CliBackendConfig = {
   serialize: true,
 };
 
+/** 默认 Codex CLI 后端配置 */
 const DEFAULT_CODEX_BACKEND: CliBackendConfig = {
   command: "codex",
   args: ["exec", "--json", "--color", "never", "--sandbox", "read-only", "--skip-git-repo-check"],
@@ -74,10 +91,16 @@ const DEFAULT_CODEX_BACKEND: CliBackendConfig = {
   serialize: true,
 };
 
+/**
+ * 标准化后端键名
+ */
 function normalizeBackendKey(key: string): string {
   return normalizeProviderId(key);
 }
 
+/**
+ * 从配置中选择后端配置
+ */
 function pickBackendConfig(
   config: Record<string, CliBackendConfig>,
   normalizedId: string,
@@ -88,6 +111,9 @@ function pickBackendConfig(
   return undefined;
 }
 
+/**
+ * 合并后端配置
+ */
 function mergeBackendConfig(base: CliBackendConfig, override?: CliBackendConfig): CliBackendConfig {
   if (!override) return { ...base };
   return {
@@ -103,6 +129,12 @@ function mergeBackendConfig(base: CliBackendConfig, override?: CliBackendConfig)
   };
 }
 
+/**
+ * 解析所有 CLI 后端 ID
+ *
+ * @param cfg - 配置对象
+ * @returns 后端 ID 集合
+ */
 export function resolveCliBackendIds(cfg?: MoltbotConfig): Set<string> {
   const ids = new Set<string>([
     normalizeBackendKey("claude-cli"),
@@ -115,6 +147,13 @@ export function resolveCliBackendIds(cfg?: MoltbotConfig): Set<string> {
   return ids;
 }
 
+/**
+ * 解析 CLI 后端配置
+ *
+ * @param provider - 提供商标识
+ * @param cfg - 配置对象
+ * @returns 已解析的后端配置，未找到返回 null
+ */
 export function resolveCliBackendConfig(
   provider: string,
   cfg?: MoltbotConfig,
