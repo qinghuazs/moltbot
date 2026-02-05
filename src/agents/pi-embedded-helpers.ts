@@ -1,3 +1,14 @@
+/**
+ * Pi 嵌入式辅助函数模块
+ *
+ * 重新导出各种 Pi SDK 相关的辅助函数，包括：
+ * - 启动文件处理
+ * - 错误分类和格式化
+ * - 消息去重
+ * - 轮次验证
+ * - 工具调用 ID 处理
+ */
+
 export {
   buildBootstrapContextFiles,
   DEFAULT_BOOTSTRAP_MAX_CHARS,

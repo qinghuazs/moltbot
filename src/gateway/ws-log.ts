@@ -1,3 +1,13 @@
+/**
+ * WebSocket 日志模块
+ *
+ * 提供网关 WebSocket 通信的日志记录功能，包括：
+ * - 请求/响应日志
+ * - 事件日志
+ * - 多种日志样式（详细、紧凑、优化）
+ * - 敏感信息脱敏
+ */
+
 import chalk from "chalk";
 import { isVerbose } from "../globals.js";
 import { parseAgentSessionKey } from "../routing/session-key.js";
@@ -6,25 +16,39 @@ import { createSubsystemLogger } from "../logging/subsystem.js";
 import { getDefaultRedactPatterns, redactSensitiveText } from "../logging/redact.js";
 import { DEFAULT_WS_SLOW_MS, getGatewayWsLogStyle } from "./ws-logging.js";
 
+/** 日志值最大长度 */
 const LOG_VALUE_LIMIT = 240;
+/** UUID 正则 */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** WebSocket 日志脱敏选项 */
 const WS_LOG_REDACT_OPTIONS = {
   mode: "tools" as const,
   patterns: getDefaultRedactPatterns(),
 };
 
+/**
+ * WebSocket 请求追踪条目
+ */
 type WsInflightEntry = {
   ts: number;
   method?: string;
   meta?: Record<string, unknown>;
 };
 
+/** 紧凑模式请求追踪 */
 const wsInflightCompact = new Map<string, WsInflightEntry>();
+/** 最后的紧凑模式连接 ID */
 let wsLastCompactConnId: string | undefined;
+/** 优化模式请求追踪 */
 const wsInflightOptimized = new Map<string, number>();
+/** 请求开始时间追踪 */
 const wsInflightSince = new Map<string, number>();
+/** WebSocket 日志器 */
 const wsLog = createSubsystemLogger("gateway/ws");
 
+/**
+ * 缩短 ID 显示
+ */
 export function shortId(value: string): string {
   const s = value.trim();
   if (UUID_RE.test(s)) return `${s.slice(0, 8)}…${s.slice(-4)}`;
@@ -32,6 +56,9 @@ export function shortId(value: string): string {
   return `${s.slice(0, 12)}…${s.slice(-4)}`;
 }
 
+/**
+ * 格式化日志值
+ */
 export function formatForLog(value: unknown): string {
   try {
     if (value instanceof Error) {
@@ -84,6 +111,9 @@ function compactPreview(input: string, maxLen = 160): string {
   return `${oneLine.slice(0, Math.max(0, maxLen - 1))}…`;
 }
 
+/**
+ * 汇总 agent 事件用于日志
+ */
 export function summarizeAgentEventForWsLog(payload: unknown): Record<string, unknown> {
   if (!payload || typeof payload !== "object") return {};
   const rec = payload as Record<string, unknown>;
@@ -144,6 +174,11 @@ export function summarizeAgentEventForWsLog(payload: unknown): Record<string, un
   return extra;
 }
 
+/**
+ * 记录 WebSocket 日志
+ *
+ * 根据配置选择不同的日志样式（详细、紧凑、优化）
+ */
 export function logWs(direction: "in" | "out", kind: string, meta?: Record<string, unknown>) {
   if (!shouldLogSubsystemToConsole("gateway/ws")) return;
   const style = getGatewayWsLogStyle();
