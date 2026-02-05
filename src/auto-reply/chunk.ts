@@ -1,6 +1,12 @@
-// Utilities for splitting outbound text into platform-sized chunks without
-// unintentionally breaking on newlines. Using [\s\S] keeps newlines inside
-// the chunk so messages are only split when they truly exceed the limit.
+/**
+ * 文本分块模块
+ *
+ * 该模块提供将出站文本分割成平台大小限制的块的工具，
+ * 避免在换行符处意外断开。使用 [\s\S] 保持换行符在块内，
+ * 只有当消息真正超过限制时才进行分割。
+ *
+ * @module auto-reply/chunk
+ */
 
 import type { ChannelId } from "../channels/plugins/types.js";
 import type { MoltbotConfig } from "../config/config.js";
@@ -8,26 +14,32 @@ import { findFenceSpanAt, isSafeFenceBreak, parseFenceSpans } from "../markdown/
 import { normalizeAccountId } from "../routing/session-key.js";
 import { INTERNAL_MESSAGE_CHANNEL } from "../utils/message-channel.js";
 
+/** 文本分块提供商类型 */
 export type TextChunkProvider = ChannelId | typeof INTERNAL_MESSAGE_CHANNEL;
 
 /**
- * Chunking mode for outbound messages:
- * - "length": Split only when exceeding textChunkLimit (default)
- * - "newline": Prefer breaking on "soft" boundaries. Historically this split on every
- *   newline; now it only breaks on paragraph boundaries (blank lines) unless the text
- *   exceeds the length limit.
+ * 出站消息的分块模式：
+ * - "length": 仅在超过 textChunkLimit 时分割（默认）
+ * - "newline": 优先在"软"边界处断开。历史上这会在每个换行符处分割；
+ *   现在只在段落边界（空行）处断开，除非文本超过长度限制。
  */
 export type ChunkMode = "length" | "newline";
 
+/** 默认分块限制 */
 const DEFAULT_CHUNK_LIMIT = 4000;
+/** 默认分块模式 */
 const DEFAULT_CHUNK_MODE: ChunkMode = "length";
 
+/** 提供商分块配置类型 */
 type ProviderChunkConfig = {
   textChunkLimit?: number;
   chunkMode?: ChunkMode;
   accounts?: Record<string, { textChunkLimit?: number; chunkMode?: ChunkMode }>;
 };
 
+/**
+ * 解析提供商的分块限制
+ */
 function resolveChunkLimitForProvider(
   cfgSection: ProviderChunkConfig | undefined,
   accountId?: string | null,
@@ -51,6 +63,15 @@ function resolveChunkLimitForProvider(
   return cfgSection.textChunkLimit;
 }
 
+/**
+ * 解析文本分块限制
+ *
+ * @param cfg - 配置对象
+ * @param provider - 提供商
+ * @param accountId - 账户 ID
+ * @param opts - 选项
+ * @returns 分块限制
+ */
 export function resolveTextChunkLimit(
   cfg: MoltbotConfig | undefined,
   provider?: TextChunkProvider,
@@ -74,6 +95,9 @@ export function resolveTextChunkLimit(
   return fallback;
 }
 
+/**
+ * 解析提供商的分块模式
+ */
 function resolveChunkModeForProvider(
   cfgSection: ProviderChunkConfig | undefined,
   accountId?: string | null,
@@ -97,6 +121,14 @@ function resolveChunkModeForProvider(
   return cfgSection.chunkMode;
 }
 
+/**
+ * 解析分块模式
+ *
+ * @param cfg - 配置对象
+ * @param provider - 提供商
+ * @param accountId - 账户 ID
+ * @returns 分块模式
+ */
 export function resolveChunkMode(
   cfg: MoltbotConfig | undefined,
   provider?: TextChunkProvider,
@@ -111,9 +143,14 @@ export function resolveChunkMode(
 }
 
 /**
- * Split text on newlines, trimming line whitespace.
- * Blank lines are folded into the next non-empty line as leading "\n" prefixes.
- * Long lines can be split by length (default) or kept intact via splitLongLines:false.
+ * 按换行符分割文本，修剪行空白。
+ * 空行会被折叠到下一个非空行作为前导 "\n" 前缀。
+ * 长行可以按长度分割（默认）或通过 splitLongLines:false 保持完整。
+ *
+ * @param text - 要分割的文本
+ * @param maxLineLength - 最大行长度
+ * @param opts - 选项
+ * @returns 分块数组
  */
 export function chunkByNewline(
   text: string,
@@ -167,13 +204,17 @@ export function chunkByNewline(
 }
 
 /**
- * Split text into chunks on paragraph boundaries (blank lines), preserving lists and
- * single-newline line wraps inside paragraphs.
+ * 按段落边界（空行）分割文本，保留列表和段落内的单换行符。
  *
- * - Only breaks at paragraph separators ("\n\n" or more, allowing whitespace on blank lines)
- * - Packs multiple paragraphs into a single chunk up to `limit`
- * - Falls back to length-based splitting when a single paragraph exceeds `limit`
- *   (unless `splitLongParagraphs` is disabled)
+ * - 仅在段落分隔符处断开（"\n\n" 或更多，允许空行上有空白）
+ * - 将多个段落打包到单个块中，直到达到 `limit`
+ * - 当单个段落超过 `limit` 时回退到基于长度的分割
+ *   （除非禁用 `splitLongParagraphs`）
+ *
+ * @param text - 要分割的文本
+ * @param limit - 分块限制
+ * @param opts - 选项
+ * @returns 分块数组
  */
 export function chunkByParagraph(
   text: string,
