@@ -1,3 +1,13 @@
+/**
+ * 启动文件模块
+ *
+ * 提供 agent 启动时加载上下文文件的功能，包括：
+ * - 加载工作目录中的启动文件
+ * - 按会话过滤启动文件
+ * - 应用钩子覆盖
+ * - 构建嵌入式上下文文件
+ */
+
 import type { MoltbotConfig } from "../config/config.js";
 import { applyBootstrapHookOverrides } from "./bootstrap-hooks.js";
 import {
@@ -8,6 +18,10 @@ import {
 import { buildBootstrapContextFiles, resolveBootstrapMaxChars } from "./pi-embedded-helpers.js";
 import type { EmbeddedContextFile } from "./pi-embedded-helpers.js";
 
+/**
+ * 创建启动警告函数
+ * 为警告消息添加会话标签
+ */
 export function makeBootstrapWarn(params: {
   sessionLabel: string;
   warn?: (message: string) => void;
@@ -16,6 +30,11 @@ export function makeBootstrapWarn(params: {
   return (message: string) => params.warn?.(`${message} (sessionKey=${params.sessionLabel})`);
 }
 
+/**
+ * 解析运行时的启动文件
+ *
+ * 加载工作目录中的启动文件，按会话过滤，并应用钩子覆盖。
+ */
 export async function resolveBootstrapFilesForRun(params: {
   workspaceDir: string;
   config?: MoltbotConfig;
@@ -38,6 +57,13 @@ export async function resolveBootstrapFilesForRun(params: {
   });
 }
 
+/**
+ * 解析运行时的启动上下文
+ *
+ * 加载启动文件并构建嵌入式上下文文件。
+ *
+ * @returns 启动文件列表和上下文文件列表
+ */
 export async function resolveBootstrapContextForRun(params: {
   workspaceDir: string;
   config?: MoltbotConfig;

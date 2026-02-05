@@ -1,3 +1,13 @@
+/**
+ * 心跳运行器模块
+ *
+ * 提供定时心跳功能，用于：
+ * - 定期检查 HEARTBEAT.md 文件并执行任务
+ * - 向用户发送心跳通知
+ * - 支持活动时间窗口配置
+ * - 支持多 agent 心跳调度
+ */
+
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -56,6 +66,9 @@ import {
   resolveHeartbeatSenderContext,
 } from "./outbound/targets.js";
 
+/**
+ * 心跳依赖接口
+ */
 type HeartbeatDeps = OutboundSendDeps &
   ChannelHeartbeatDeps & {
     runtime?: RuntimeEnv;
@@ -64,29 +77,47 @@ type HeartbeatDeps = OutboundSendDeps &
   };
 
 const log = createSubsystemLogger("gateway/heartbeat");
+/** 心跳是否启用 */
 let heartbeatsEnabled = true;
 
+/**
+ * 设置心跳启用状态
+ */
 export function setHeartbeatsEnabled(enabled: boolean) {
   heartbeatsEnabled = enabled;
 }
 
+/** 心跳配置类型 */
 type HeartbeatConfig = AgentDefaultsConfig["heartbeat"];
+/** 心跳 agent 配置 */
 type HeartbeatAgent = {
   agentId: string;
   heartbeat?: HeartbeatConfig;
 };
 
+/**
+ * 心跳摘要信息
+ */
 export type HeartbeatSummary = {
+  /** 是否启用 */
   enabled: boolean;
+  /** 间隔配置字符串 */
   every: string;
+  /** 间隔毫秒数 */
   everyMs: number | null;
+  /** 心跳提示词 */
   prompt: string;
+  /** 发送目标 */
   target: string;
+  /** 使用的模型 */
   model?: string;
+  /** 确认消息最大字符数 */
   ackMaxChars: number;
 };
 
+/** 默认心跳目标 */
 const DEFAULT_HEARTBEAT_TARGET = "last";
+/** 活动时间格式正则 */
 const ACTIVE_HOURS_TIME_PATTERN = /^([01]\d|2[0-3]|24):([0-5]\d)$/;
 
 // Prompt used when an async exec has completed and the result should be relayed to the user.
@@ -171,6 +202,9 @@ function isWithinActiveHours(
   return currentMin >= startMin || currentMin < endMin;
 }
 
+/**
+ * 心跳 agent 状态
+ */
 type HeartbeatAgentState = {
   agentId: string;
   heartbeat?: HeartbeatConfig;
@@ -179,8 +213,13 @@ type HeartbeatAgentState = {
   nextDueMs: number;
 };
 
+/**
+ * 心跳运行器接口
+ */
 export type HeartbeatRunner = {
+  /** 停止心跳 */
   stop: () => void;
+  /** 更新配置 */
   updateConfig: (cfg: MoltbotConfig) => void;
 };
 
@@ -189,6 +228,9 @@ function hasExplicitHeartbeatAgents(cfg: MoltbotConfig) {
   return list.some((entry) => Boolean(entry?.heartbeat));
 }
 
+/**
+ * 检查指定 agent 是否启用心跳
+ */
 export function isHeartbeatEnabledForAgent(cfg: MoltbotConfig, agentId?: string): boolean {
   const resolvedAgentId = normalizeAgentId(agentId ?? resolveDefaultAgentId(cfg));
   const list = cfg.agents?.list ?? [];
@@ -209,6 +251,9 @@ function resolveHeartbeatConfig(cfg: MoltbotConfig, agentId?: string): Heartbeat
   return { ...defaults, ...overrides };
 }
 
+/**
+ * 解析指定 agent 的心跳摘要
+ */
 export function resolveHeartbeatSummaryForAgent(
   cfg: MoltbotConfig,
   agentId?: string,
@@ -272,6 +317,9 @@ function resolveHeartbeatAgents(cfg: MoltbotConfig): HeartbeatAgent[] {
   return [{ agentId: fallbackId, heartbeat: resolveHeartbeatConfig(cfg, fallbackId) }];
 }
 
+/**
+ * 解析心跳间隔（毫秒）
+ */
 export function resolveHeartbeatIntervalMs(
   cfg: MoltbotConfig,
   overrideEvery?: string,
@@ -295,6 +343,9 @@ export function resolveHeartbeatIntervalMs(
   return ms;
 }
 
+/**
+ * 解析心跳提示词
+ */
 export function resolveHeartbeatPrompt(cfg: MoltbotConfig, heartbeat?: HeartbeatConfig) {
   return resolveHeartbeatPromptText(heartbeat?.prompt ?? cfg.agents?.defaults?.heartbeat?.prompt);
 }
@@ -427,6 +478,11 @@ function normalizeHeartbeatReply(
   return { shouldSkip: false, text: finalText, hasMedia };
 }
 
+/**
+ * 执行一次心跳
+ *
+ * 检查 HEARTBEAT.md 文件，调用 LLM 处理，并根据结果发送通知。
+ */
 export async function runHeartbeatOnce(opts: {
   cfg?: MoltbotConfig;
   agentId?: string;
@@ -754,6 +810,11 @@ export async function runHeartbeatOnce(opts: {
   }
 }
 
+/**
+ * 启动心跳运行器
+ *
+ * 创建定时心跳调度器，支持多 agent 心跳。
+ */
 export function startHeartbeatRunner(opts: {
   cfg?: MoltbotConfig;
   runtime?: RuntimeEnv;

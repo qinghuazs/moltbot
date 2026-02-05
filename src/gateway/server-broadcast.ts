@@ -1,11 +1,27 @@
+/**
+ * 网关广播模块
+ *
+ * 提供向所有连接的 WebSocket 客户端广播事件的功能，包括：
+ * - 基于权限范围的事件过滤
+ * - 慢消费者检测和处理
+ * - 事件序列号管理
+ */
+
 import type { GatewayWsClient } from "./server/ws-types.js";
 import { MAX_BUFFERED_BYTES } from "./server-constants.js";
 import { logWs, summarizeAgentEventForWsLog } from "./ws-log.js";
 
+/** 管理员权限范围 */
 const ADMIN_SCOPE = "operator.admin";
+/** 审批权限范围 */
 const APPROVALS_SCOPE = "operator.approvals";
+/** 配对权限范围 */
 const PAIRING_SCOPE = "operator.pairing";
 
+/**
+ * 事件权限范围映射
+ * 定义哪些事件需要哪些权限范围
+ */
 const EVENT_SCOPE_GUARDS: Record<string, string[]> = {
   "exec.approval.requested": [APPROVALS_SCOPE],
   "exec.approval.resolved": [APPROVALS_SCOPE],
@@ -15,6 +31,9 @@ const EVENT_SCOPE_GUARDS: Record<string, string[]> = {
   "node.pair.resolved": [PAIRING_SCOPE],
 };
 
+/**
+ * 检查客户端是否有接收指定事件的权限
+ */
 function hasEventScope(client: GatewayWsClient, event: string): boolean {
   const required = EVENT_SCOPE_GUARDS[event];
   if (!required) return true;
@@ -25,6 +44,12 @@ function hasEventScope(client: GatewayWsClient, event: string): boolean {
   return required.some((scope) => scopes.includes(scope));
 }
 
+/**
+ * 创建网关广播器
+ *
+ * @param params.clients - 已连接的客户端集合
+ * @returns 广播器对象
+ */
 export function createGatewayBroadcaster(params: { clients: Set<GatewayWsClient> }) {
   let seq = 0;
   const broadcast = (
