@@ -1,3 +1,15 @@
+/**
+ * 代理工作区模块
+ *
+ * 该模块负责管理代理的工作区目录，包括：
+ * - 工作区目录解析
+ * - 引导文件创建和加载
+ * - Git 仓库初始化
+ * - 模板文件管理
+ *
+ * @module agents/workspace
+ */
+
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -7,6 +19,10 @@ import { isSubagentSessionKey } from "../routing/session-key.js";
 import { runCommandWithTimeout } from "../process/exec.js";
 import { resolveUserPath } from "../utils.js";
 
+/**
+ * 解析默认代理工作区目录
+ * 支持通过 CLAWDBOT_PROFILE 环境变量指定配置文件
+ */
 export function resolveDefaultAgentWorkspaceDir(
   env: NodeJS.ProcessEnv = process.env,
   homedir: () => string = os.homedir,
@@ -18,22 +34,36 @@ export function resolveDefaultAgentWorkspaceDir(
   return path.join(homedir(), "clawd");
 }
 
+/** 默认代理工作区目录 */
 export const DEFAULT_AGENT_WORKSPACE_DIR = resolveDefaultAgentWorkspaceDir();
+/** 代理配置文件名 */
 export const DEFAULT_AGENTS_FILENAME = "AGENTS.md";
+/** 灵魂配置文件名 */
 export const DEFAULT_SOUL_FILENAME = "SOUL.md";
+/** 工具配置文件名 */
 export const DEFAULT_TOOLS_FILENAME = "TOOLS.md";
+/** 身份配置文件名 */
 export const DEFAULT_IDENTITY_FILENAME = "IDENTITY.md";
+/** 用户配置文件名 */
 export const DEFAULT_USER_FILENAME = "USER.md";
+/** 心跳配置文件名 */
 export const DEFAULT_HEARTBEAT_FILENAME = "HEARTBEAT.md";
+/** 引导配置文件名 */
 export const DEFAULT_BOOTSTRAP_FILENAME = "BOOTSTRAP.md";
+/** 记忆配置文件名 */
 export const DEFAULT_MEMORY_FILENAME = "MEMORY.md";
+/** 记忆配置备选文件名 */
 export const DEFAULT_MEMORY_ALT_FILENAME = "memory.md";
 
+/** 模板目录路径 */
 const TEMPLATE_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../docs/reference/templates",
 );
 
+/**
+ * 去除 Markdown 前置元数据
+ */
 function stripFrontMatter(content: string): string {
   if (!content.startsWith("---")) return content;
   const endIndex = content.indexOf("\n---", 3);
@@ -44,6 +74,9 @@ function stripFrontMatter(content: string): string {
   return trimmed;
 }
 
+/**
+ * 加载模板文件
+ */
 async function loadTemplate(name: string): Promise<string> {
   const templatePath = path.join(TEMPLATE_DIR, name);
   try {
@@ -56,6 +89,7 @@ async function loadTemplate(name: string): Promise<string> {
   }
 }
 
+/** 工作区引导文件名类型 */
 export type WorkspaceBootstrapFileName =
   | typeof DEFAULT_AGENTS_FILENAME
   | typeof DEFAULT_SOUL_FILENAME
@@ -67,13 +101,21 @@ export type WorkspaceBootstrapFileName =
   | typeof DEFAULT_MEMORY_FILENAME
   | typeof DEFAULT_MEMORY_ALT_FILENAME;
 
+/** 工作区引导文件信息 */
 export type WorkspaceBootstrapFile = {
+  /** 文件名 */
   name: WorkspaceBootstrapFileName;
+  /** 文件路径 */
   path: string;
+  /** 文件内容 */
   content?: string;
+  /** 是否缺失 */
   missing: boolean;
 };
 
+/**
+ * 如果文件不存在则写入
+ */
 async function writeFileIfMissing(filePath: string, content: string) {
   try {
     await fs.writeFile(filePath, content, {
@@ -86,6 +128,9 @@ async function writeFileIfMissing(filePath: string, content: string) {
   }
 }
 
+/**
+ * 检查目录是否有 Git 仓库
+ */
 async function hasGitRepo(dir: string): Promise<boolean> {
   try {
     await fs.stat(path.join(dir, ".git"));
@@ -95,6 +140,9 @@ async function hasGitRepo(dir: string): Promise<boolean> {
   }
 }
 
+/**
+ * 检查 Git 是否可用
+ */
 async function isGitAvailable(): Promise<boolean> {
   try {
     const result = await runCommandWithTimeout(["git", "--version"], { timeoutMs: 2_000 });
@@ -104,6 +152,10 @@ async function isGitAvailable(): Promise<boolean> {
   }
 }
 
+/**
+ * 确保 Git 仓库存在
+ * 仅在全新工作区时初始化
+ */
 async function ensureGitRepo(dir: string, isBrandNewWorkspace: boolean) {
   if (!isBrandNewWorkspace) return;
   if (await hasGitRepo(dir)) return;
@@ -115,6 +167,14 @@ async function ensureGitRepo(dir: string, isBrandNewWorkspace: boolean) {
   }
 }
 
+/**
+ * 确保代理工作区存在
+ * 创建目录并可选地创建引导文件
+ *
+ * @param params.dir - 工作区目录
+ * @param params.ensureBootstrapFiles - 是否创建引导文件
+ * @returns 工作区路径信息
+ */
 export async function ensureAgentWorkspace(params?: {
   dir?: string;
   ensureBootstrapFiles?: boolean;
@@ -188,6 +248,9 @@ export async function ensureAgentWorkspace(params?: {
   };
 }
 
+/**
+ * 解析记忆引导文件条目
+ */
 async function resolveMemoryBootstrapEntries(
   resolvedDir: string,
 ): Promise<Array<{ name: WorkspaceBootstrapFileName; filePath: string }>> {
@@ -221,6 +284,12 @@ async function resolveMemoryBootstrapEntries(
   return deduped;
 }
 
+/**
+ * 加载工作区引导文件
+ *
+ * @param dir - 工作区目录
+ * @returns 引导文件列表
+ */
 export async function loadWorkspaceBootstrapFiles(dir: string): Promise<WorkspaceBootstrapFile[]> {
   const resolvedDir = resolveUserPath(dir);
 
@@ -277,8 +346,17 @@ export async function loadWorkspaceBootstrapFiles(dir: string): Promise<Workspac
   return result;
 }
 
+/** 子代理引导文件白名单 */
 const SUBAGENT_BOOTSTRAP_ALLOWLIST = new Set([DEFAULT_AGENTS_FILENAME, DEFAULT_TOOLS_FILENAME]);
 
+/**
+ * 为会话过滤引导文件
+ * 子代理只能访问白名单中的文件
+ *
+ * @param files - 引导文件列表
+ * @param sessionKey - 会话键
+ * @returns 过滤后的文件列表
+ */
 export function filterBootstrapFilesForSession(
   files: WorkspaceBootstrapFile[],
   sessionKey?: string,
