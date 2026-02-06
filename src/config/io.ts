@@ -1,3 +1,15 @@
+/**
+ * 配置文件 I/O 模块
+ *
+ * 负责 Moltbot 配置文件的读取、解析、验证和写入。
+ * 核心功能：
+ * - 从 JSON5 配置文件加载配置（支持 $include 指令和 ${VAR} 环境变量替换）
+ * - 配置验证（schema 校验 + 遗留配置检测 + 重复代理目录检测）
+ * - 应用各类默认值（模型、代理、会话、日志等）
+ * - 配置写入（原子写入 + 自动备份轮转）
+ * - 配置缓存（可配置 TTL，避免频繁磁盘读取）
+ * - Shell 环境变量回退加载（从用户 shell 配置中提取 API 密钥等）
+ */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -38,6 +50,7 @@ import { compareMoltbotVersions } from "./version.js";
 export { CircularIncludeError, ConfigIncludeError } from "./includes.js";
 export { MissingEnvVarError } from "./env-substitution.js";
 
+/** Shell 环境变量回退加载时期望检查的 API 密钥列表 */
 const SHELL_ENV_EXPECTED_KEYS = [
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
@@ -57,6 +70,7 @@ const SHELL_ENV_EXPECTED_KEYS = [
   "CLAWDBOT_GATEWAY_PASSWORD",
 ];
 
+/** 配置备份保留数量 */
 const CONFIG_BACKUP_COUNT = 5;
 const loggedInvalidConfigs = new Set<string>();
 
@@ -105,6 +119,7 @@ async function rotateConfigBackups(configPath: string, ioFs: typeof fs.promises)
   });
 }
 
+/** 配置 I/O 依赖注入接口（用于测试和自定义） */
 export type ConfigIoDeps = {
   fs?: typeof fs;
   json5?: typeof JSON5;
@@ -173,6 +188,7 @@ function normalizeDeps(overrides: ConfigIoDeps = {}): Required<ConfigIoDeps> {
   };
 }
 
+/** 解析 JSON5 配置字符串 */
 export function parseConfigJson5(
   raw: string,
   json5: { parse: (value: string) => unknown } = JSON5,
@@ -184,6 +200,22 @@ export function parseConfigJson5(
   }
 }
 
+/**
+ * 创建配置 I/O 实例
+ *
+ * 返回包含 loadConfig、readConfigFileSnapshot、writeConfigFile 方法的对象。
+ * 支持依赖注入以便测试。
+ *
+ * 配置加载流程：
+ * 1. 读取 JSON5 文件
+ * 2. 解析 $include 指令
+ * 3. 注入 config.env 到 process.env
+ * 4. 替换 ${VAR} 环境变量引用
+ * 5. Schema 验证
+ * 6. 应用各类默认值
+ * 7. 路径规范化
+ * 8. Shell 环境变量回退加载
+ */
 export function createConfigIO(overrides: ConfigIoDeps = {}) {
   const deps = normalizeDeps(overrides);
   const requestedConfigPath = resolveConfigPathForDeps(deps);
@@ -554,6 +586,7 @@ function clearConfigCache(): void {
   configCache = null;
 }
 
+/** 加载配置（带缓存，默认 200ms TTL） */
 export function loadConfig(): MoltbotConfig {
   const io = createConfigIO();
   const configPath = io.configPath;
@@ -578,10 +611,12 @@ export function loadConfig(): MoltbotConfig {
   return config;
 }
 
+/** 读取配置文件快照（包含原始内容、解析结果、验证状态和哈希） */
 export async function readConfigFileSnapshot(): Promise<ConfigFileSnapshot> {
   return await createConfigIO().readConfigFileSnapshot();
 }
 
+/** 写入配置文件（验证 + 原子写入 + 备份轮转） */
 export async function writeConfigFile(cfg: MoltbotConfig): Promise<void> {
   clearConfigCache();
   await createConfigIO().writeConfigFile(cfg);

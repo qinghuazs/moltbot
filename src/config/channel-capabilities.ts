@@ -1,3 +1,10 @@
+/**
+ * 渠道能力解析模块
+ *
+ * 解析各消息渠道（Telegram、Discord 等）的能力配置（capabilities），
+ * 支持按账户级别和渠道级别的能力覆盖。
+ * 能力配置可以是字符串数组（如 ["inlineButtons"]）或对象格式。
+ */
 import { normalizeChannelId } from "../channels/plugins/index.js";
 import { normalizeAccountId } from "../routing/session-key.js";
 import type { MoltbotConfig } from "./config.js";
@@ -44,6 +51,16 @@ function resolveAccountCapabilities(params: {
   return normalizeCapabilities(cfg.capabilities);
 }
 
+/**
+ * 解析指定渠道的能力列表
+ *
+ * 按优先级查找：渠道配置 > 账户级配置 > 渠道默认配置。
+ *
+ * @param params.cfg - Moltbot 配置对象
+ * @param params.channel - 渠道 ID（如 "telegram"）
+ * @param params.accountId - 可选的账户 ID
+ * @returns 能力字符串数组，或 undefined
+ */
 export function resolveChannelCapabilities(params: {
   cfg?: Partial<MoltbotConfig>;
   channel?: string | null;

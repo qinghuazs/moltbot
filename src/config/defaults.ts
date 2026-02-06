@@ -1,3 +1,18 @@
+/**
+ * 配置默认值应用模块
+ *
+ * 为 MoltbotConfig 的各个配置段填充默认值，包括：
+ * - 消息确认反应范围
+ * - 会话主键
+ * - Talk API 密钥
+ * - 模型定义（成本、上下文窗口、最大令牌数等）
+ * - 代理并发限制
+ * - 日志脱敏
+ * - 上下文裁剪和心跳
+ * - 压缩模式
+ *
+ * 所有 apply* 函数均为纯函数，返回新的配置对象（不修改原对象）。
+ */
 import { DEFAULT_CONTEXT_TOKENS } from "../agents/defaults.js";
 import { parseModelRef } from "../agents/model-selection.js";
 import { resolveTalkApiKey } from "./talk.js";
@@ -9,8 +24,10 @@ type WarnState = { warned: boolean };
 
 let defaultWarnState: WarnState = { warned: false };
 
+/** Anthropic 认证模式类型 */
 type AnthropicAuthDefaultsMode = "api_key" | "oauth";
 
+/** 默认模型别名映射（简短名称 -> 完整 provider/model ID） */
 const DEFAULT_MODEL_ALIASES: Readonly<Record<string, string>> = {
   // Anthropic (pi-ai catalog uses "latest" ids without date suffix)
   opus: "anthropic/claude-opus-4-5",
@@ -25,13 +42,16 @@ const DEFAULT_MODEL_ALIASES: Readonly<Record<string, string>> = {
   "gemini-flash": "google/gemini-3-flash-preview",
 };
 
+/** 默认模型成本（全部为 0） */
 const DEFAULT_MODEL_COST: ModelDefinitionConfig["cost"] = {
   input: 0,
   output: 0,
   cacheRead: 0,
   cacheWrite: 0,
 };
+/** 默认模型输入类型 */
 const DEFAULT_MODEL_INPUT: ModelDefinitionConfig["input"] = ["text"];
+/** 默认模型最大输出令牌数 */
 const DEFAULT_MODEL_MAX_TOKENS = 8192;
 
 type ModelDefinitionLike = Partial<ModelDefinitionConfig> &
@@ -92,6 +112,7 @@ export type SessionDefaultsOptions = {
   warnState?: WarnState;
 };
 
+/** 应用消息默认值（设置确认反应范围为 "group-mentions"） */
 export function applyMessageDefaults(cfg: MoltbotConfig): MoltbotConfig {
   const messages = cfg.messages;
   const hasAckScope = messages?.ackReactionScope !== undefined;
@@ -105,6 +126,7 @@ export function applyMessageDefaults(cfg: MoltbotConfig): MoltbotConfig {
   };
 }
 
+/** 应用会话默认值（强制 mainKey 为 "main"，忽略自定义值并发出警告） */
 export function applySessionDefaults(
   cfg: MoltbotConfig,
   options: SessionDefaultsOptions = {},
@@ -129,6 +151,7 @@ export function applySessionDefaults(
   return next;
 }
 
+/** 应用 Talk API 密钥默认值（从环境变量中解析） */
 export function applyTalkApiKey(config: MoltbotConfig): MoltbotConfig {
   const resolved = resolveTalkApiKey();
   if (!resolved) return config;
@@ -143,6 +166,12 @@ export function applyTalkApiKey(config: MoltbotConfig): MoltbotConfig {
   };
 }
 
+/**
+ * 应用模型定义默认值
+ *
+ * 为每个模型填充缺失的 reasoning、input、cost、contextWindow、maxTokens 字段，
+ * 并为已知模型自动添加别名。
+ */
 export function applyModelDefaults(cfg: MoltbotConfig): MoltbotConfig {
   let mutated = false;
   let nextCfg = cfg;
@@ -238,6 +267,7 @@ export function applyModelDefaults(cfg: MoltbotConfig): MoltbotConfig {
   };
 }
 
+/** 应用代理并发限制默认值 */
 export function applyAgentDefaults(cfg: MoltbotConfig): MoltbotConfig {
   const agents = cfg.agents;
   const defaults = agents?.defaults;
@@ -275,6 +305,7 @@ export function applyAgentDefaults(cfg: MoltbotConfig): MoltbotConfig {
   };
 }
 
+/** 应用日志脱敏默认值（默认对工具输出进行脱敏） */
 export function applyLoggingDefaults(cfg: MoltbotConfig): MoltbotConfig {
   const logging = cfg.logging;
   if (!logging) return cfg;
@@ -288,6 +319,14 @@ export function applyLoggingDefaults(cfg: MoltbotConfig): MoltbotConfig {
   };
 }
 
+/**
+ * 应用上下文裁剪默认值
+ *
+ * 根据 Anthropic 认证模式（API Key 或 OAuth）设置：
+ * - 上下文裁剪模式（cache-ttl）和 TTL
+ * - 心跳间隔（API Key: 30m, OAuth: 1h）
+ * - API Key 模式下为 Anthropic 模型启用缓存控制 TTL
+ */
 export function applyContextPruningDefaults(cfg: MoltbotConfig): MoltbotConfig {
   const defaults = cfg.agents?.defaults;
   if (!defaults) return cfg;
@@ -369,6 +408,7 @@ export function applyContextPruningDefaults(cfg: MoltbotConfig): MoltbotConfig {
   };
 }
 
+/** 应用压缩模式默认值（默认为 "safeguard" 模式） */
 export function applyCompactionDefaults(cfg: MoltbotConfig): MoltbotConfig {
   const defaults = cfg.agents?.defaults;
   if (!defaults) return cfg;

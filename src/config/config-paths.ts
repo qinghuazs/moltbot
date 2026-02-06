@@ -1,7 +1,23 @@
+/**
+ * 配置路径操作模块
+ *
+ * 提供配置对象中点分隔路径（如 "foo.bar.baz"）的解析、读取、设置和删除操作。
+ * 用于 CLI 的 `moltbot config set/get/unset` 命令。
+ * 内置原型链污染防护（阻止 __proto__、prototype、constructor 等危险键）。
+ */
+
+/** 路径节点类型 */
 type PathNode = Record<string, unknown>;
 
+/** 被阻止的危险键名集合（防止原型链污染） */
 const BLOCKED_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 
+/**
+ * 解析点分隔的配置路径字符串
+ *
+ * @param raw - 原始路径字符串（如 "gateway.auth.token"）
+ * @returns 解析结果，包含路径数组或错误信息
+ */
 export function parseConfigPath(raw: string): {
   ok: boolean;
   path?: string[];
@@ -27,6 +43,15 @@ export function parseConfigPath(raw: string): {
   return { ok: true, path: parts };
 }
 
+/**
+ * 在配置对象中按路径设置值
+ *
+ * 沿路径逐层创建中间对象（如不存在），最终在叶节点设置目标值。
+ *
+ * @param root - 配置根对象
+ * @param path - 路径数组（如 ["gateway", "auth", "token"]）
+ * @param value - 要设置的值
+ */
 export function setConfigValueAtPath(root: PathNode, path: string[], value: unknown): void {
   let cursor: PathNode = root;
   for (let idx = 0; idx < path.length - 1; idx += 1) {
@@ -40,6 +65,15 @@ export function setConfigValueAtPath(root: PathNode, path: string[], value: unkn
   cursor[path[path.length - 1]] = value;
 }
 
+/**
+ * 在配置对象中按路径删除值
+ *
+ * 删除叶节点后，自动清理空的父级对象（从叶向根回溯）。
+ *
+ * @param root - 配置根对象
+ * @param path - 路径数组
+ * @returns 是否成功删除（路径不存在时返回 false）
+ */
 export function unsetConfigValueAtPath(root: PathNode, path: string[]): boolean {
   const stack: Array<{ node: PathNode; key: string }> = [];
   let cursor: PathNode = root;
@@ -65,6 +99,13 @@ export function unsetConfigValueAtPath(root: PathNode, path: string[]): boolean 
   return true;
 }
 
+/**
+ * 在配置对象中按路径读取值
+ *
+ * @param root - 配置根对象
+ * @param path - 路径数组
+ * @returns 路径对应的值，路径不存在时返回 undefined
+ */
 export function getConfigValueAtPath(root: PathNode, path: string[]): unknown {
   let cursor: unknown = root;
   for (const key of path) {

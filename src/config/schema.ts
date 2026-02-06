@@ -1,15 +1,34 @@
+/**
+ * 配置 Schema 与 UI 提示模块
+ *
+ * 生成 Moltbot 配置的 JSON Schema 和 UI 提示信息，用于：
+ * - Control UI 中的配置编辑器（表单渲染、字段标签、帮助文本、敏感字段标记）
+ * - 插件和渠道扩展的 Schema 合并
+ * - 配置验证
+ *
+ * UI 提示包括：分组标签、字段排序、帮助文本、占位符、敏感字段标记等。
+ */
 import { CHANNEL_IDS } from "../channels/registry.js";
 import { VERSION } from "../version.js";
 import { MoltbotSchema } from "./zod-schema.js";
 
+/** 单个配置字段的 UI 提示 */
 export type ConfigUiHint = {
+  /** 显示标签 */
   label?: string;
+  /** 帮助文本 */
   help?: string;
+  /** 所属分组 */
   group?: string;
+  /** 排序权重 */
   order?: number;
+  /** 是否为高级选项 */
   advanced?: boolean;
+  /** 是否为敏感字段（如密码、令牌） */
   sensitive?: boolean;
+  /** 输入占位符 */
   placeholder?: string;
+  /** 数组项模板 */
   itemTemplate?: unknown;
 };
 
@@ -19,6 +38,7 @@ export type ConfigSchema = ReturnType<typeof MoltbotSchema.toJSONSchema>;
 
 type JsonSchemaNode = Record<string, unknown>;
 
+/** 配置 Schema 响应（包含 JSON Schema、UI 提示、版本和生成时间） */
 export type ConfigSchemaResponse = {
   schema: ConfigSchema;
   uiHints: ConfigUiHints;
@@ -26,6 +46,7 @@ export type ConfigSchemaResponse = {
   generatedAt: string;
 };
 
+/** 插件 UI 元数据（用于 Schema 合并和 UI 提示生成） */
 export type PluginUiMetadata = {
   id: string;
   name?: string;
@@ -37,6 +58,7 @@ export type PluginUiMetadata = {
   configSchema?: JsonSchemaNode;
 };
 
+/** 渠道 UI 元数据（用于 Schema 合并和 UI 提示生成） */
 export type ChannelUiMetadata = {
   id: string;
   label?: string;
@@ -45,6 +67,7 @@ export type ChannelUiMetadata = {
   configUiHints?: Record<string, ConfigUiHint>;
 };
 
+/** 配置分组显示标签 */
 const GROUP_LABELS: Record<string, string> = {
   wizard: "Wizard",
   update: "Update",
@@ -73,6 +96,7 @@ const GROUP_LABELS: Record<string, string> = {
   voicewake: "Voice Wake",
 };
 
+/** 配置分组排序权重（数值越小越靠前） */
 const GROUP_ORDER: Record<string, number> = {
   wizard: 20,
   update: 25,
@@ -101,6 +125,7 @@ const GROUP_ORDER: Record<string, number> = {
   logging: 900,
 };
 
+/** 配置字段显示标签映射 */
 const FIELD_LABELS: Record<string, string> = {
   "meta.lastTouchedVersion": "Config Last Touched Version",
   "meta.lastTouchedAt": "Config Last Touched At",
@@ -364,6 +389,7 @@ const FIELD_LABELS: Record<string, string> = {
   "plugins.installs.*.installedAt": "Plugin Install Time",
 };
 
+/** 配置字段帮助文本映射 */
 const FIELD_HELP: Record<string, string> = {
   "meta.lastTouchedVersion": "Auto-set when Moltbot writes the config.",
   "meta.lastTouchedAt": "ISO timestamp of the last config write (auto-set).",
@@ -678,6 +704,7 @@ const FIELD_HELP: Record<string, string> = {
     'Direct message access control ("pairing" recommended). "open" requires channels.slack.dm.allowFrom=["*"].',
 };
 
+/** 配置字段输入占位符映射 */
 const FIELD_PLACEHOLDERS: Record<string, string> = {
   "gateway.remote.url": "ws://host:18789",
   "gateway.remote.tlsFingerprint": "sha256:ab12cd34…",
@@ -687,6 +714,7 @@ const FIELD_PLACEHOLDERS: Record<string, string> = {
   "agents.list[].identity.avatar": "avatars/clawd.png",
 };
 
+/** 敏感字段路径匹配模式（token、password、secret、apiKey） */
 const SENSITIVE_PATTERNS = [/token/i, /password/i, /secret/i, /api.?key/i];
 
 function isSensitivePath(path: string): boolean {
@@ -967,6 +995,15 @@ function buildBaseConfigSchema(): ConfigSchemaResponse {
   return next;
 }
 
+/**
+ * 构建完整的配置 Schema 响应
+ *
+ * 合并基础 Schema 与插件/渠道扩展的 Schema 和 UI 提示。
+ *
+ * @param params.plugins - 插件 UI 元数据列表
+ * @param params.channels - 渠道 UI 元数据列表
+ * @returns 包含 JSON Schema、UI 提示、版本和生成时间的响应
+ */
 export function buildConfigSchema(params?: {
   plugins?: PluginUiMetadata[];
   channels?: ChannelUiMetadata[];

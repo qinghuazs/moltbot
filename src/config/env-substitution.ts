@@ -1,10 +1,10 @@
 /**
- * Environment variable substitution for config values.
+ * 配置环境变量替换模块
  *
- * Supports `${VAR_NAME}` syntax in string values, substituted at config load time.
- * - Only uppercase env vars are matched: `[A-Z_][A-Z0-9_]*`
- * - Escape with `$${}` to output literal `${}`
- * - Missing env vars throw `MissingEnvVarError` with context
+ * 支持在配置字符串值中使用 `${VAR_NAME}` 语法引用环境变量，在配置加载时进行替换。
+ * - 仅匹配大写环境变量名：`[A-Z_][A-Z0-9_]*`
+ * - 使用 `$${}` 转义输出字面量 `${}`
+ * - 缺失的环境变量会抛出 `MissingEnvVarError`（包含配置路径上下文）
  *
  * @example
  * ```json5

@@ -1,3 +1,11 @@
+/**
+ * 端口默认值模块
+ *
+ * 定义网关及相关服务的默认端口号，并提供基于网关端口的派生端口计算。
+ * 各服务端口通过固定偏移量从网关端口派生，确保端口分配的一致性。
+ */
+
+/** 端口范围类型 */
 export type PortRange = { start: number; end: number };
 
 function isValidPort(port: number): boolean {
