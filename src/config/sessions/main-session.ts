@@ -1,3 +1,9 @@
+/**
+ * 主会话解析模块
+ *
+ * 解析代理的主会话键（main session key），
+ * 根据会话范围（per-sender/global）和代理 ID 生成会话标识。
+ */
 import {
   buildAgentMainSessionKey,
   DEFAULT_AGENT_ID,

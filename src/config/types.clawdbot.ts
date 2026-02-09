@@ -1,3 +1,9 @@
+/**
+ * MoltbotConfig 主配置类型定义
+ *
+ * 定义 Moltbot 的顶层配置结构（MoltbotConfig），
+ * 聚合代理、渠道、模型、插件、认证、网关等所有子配置段。
+ */
 import type { AgentBinding, AgentsConfig } from "./types.agents.js";
 import type { ApprovalsConfig } from "./types.approvals.js";
 import type { AuthConfig } from "./types.auth.js";

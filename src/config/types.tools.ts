@@ -1,6 +1,13 @@
+/**
+ * 工具配置类型定义
+ *
+ * 定义代理工具的配置结构，包括媒体理解、记忆搜索、
+ * 会话发送策略、工具权限提升等。
+ */
 import type { NormalizedChatType } from "../channels/chat-type.js";
 import type { AgentElevatedAllowFromConfig, SessionSendPolicyAction } from "./types.base.js";
 
+/** 媒体理解范围匹配条件 */
 export type MediaUnderstandingScopeMatch = {
   channel?: string;
   chatType?: NormalizedChatType;

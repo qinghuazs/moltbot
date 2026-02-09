@@ -1,3 +1,8 @@
+/**
+ * 会话 Zod Schema 定义
+ *
+ * 定义会话（session）、消息和命令配置的 Schema。
+ */
 import { z } from "zod";
 
 import {

@@ -1,3 +1,11 @@
+/**
+ * 旧版配置迁移共享类型和工具函数
+ *
+ * 定义迁移规则和迁移操作的共享类型，以及配置对象操作的辅助函数
+ * （如 ensureRecord, getRecord, isRecord, mergeMissing 等）。
+ */
+
+/** 旧版配置规则：检测已废弃/迁移的配置路径 */
 export type LegacyConfigRule = {
   path: string[];
   message: string;

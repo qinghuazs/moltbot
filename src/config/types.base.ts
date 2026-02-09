@@ -1,5 +1,12 @@
+/**
+ * 配置基础类型定义
+ *
+ * 定义消息回复、打字状态、会话范围、群组策略、DM 策略、
+ * Markdown 配置、日志配置、诊断配置等核心基础类型。
+ */
 import type { NormalizedChatType } from "../channels/chat-type.js";
 
+/** 回复模式：文本回复或命令回复 */
 export type ReplyMode = "text" | "command";
 export type TypingMode = "never" | "instant" | "thinking" | "message";
 export type SessionScope = "per-sender" | "global";

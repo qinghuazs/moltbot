@@ -1,3 +1,11 @@
+/**
+ * 沙箱配置类型定义
+ *
+ * 定义 Docker 沙箱和浏览器沙箱的配置结构，
+ * 包括容器设置、清理策略和浏览器配置。
+ */
+
+/** Docker 沙箱设置 */
 export type SandboxDockerSettings = {
   /** Docker image to use for sandbox containers. */
   image?: string;

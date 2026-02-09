@@ -1,4 +1,9 @@
-// Split into focused modules to keep files small and improve edit locality.
+/**
+ * 配置类型定义统一导出
+ *
+ * 聚合并导出所有配置相关的 TypeScript 类型定义，
+ * 按功能拆分到独立的 types.*.ts 文件中以提高可维护性。
+ */
 
 export * from "./types.agent-defaults.js";
 export * from "./types.agents.js";

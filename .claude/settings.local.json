@@ -16,7 +16,8 @@
       "Bash(pnpm lint)",
       "Bash(git diff-tree:*)",
       "Bash(while read hash)",
-      "Bash(do git diff-tree:*)"
+      "Bash(do git diff-tree:*)",
+      "Bash(pnpm build:*)"
     ]
   }
 }

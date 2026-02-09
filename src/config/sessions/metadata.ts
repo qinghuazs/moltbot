@@ -1,3 +1,9 @@
+/**
+ * 会话元数据解析模块
+ *
+ * 从消息上下文中提取和合并会话的投递上下文（delivery context）、
+ * 来源信息（session origin）等元数据。
+ */
 import type { MsgContext } from "../../auto-reply/templating.js";
 import { normalizeChatType } from "../../channels/chat-type.js";
 import { resolveConversationLabel } from "../../channels/conversation-label.js";

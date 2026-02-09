@@ -1,10 +1,12 @@
+/**
+ * 命令执行队列模块
+ *
+ * 进程内的最小命令队列，按通道（lane）串行化命令执行。
+ * 默认通道（main）保持现有行为；额外通道（如 cron）允许
+ * 低风险并行执行，避免 stdin/日志与主自动回复流交叉。
+ */
 import { CommandLane } from "./lanes.js";
 import { diagnosticLogger as diag, logLaneDequeue, logLaneEnqueue } from "../logging/diagnostic.js";
-
-// Minimal in-process queue to serialize command executions.
-// Default lane ("main") preserves the existing behavior. Additional lanes allow
-// low-risk parallelism (e.g. cron jobs) without interleaving stdin / logs for
-// the main auto-reply workflow.
 
 type QueueEntry = {
   task: () => Promise<unknown>;

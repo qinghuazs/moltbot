@@ -1,3 +1,9 @@
+/**
+ * Microsoft Teams 渠道配置类型定义
+ *
+ * 定义 MS Teams 渠道的配置结构，包括 Bot Framework 凭证、
+ * DM/群组策略、流式输出等。
+ */
 import type {
   BlockStreamingCoalesceConfig,
   DmPolicy,

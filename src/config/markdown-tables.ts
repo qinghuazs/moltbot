@@ -1,3 +1,9 @@
+/**
+ * Markdown 表格模式解析模块
+ *
+ * 解析各渠道/账户的 Markdown 表格渲染模式配置。
+ * 支持按渠道和账户级别的配置覆盖，并提供默认回退逻辑。
+ */
 import { normalizeChannelId } from "../channels/plugins/index.js";
 import { normalizeAccountId } from "../routing/session-key.js";
 import type { MoltbotConfig } from "./config.js";

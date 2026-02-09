@@ -1,3 +1,9 @@
+/**
+ * 代理默认配置类型定义
+ *
+ * 定义代理的默认配置结构（agents.defaults），包括：
+ * 流式输出、打字状态、人类延迟、心跳、压缩、上下文裁剪等默认行为。
+ */
 import type {
   BlockStreamingChunkConfig,
   BlockStreamingCoalesceConfig,

@@ -1,3 +1,11 @@
+/**
+ * 版本号解析与比较模块
+ *
+ * 解析 Moltbot 版本号字符串（如 "v2024.1.15-3"）为结构化对象，
+ * 并提供版本比较功能。版本格式：major.minor.patch[-revision]。
+ */
+
+/** Moltbot 版本号结构 */
 export type MoltbotVersion = {
   major: number;
   minor: number;

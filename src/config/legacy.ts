@@ -1,3 +1,9 @@
+/**
+ * 旧版配置检测与迁移执行模块
+ *
+ * 检测配置对象中的旧版配置项（如已移动/重命名的字段），
+ * 并逐步应用所有注册的迁移规则将配置升级到最新格式。
+ */
 import { LEGACY_CONFIG_MIGRATIONS } from "./legacy.migrations.js";
 import { LEGACY_CONFIG_RULES } from "./legacy.rules.js";
 import type { LegacyConfigIssue } from "./types.js";

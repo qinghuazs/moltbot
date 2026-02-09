@@ -1,3 +1,11 @@
+/**
+ * 旧版配置迁移规则 - 第 1 部分
+ *
+ * 包含早期的配置迁移操作，如：
+ * - 顶层渠道配置移入 channels.* 命名空间
+ * - 旧版 provider/model 字段重命名
+ * - 旧版会话配置结构调整
+ */
 import {
   ensureRecord,
   getRecord,

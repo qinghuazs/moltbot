@@ -1,3 +1,9 @@
+/**
+ * 进程启动工具模块
+ *
+ * 提供带回退策略的 spawn 函数，当主 spawn 选项失败时
+ * 自动尝试备选配置（如不同的 shell 或 PATH）。
+ */
 import type { ChildProcess, SpawnOptions } from "node:child_process";
 import { spawn } from "node:child_process";
 

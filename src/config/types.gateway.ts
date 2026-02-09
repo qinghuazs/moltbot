@@ -1,3 +1,11 @@
+/**
+ * 网关配置类型定义
+ *
+ * 定义网关服务器的配置结构，包括绑定模式、TLS、端口、
+ * Control UI、节点发现等。
+ */
+
+/** 网关绑定模式 */
 export type GatewayBindMode = "auto" | "lan" | "loopback" | "custom" | "tailnet";
 
 export type GatewayTlsConfig = {

@@ -1,3 +1,8 @@
+/**
+ * Talk API 密钥解析模块
+ *
+ * 解析 Talk API 密钥，支持从配置、环境变量或文件系统中获取。
+ */
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";

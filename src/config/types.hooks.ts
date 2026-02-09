@@ -1,3 +1,10 @@
+/**
+ * 钩子配置类型定义
+ *
+ * 定义消息钩子（hooks）的匹配条件、转换规则和映射配置。
+ */
+
+/** 钩子匹配条件 */
 export type HookMappingMatch = {
   path?: string;
   source?: string;

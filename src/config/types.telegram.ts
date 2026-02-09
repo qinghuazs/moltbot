@@ -1,3 +1,9 @@
+/**
+ * Telegram 渠道配置类型定义
+ *
+ * 定义 Telegram 渠道的配置结构，包括 Bot Token、
+ * DM/群组策略、自定义命令、流式输出、多账户等。
+ */
 import type {
   BlockStreamingChunkConfig,
   BlockStreamingCoalesceConfig,

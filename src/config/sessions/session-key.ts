@@ -1,3 +1,9 @@
+/**
+ * 会话键生成模块
+ *
+ * 根据消息上下文和配置的会话范围（per-sender/global/per-peer 等），
+ * 生成唯一的会话键标识符，用于路由消息到正确的 Pi 会话。
+ */
 import type { MsgContext } from "../../auto-reply/templating.js";
 import {
   buildAgentMainSessionKey,

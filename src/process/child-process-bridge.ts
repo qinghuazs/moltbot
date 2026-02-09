@@ -1,3 +1,10 @@
+/**
+ * 子进程桥接模块
+ *
+ * 将父进程的信号（SIGINT、SIGTERM 等）转发给子进程，
+ * 并在子进程退出时清理信号监听器。用于 CLI 命令执行场景，
+ * 确保 Ctrl+C 等信号能正确传递到子进程。
+ */
 import type { ChildProcess } from "node:child_process";
 import process from "node:process";
 

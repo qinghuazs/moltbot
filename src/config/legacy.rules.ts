@@ -1,3 +1,10 @@
+/**
+ * 旧版配置规则定义
+ *
+ * 定义所有已知的旧版配置路径及其提示信息，
+ * 用于检测用户配置中是否存在已迁移/废弃的字段。
+ * 例如：whatsapp -> channels.whatsapp, telegram -> channels.telegram 等。
+ */
 import type { LegacyConfigRule } from "./legacy.shared.js";
 
 export const LEGACY_CONFIG_RULES: LegacyConfigRule[] = [

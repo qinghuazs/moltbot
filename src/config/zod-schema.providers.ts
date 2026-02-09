@@ -1,3 +1,9 @@
+/**
+ * 渠道 Provider Zod Schema 汇总
+ *
+ * 聚合所有渠道的 Zod Schema（Discord、Telegram、Slack 等），
+ * 组合成统一的 ChannelsSchema。
+ */
 import { z } from "zod";
 
 import {

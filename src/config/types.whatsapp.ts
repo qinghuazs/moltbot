@@ -1,3 +1,9 @@
+/**
+ * WhatsApp 渠道配置类型定义
+ *
+ * 定义 WhatsApp 渠道的配置结构，包括 DM/群组策略、
+ * 流式输出、心跳可见性等。
+ */
 import type {
   BlockStreamingCoalesceConfig,
   DmPolicy,

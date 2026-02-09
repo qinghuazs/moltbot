@@ -1,3 +1,11 @@
+/**
+ * 模型配置类型定义
+ *
+ * 定义 AI 模型的 API 类型、兼容性配置、成本定义、Provider 配置、
+ * 模型故障转移等类型。
+ */
+
+/** 模型 API 协议类型 */
 export type ModelApi =
   | "openai-completions"
   | "openai-responses"

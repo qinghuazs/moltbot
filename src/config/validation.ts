@@ -1,3 +1,18 @@
+/**
+ * 配置验证模块
+ *
+ * 对 Moltbot 配置对象进行全面验证，包括：
+ * - Zod Schema 校验（结构和类型）
+ * - 旧版配置检测（legacy config issues）
+ * - 重复代理目录检测
+ * - 代理头像路径安全校验（必须在工作区内）
+ * - 插件配置验证（schema 校验、启用状态、memory slot、渠道 ID）
+ * - 心跳目标渠道验证
+ *
+ * 提供两个入口函数：
+ * - validateConfigObject: 基础验证（不含插件）
+ * - validateConfigObjectWithPlugins: 完整验证（含插件 manifest 和配置 schema）
+ */
 import path from "node:path";
 
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";

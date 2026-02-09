@@ -1,3 +1,9 @@
+/**
+ * 渠道配置类型定义
+ *
+ * 聚合所有消息渠道（Telegram、Discord、Slack、Signal 等）的配置类型，
+ * 定义统一的 ChannelsConfig 结构。
+ */
 import type { DiscordConfig } from "./types.discord.js";
 import type { GoogleChatConfig } from "./types.googlechat.js";
 import type { IMessageConfig } from "./types.imessage.js";

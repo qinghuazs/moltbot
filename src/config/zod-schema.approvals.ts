@@ -1,3 +1,8 @@
+/**
+ * 执行审批 Zod Schema 定义
+ *
+ * 定义执行审批的转发目标、转发模式和审批配置 Schema。
+ */
 import { z } from "zod";
 
 const ExecApprovalForwardTargetSchema = z

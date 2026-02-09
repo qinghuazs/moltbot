@@ -1,3 +1,11 @@
+/**
+ * 插件自动启用模块
+ *
+ * 根据用户的渠道和 provider 配置，自动检测并启用对应的插件。
+ * 例如：配置了 Telegram token 时自动启用 telegram 插件；
+ * 配置了 google-antigravity provider 时自动启用对应的 auth 插件。
+ * 支持 preferOver 机制避免同类插件重复启用。
+ */
 import type { MoltbotConfig } from "./config.js";
 import {
   getChatChannelMeta,

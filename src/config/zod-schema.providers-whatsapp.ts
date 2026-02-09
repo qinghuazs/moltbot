@@ -1,3 +1,9 @@
+/**
+ * WhatsApp 渠道 Zod Schema 定义
+ *
+ * 定义 WhatsApp 渠道配置的 Zod Schema，包括
+ * DM/群组策略、工具策略、心跳可见性等。
+ */
 import { z } from "zod";
 
 import {

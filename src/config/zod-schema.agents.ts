@@ -1,3 +1,8 @@
+/**
+ * 代理 Zod Schema 定义
+ *
+ * 定义代理列表、音频配置、绑定和广播等 Schema。
+ */
 import { z } from "zod";
 import { AgentDefaultsSchema } from "./zod-schema.agent-defaults.js";
 import { AgentEntrySchema } from "./zod-schema.agent-runtime.js";

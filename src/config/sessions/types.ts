@@ -1,3 +1,10 @@
+/**
+ * 会话类型定义
+ *
+ * 定义会话管理的核心类型，包括会话范围（SessionScope）、
+ * 会话条目（SessionEntry）、会话来源（SessionOrigin）、
+ * 群组键解析（GroupKeyResolution）等。
+ */
 import crypto from "node:crypto";
 
 import type { Skill } from "@mariozechner/pi-coding-agent";

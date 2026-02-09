@@ -1,6 +1,12 @@
+/**
+ * 消息配置类型定义
+ *
+ * 定义群聊配置、DM 配置、消息队列、TTS 等消息相关配置类型。
+ */
 import type { QueueDropPolicy, QueueMode, QueueModeByProvider } from "./types.queue.js";
 import type { TtsConfig } from "./types.tts.js";
 
+/** 群聊配置 */
 export type GroupChatConfig = {
   mentionPatterns?: string[];
   historyLimit?: number;

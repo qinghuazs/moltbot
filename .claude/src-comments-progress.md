@@ -43,12 +43,12 @@
 | 目录 | 文件数 | 状态 | 备注 |
 |------|--------|------|------|
 | `src/` (根目录) | 10 | ✅ 完成 | index.ts, entry.ts, utils.ts 等 |
-| `src/config/` | 78 | 🔄 部分 | paths.ts, sessions.ts 已完成 |
+| `src/config/` | 81 | ✅ 完成 | 全部非测试文件已添加注释（含 types.*, zod-schema.*, sessions/*） |
 | `src/infra/` | 94 | 🔄 部分 | 已完成约 28 个核心文件 (含 bonjour, device-pairing, node-shell) |
 | `src/agents/` | 102 | 🔄 部分 | 已完成约 38 个核心文件 (含 memory-search, cli-runner) |
 | `src/gateway/` | 72 | 🔄 部分 | 已完成约 19 个核心文件 (含 server-methods, server-chat) |
 | `src/routing/` | 4 | ✅ 完成 | bindings.ts, resolve-route.ts, session-key.ts |
-| `src/process/` | 5 | 🔄 部分 | lanes.ts 已完成 |
+| `src/process/` | 5 | ✅ 完成 | 全部非测试文件已添加注释 |
 
 ### 优先级 2: 功能模块 (中优先级)
 

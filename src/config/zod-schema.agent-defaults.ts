@@ -1,3 +1,9 @@
+/**
+ * 代理默认配置 Zod Schema 定义
+ *
+ * 定义 agents.defaults 配置段的 Schema，包括心跳、沙箱、
+ * 流式输出、压缩、上下文裁剪等默认行为。
+ */
 import { z } from "zod";
 import {
   HeartbeatSchema,

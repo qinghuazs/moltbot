@@ -1,3 +1,9 @@
+/**
+ * 会话重置策略解析模块
+ *
+ * 解析会话的自动重置策略（daily/idle 模式），
+ * 支持按渠道和聊天类型（DM/群组/线程）的差异化配置。
+ */
 import type { SessionConfig, SessionResetConfig } from "../types.base.js";
 import { DEFAULT_IDLE_MINUTES } from "./types.js";
 import { normalizeMessageChannel } from "../../utils/message-channel.js";

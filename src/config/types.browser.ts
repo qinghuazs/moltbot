@@ -1,3 +1,11 @@
+/**
+ * 浏览器配置类型定义
+ *
+ * 定义浏览器沙箱的配置文件（profile）结构，
+ * 包括 CDP 端口、驱动类型、配色、代理设置等。
+ */
+
+/** 浏览器配置项 */
 export type BrowserProfileConfig = {
   /** CDP port for this profile. Allocated once at creation, persisted permanently. */
   cdpPort?: number;

@@ -1,3 +1,11 @@
+/**
+ * 旧版配置迁移规则 - 第 2 部分
+ *
+ * 包含中期的配置迁移操作，如：
+ * - 代理配置结构调整（agents.list 格式化）
+ * - 音频转录配置迁移
+ * - 工具/沙箱配置结构变更
+ */
 import {
   ensureAgentEntry,
   ensureRecord,

@@ -1,3 +1,11 @@
+/**
+ * 技能配置类型定义
+ *
+ * 定义技能（skills）的配置结构，包括启用状态、API 密钥、
+ * 环境变量、加载路径等。
+ */
+
+/** 单个技能配置 */
 export type SkillConfig = {
   enabled?: boolean;
   apiKey?: string;

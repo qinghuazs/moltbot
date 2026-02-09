@@ -1,3 +1,9 @@
+/**
+ * 会话转录管理模块
+ *
+ * 管理 Pi 会话的转录文件，包括创建/恢复/重置会话、
+ * 绑定转录路径和发射转录更新事件。
+ */
 import fs from "node:fs";
 import path from "node:path";
 

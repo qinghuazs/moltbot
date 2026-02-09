@@ -1,3 +1,11 @@
+/**
+ * 认证配置类型定义
+ *
+ * 定义认证配置文件（auth profiles）的类型结构，
+ * 支持 API Key、OAuth、Token 三种认证模式。
+ */
+
+/** 单个认证配置项 */
 export type AuthProfileConfig = {
   provider: string;
   /**

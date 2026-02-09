@@ -1,3 +1,9 @@
+/**
+ * 群组会话键解析模块
+ *
+ * 根据消息上下文（渠道、群组 ID、标签等）解析群组会话键，
+ * 用于将群聊消息路由到正确的 Pi 会话。
+ */
 import type { MsgContext } from "../../auto-reply/templating.js";
 import { listDeliverableMessageChannels } from "../../utils/message-channel.js";
 import type { GroupKeyResolution } from "./types.js";

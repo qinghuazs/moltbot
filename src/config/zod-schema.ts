@@ -1,3 +1,9 @@
+/**
+ * Moltbot 主配置 Zod Schema
+ *
+ * 聚合所有子 Schema 定义完整的 MoltbotSchema，
+ * 用于配置文件的运行时校验和类型推断。
+ */
 import { z } from "zod";
 import { ToolsSchema } from "./zod-schema.agent-runtime.js";
 import { ApprovalsSchema } from "./zod-schema.approvals.js";

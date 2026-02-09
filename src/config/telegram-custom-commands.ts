@@ -1,3 +1,12 @@
+/**
+ * Telegram 自定义命令解析模块
+ *
+ * 验证和规范化 Telegram Bot 的自定义命令配置，包括：
+ * - 命令名称格式校验（a-z, 0-9, 下划线，最长 32 字符）
+ * - 保留命令冲突检测
+ * - 重复命令检测
+ * - 命令描述必填校验
+ */
 export const TELEGRAM_COMMAND_NAME_PATTERN = /^[a-z0-9_]{1,32}$/;
 
 export type TelegramCustomCommandInput = {

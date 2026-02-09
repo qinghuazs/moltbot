@@ -1,3 +1,9 @@
+/**
+ * 会话路径解析模块
+ *
+ * 解析会话存储文件和转录文件的文件系统路径，
+ * 按代理 ID 组织目录结构。
+ */
 import os from "node:os";
 import path from "node:path";
 import { DEFAULT_AGENT_ID, normalizeAgentId } from "../../routing/session-key.js";

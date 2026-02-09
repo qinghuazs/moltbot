@@ -1,3 +1,11 @@
+/**
+ * TTS（文字转语音）配置类型定义
+ *
+ * 定义 TTS 的 Provider、模式、自动触发规则、
+ * 模型覆盖和语音配置等类型。
+ */
+
+/** TTS Provider */
 export type TtsProvider = "elevenlabs" | "openai" | "edge";
 
 export type TtsMode = "final" | "all";

@@ -1,3 +1,13 @@
+/**
+ * 群组策略模块
+ *
+ * 解析各消息渠道的群组访问控制策略，包括：
+ * - 群组白名单（allowlist）：配置了 groups 时启用，仅允许列出的群组
+ * - 通配符 "*" 群组：允许所有群组
+ * - 群组级 requireMention 设置：是否需要 @提及 才响应
+ * - 群组级工具策略：按群组和发送者控制工具权限
+ * - 发送者级工具策略：按发送者 ID/用户名/E164 匹配
+ */
 import type { ChannelId } from "../channels/plugins/types.js";
 import { normalizeAccountId } from "../routing/session-key.js";
 import type { MoltbotConfig } from "./config.js";
@@ -11,10 +21,15 @@ export type ChannelGroupConfig = {
   toolsBySender?: GroupToolPolicyBySenderConfig;
 };
 
+/** 群组策略解析结果 */
 export type ChannelGroupPolicy = {
+  /** 是否启用了群组白名单 */
   allowlistEnabled: boolean;
+  /** 当前群组是否被允许 */
   allowed: boolean;
+  /** 当前群组的配置 */
   groupConfig?: ChannelGroupConfig;
+  /** 通配符 "*" 群组的默认配置 */
   defaultConfig?: ChannelGroupConfig;
 };
 
@@ -34,6 +49,11 @@ function normalizeSenderKey(value: string): string {
   return withoutAt.toLowerCase();
 }
 
+/**
+ * 按发送者解析工具策略
+ *
+ * 按优先级匹配：senderId > senderE164 > senderUsername > senderName > 通配符 "*"
+ */
 export function resolveToolsBySender(
   params: {
     toolsBySender?: GroupToolPolicyBySenderConfig;
@@ -102,6 +122,11 @@ function resolveChannelGroups(
   return accountGroups ?? channelConfig.groups;
 }
 
+/**
+ * 解析群组的访问控制策略
+ *
+ * 判断指定群组是否在白名单中，并返回群组级和默认级配置。
+ */
 export function resolveChannelGroupPolicy(params: {
   cfg: MoltbotConfig;
   channel: GroupPolicyChannel;
@@ -127,6 +152,11 @@ export function resolveChannelGroupPolicy(params: {
   };
 }
 
+/**
+ * 解析群组的 requireMention 设置
+ *
+ * 优先级：群组配置 > 默认配置 > 渠道级覆盖 > 默认 true
+ */
 export function resolveChannelGroupRequireMention(params: {
   cfg: MoltbotConfig;
   channel: GroupPolicyChannel;
@@ -154,6 +184,11 @@ export function resolveChannelGroupRequireMention(params: {
   return true;
 }
 
+/**
+ * 解析群组的工具策略
+ *
+ * 按优先级查找：群组发送者策略 > 群组工具策略 > 默认发送者策略 > 默认工具策略
+ */
 export function resolveChannelGroupToolsPolicy(
   params: {
     cfg: MoltbotConfig;

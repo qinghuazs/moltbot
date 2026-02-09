@@ -1,3 +1,11 @@
+/**
+ * 会话存储模块
+ *
+ * 提供会话数据的持久化存储（JSON5 文件），支持：
+ * - 原子写入（tmp + rename）
+ * - 缓存 TTL（避免频繁磁盘读取）
+ * - 会话条目的增删改查
+ */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";

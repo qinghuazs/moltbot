@@ -1,3 +1,9 @@
+/**
+ * 核心渠道 Provider Zod Schema 定义
+ *
+ * 定义 Discord、Telegram、Slack、Signal、iMessage 等
+ * 核心渠道的 Zod Schema。
+ */
 import { z } from "zod";
 
 import {

@@ -1,3 +1,9 @@
+/**
+ * 核心 Zod Schema 定义
+ *
+ * 定义配置中通用的基础 Schema，包括模型 API、Provider 配置、
+ * DM/群组策略、Markdown 配置、可执行令牌校验等。
+ */
 import { z } from "zod";
 
 import { isSafeExecutableValue } from "../infra/exec-safety.js";

@@ -1,3 +1,9 @@
+/**
+ * Discord 渠道配置类型定义
+ *
+ * 定义 Discord 渠道的配置结构，包括令牌、DM/群组策略、
+ * 流式输出、Markdown 配置、多账户等。
+ */
 import type {
   BlockStreamingCoalesceConfig,
   DmPolicy,

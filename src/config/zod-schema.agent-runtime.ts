@@ -1,3 +1,9 @@
+/**
+ * 代理运行时 Zod Schema 定义
+ *
+ * 定义单个代理条目的完整 Schema，包括模型选择、工具策略、
+ * 沙箱配置、心跳、记忆搜索、群聊设置等。
+ */
 import { z } from "zod";
 
 import { parseDurationMs } from "../cli/parse-duration.js";

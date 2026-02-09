@@ -1,3 +1,9 @@
+/**
+ * 代理配置类型定义
+ *
+ * 定义代理（Agent）的完整配置结构，包括代理列表、代理绑定、
+ * 沙箱设置、工具配置、模型选择、记忆搜索等。
+ */
 import type { AgentDefaultsConfig } from "./types.agent-defaults.js";
 import type { HumanDelayConfig, IdentityConfig } from "./types.base.js";
 import type { GroupChatConfig } from "./types.messages.js";

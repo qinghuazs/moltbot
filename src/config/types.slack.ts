@@ -1,3 +1,9 @@
+/**
+ * Slack 渠道配置类型定义
+ *
+ * 定义 Slack 渠道的配置结构，包括 Bot/App/User Token、
+ * DM/群组策略、线程模式、流式输出等。
+ */
 import type {
   BlockStreamingCoalesceConfig,
   DmPolicy,

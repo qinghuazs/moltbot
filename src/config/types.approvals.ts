@@ -1,3 +1,10 @@
+/**
+ * 执行审批配置类型定义
+ *
+ * 定义命令执行审批的转发模式、转发目标和审批配置结构。
+ */
+
+/** 审批转发模式：仅会话内、指定目标、或两者 */
 export type ExecApprovalForwardingMode = "session" | "targets" | "both";
 
 export type ExecApprovalForwardTarget = {

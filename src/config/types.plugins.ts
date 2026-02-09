@@ -1,3 +1,11 @@
+/**
+ * 插件配置类型定义
+ *
+ * 定义插件系统的配置结构，包括插件条目、插槽配置、
+ * 加载路径和允许/拒绝列表。
+ */
+
+/** 单个插件条目配置 */
 export type PluginEntryConfig = {
   enabled?: boolean;
   config?: Record<string, unknown>;

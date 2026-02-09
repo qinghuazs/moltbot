@@ -1,3 +1,8 @@
+/**
+ * 钩子 Zod Schema 定义
+ *
+ * 定义钩子映射、Gmail 钩子和内部钩子等 Schema。
+ */
 import { z } from "zod";
 
 export const HookMappingSchema = z

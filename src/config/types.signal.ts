@@ -1,3 +1,9 @@
+/**
+ * Signal 渠道配置类型定义
+ *
+ * 定义 Signal 渠道的配置结构，包括 signal-cli 路径/HTTP 接口、
+ * DM/群组策略、流式输出等。
+ */
 import type {
   BlockStreamingCoalesceConfig,
   DmPolicy,
